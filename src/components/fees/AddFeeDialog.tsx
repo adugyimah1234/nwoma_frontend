@@ -45,7 +45,7 @@ import { getAllAcademicYear, type academicYear } from '@/services/academic_year'
 
 // Types
 import { type CreateFeePayload } from '@/types/fee';
-import { type Category } from '@/types/exam';
+import { type Category } from '@/types/assessment';
 
 // Form schema with validation
 const feeFormSchema = z.object({
@@ -57,7 +57,7 @@ const feeFormSchema = z.object({
   class_id: z
     .number({ required_error: "Class is required" }),
   fee_type: z
-    .enum(["registration", "admission", "tuition", "exam"] as const, {
+    .enum(["registration", "admission", "tuition", "assessment"] as const, {
       required_error: "Fee type is required",
     }),
   description: z
@@ -122,15 +122,15 @@ export default function AddFeeDialog({ onSuccess }: AddFeeDialogProps) {
       
       // Pre-select first items if available
       if (yearsData.length > 0) {
-        form.setValue('academic_year_id', yearsData[0].id);
+        form.setValue('academic_year_id', yearsData[0].id as any);
       }
       
       if (categoriesData.length > 0) {
-        form.setValue('category_id', categoriesData[0].id);
+        form.setValue('category_id', categoriesData[0].id as any);
       }
       
       if (classesData.length > 0) {
-        form.setValue('class_id', classesData[0].id);
+        form.setValue('class_id', classesData[0].id as any);
       }
     } catch (error) {
       console.error('Error loading reference data:', error);
@@ -146,10 +146,10 @@ export default function AddFeeDialog({ onSuccess }: AddFeeDialogProps) {
     try {
       const payload: CreateFeePayload = {
         amount: data.amount,
-        category_id: data.category_id,
-        class_id: data.class_id,
+        category_id: String(data.category_id),
+        class_id: String(data.class_id),
         fee_type: data.fee_type,
-        academic_year_id: data.academic_year_id,
+        academic_year_id: String(data.academic_year_id),
         description: data.description
       };
       
@@ -234,7 +234,7 @@ export default function AddFeeDialog({ onSuccess }: AddFeeDialogProps) {
                       <SelectItem value="registration">Registration</SelectItem>
                       <SelectItem value="admission">Admission</SelectItem>
                       <SelectItem value="tuition">Tuition</SelectItem>
-                      <SelectItem value="exam">Exam</SelectItem>
+                      <SelectItem value="assessment">Assessment</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormDescription>

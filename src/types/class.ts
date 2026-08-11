@@ -1,23 +1,24 @@
 /**
- * Types for the school management system's classes and exams
+ * Types for the school management system's classes and assessments
  */
 
 /**
  * Basic class interface
  */
 export interface Class {
-  level: number | undefined;
-  id: number;
+  level?: number;
+  id: string;
   name: string;
-  grade_level: string;
-  academic_year_id: number;
-  school_id?: number;
-  teacher_id?: number;
-  capacity: number;
-  current_students: number;
+  grade_level?: string;
+  academic_year_id?: string;
+  school_id?: string;
+  garrison_id?: string;
+  teacher_id?: string;
+  capacity?: number;
+  current_students?: number;
   sections?: Section[];
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 /**
@@ -28,32 +29,32 @@ export interface Section {
   name: string;
   class_id: string;
   teacher_id?: string;
-  capacity: number;
-  current_students: number;
+  capacity?: number;
+  current_students?: number;
 }
 
 /**
- * Exam interface
+ * Assessment interface
  */
-export interface ClassExam {
-  id: number;
-  class_id: number;
-  category_id: number;
+export interface ClassAssessment {
+  id: string;
+  class_id: string;
+  category_id?: string;
   category_name?: string;
   name: string;
-  date: string;
+  date?: string;
   description?: string;
-  total_marks: number;
+  total_marks?: number;
   venue?: string;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 /**
- * Class with exams
+ * Class with assessments
  */
-export interface ClassWithExams extends Class {
-  exams: ClassExam[];
+export interface ClassWithAssessments extends Class {
+  assessments: ClassAssessment[];
 }
 
 /**
@@ -61,46 +62,47 @@ export interface ClassWithExams extends Class {
  */
 export interface CreateClassDTO {
   name: string;
-  grade_level: string;
-  academic_year_id: number;
-  school_id?: number;
-  teacher_id?: number;
-  capacity: number;
+  grade_level?: string;
+  academic_year_id?: string;
+  school_id?: string;
+  garrison_id?: string;
+  teacher_id?: string;
+  capacity?: number;
 }
 
 export interface UpdateClassDTO {
   name?: string;
   grade_level?: string;
-  teacher_id?: number;
+  teacher_id?: string;
   capacity?: number;
 }
 
 export interface CreateSectionDTO {
   name: string;
-  class_id: number;
-  teacher_id?: number;
-  capacity: number;
+  class_id: string;
+  teacher_id?: string;
+  capacity?: number;
 }
 
 export interface UpdateSectionDTO {
   name?: string;
-  teacher_id?: number;
+  teacher_id?: string;
   capacity?: number;
 }
 
-export interface CreateExamDTO {
+export interface CreateAssessmentDTO {
   name: string;
-  date: string;
-  category_id: number;
+  date?: string;
+  category_id?: string;
   description?: string;
-  total_marks: number;
+  total_marks?: number;
   venue?: string;
 }
 
-export interface UpdateExamDTO {
+export interface UpdateAssessmentDTO {
   name?: string;
   date?: string;
-  category_id?: number;
+  category_id?: string;
   description?: string;
   total_marks?: number;
   venue?: string;
@@ -110,11 +112,12 @@ export interface UpdateExamDTO {
  * Filter interfaces
  */
 export interface ClassFilters {
-  academic_year_id?: number;
-  school_id?: number;
+  academic_year_id?: string;
+  school_id?: string;
+  garrison_id?: string;
   grade_level?: string;
-  teacher_id?: number;
-  category_id?: number;
+  teacher_id?: string;
+  category_id?: string;
 }
 
 /**
@@ -127,7 +130,7 @@ export interface CreateResponse {
 
 export interface UpdateResponse {
   message: string;
-  changes: number;
+  changes?: number;
 }
 
 export interface DeleteResponse {
@@ -139,4 +142,3 @@ export interface ErrorResponse {
   error?: string;
   statusCode?: number;
 }
-

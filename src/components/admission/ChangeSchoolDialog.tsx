@@ -82,8 +82,8 @@ export function ChangeSchoolDialog({
     setLoading(true);
     setError(null);
     try {
-      await studentService.updatePartial(Number(admissionId), {
-        school_id: Number(selectedSchoolId),
+      await studentService.updatePartial(admissionId, {
+        school_id: selectedSchoolId,
       });
       toast({
         title: "Success",
@@ -137,7 +137,7 @@ export function ChangeSchoolDialog({
                   </SelectItem>
                 ) : (
                   schools.map((school) => (
-                    <SelectItem key={school.id} value={school.id}>
+                    <SelectItem key={school.id} value={String(school.id)}>
                       {school.name}
                     </SelectItem>
                   ))

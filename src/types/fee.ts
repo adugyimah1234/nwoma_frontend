@@ -5,40 +5,41 @@ import { type Receipt } from './receipt';
  */
 
 // Fee types as defined in the database
-export type FeeType = 'registration' | 'admission' | 'tuition' | 'exam';
+export type FeeType = 'registration' | 'admission' | 'tuition' | 'assessment' | string;
 
 // Base fee structure
 export interface Fee {
-  id: number;
-  category_id: number;
+  id: string;
+  category_id?: string;
   fee_type: FeeType;
   amount: number;
   description?: string;
   effective_date?: string;
-  school_id?: number;
+  school_id?: string;
+  garrison_id?: string;
 }
 
 // Fee with related information (category and class names)
 export interface FeeWithDetails extends Fee {
-
-  status: string; // e.g., 'active', 'inactive'
+  status?: string; // e.g., 'active', 'inactive'
   category_name?: string;
-  academic_year_id?: number; // Added for academic year context
-  class_id?: number;
+  academic_year_id?: string;
+  class_id?: string;
   class_name?: string;
   school_name?: string;
 }
 
 // Payment record
 export interface Payment {
-  id: number;
-  student_id: number;
-  fee_id: number;
+  id: string;
+  student_id: string;
+  fee_id?: string;
   amount_paid: number;
   payment_date: string;
   installment_number?: number;
-  recorded_by?: number;
-  school_id?: number;
+  recorded_by?: string;
+  school_id?: string;
+  garrison_id?: string;
 }
 
 // Payment with related information
@@ -53,9 +54,6 @@ export interface PaymentWithDetails extends Payment {
 // Receipt types match fee types
 export type ReceiptType = FeeType;
 
-// Receipt record
-
-
 // Receipt with related information
 export interface ReceiptWithDetails extends Receipt {
   student_name?: string;
@@ -67,88 +65,77 @@ export interface ReceiptWithDetails extends Receipt {
 
 // Request payloads
 export interface CreateFeePayload {
-  category_id: number;
-  class_id: number;
+  category_id?: string;
+  class_id?: string;
   fee_type: FeeType;
   amount: number;
   description?: string;
   effective_date?: string;
-  school_id?: number;
-  academic_year_id: number; // <-- Add this
-
+  school_id?: string;
+  garrison_id?: string;
+  academic_year_id?: string;
 }
 
 export interface UpdateFeePayload {
-  category_id?: number;
-  class_id?: number;
-  academic_year_id?: number; // Added for academic year context
+  category_id?: string;
+  class_id?: string;
+  academic_year_id?: string;
   fee_type?: FeeType;
   amount?: number;
   description?: string;
   effective_date?: string;
-  school_id?: number;
+  school_id?: string;
+  garrison_id?: string;
 }
 
 export interface CreatePaymentPayload {
-  student_id: number;
-  fee_id: number;
+  student_id: string;
+  fee_id?: string;
   amount_paid: number;
   payment_date?: string;
   installment_number?: number;
-  school_id?: number;
+  school_id?: string;
+  garrison_id?: string;
 }
 
 export interface CreateReceiptPayload {
-  student_id: number;
-  payment_id?: number;
+  student_id?: string;
+  payment_id?: string;
   receipt_type: ReceiptType;
   amount: number;
   date_issued?: string;
   venue?: string;
   logo_url?: string;
-  exam_date?: string;
-  class_id?: number;
-  school_id?: number;
-}
-
-// API Response types
-export interface FeeResponse {
-  message: string;
-  data: Fee;
-}
-
-export interface PaymentResponse {
-  message: string;
-  data: Payment;
-}
-
-export interface ReceiptResponse {
-  message: string;
-  data: Receipt;
+  assessment_date?: string;
+  class_id?: string;
+  school_id?: string;
+  garrison_id?: string;
 }
 
 // Query parameters
 export interface FeeQueryParams {
-  category?: string | number;
-  classLevel?: string | number;
-  school_id?: number;
+  category?: string;
+  classLevel?: string;
+  school_id?: string;
+  garrison_id?: string;
   fee_type?: FeeType;
 }
 
 export interface PaymentQueryParams {
-  student_id?: number;
-  fee_id?: number;
+  student_id?: string;
+  fee_id?: string;
   payment_date_from?: string;
   payment_date_to?: string;
-  school_id?: number;
+  school_id?: string;
+  garrison_id?: string;
 }
 
 export interface ReceiptQueryParams {
-  student_id?: number;
-  payment_id?: number;
+  student_id?: string;
+  payment_id?: string;
   receipt_type?: ReceiptType;
   date_from?: string;
   date_to?: string;
-  school_id?: number;
+  school_id?: string;
+  garrison_id?: string;
 }
-

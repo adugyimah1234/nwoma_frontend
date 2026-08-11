@@ -22,7 +22,7 @@ const UserProfile = () => {
       setLoading(true);
       getUserById(String(user.id))
         .then((data) => {
-          setFullUserData(data); // Assuming your backend returns { user: FullUser }
+          setFullUserData(data as any); // Assuming your backend returns { user: FullUser }
           setLoading(false);
         })
         .catch((err) => {

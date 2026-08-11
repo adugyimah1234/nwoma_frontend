@@ -14,18 +14,8 @@ import {
 import { getReceipts } from '@/services/receipt';
 import studentService from '@/services/students';
 import { getAllCategories } from '@/services/categories';
-
-interface Receipt {
-  id: number;
-  student_id: number;
-  receipt_type: 'registration' | 'levy' | 'textBooks' | 'exerciseBooks' | 'furniture' | 'jersey_crest';
-  amount: number;
-}
-
-interface Student {
-  id: number;
-  category_id: number;
-}
+import { type Receipt as ReceiptType } from '@/types/receipt';
+import { type Student } from '@/types/student';
 
 interface PaymentStats {
   receiptTypes: {
@@ -85,28 +75,42 @@ const PaymentBreakdownComponent: React.FC = () => {
           r => r.student_id !== null && !isNaN(Number(r.amount))
         );
 
-        const receiptTypeStats = Object.keys(receiptTypeConfig).map(type => {
+        // Dynamically extract all receipt types from the database receipts
+        const presentTypes = Array.from(
+          new Set([...Object.keys(receiptTypeConfig), ...receipts.map(r => r.receipt_type).filter(Boolean)])
+        ) as string[];
+
+        const getMeta = (type: string) => {
+          const cfg = receiptTypeConfig[type as keyof typeof receiptTypeConfig];
+          if (cfg) return cfg;
+          const formattedName = type.charAt(0).toUpperCase() + type.slice(1).replace(/_/g, ' ');
+          return { icon: FileText, color: '#6B7280', name: formattedName };
+        };
+
+        const receiptTypeStats = presentTypes.map(type => {
           const typeReceipts = receipts.filter(r => r.receipt_type === type);
           const totalAmount = typeReceipts.reduce((sum, r) => sum + Number(r.amount), 0);
+          const meta = getMeta(type);
 
           return {
-            type: receiptTypeConfig[type as keyof typeof receiptTypeConfig].name,
+            type: meta.name,
             amount: totalAmount,
             count: typeReceipts.length,
-            color: receiptTypeConfig[type as keyof typeof receiptTypeConfig].color,
-            icon: receiptTypeConfig[type as keyof typeof receiptTypeConfig].icon
+            color: meta.color,
+            icon: meta.icon
           };
         }).filter(stat => stat.count > 0);
 
-        const receiptTypeCategories = Object.keys(receiptTypeConfig).map(type => {
+        const receiptTypeCategories = presentTypes.map(type => {
           const typeReceipts = receipts.filter(r => r.receipt_type === type);
           const uniqueStudents = new Set(typeReceipts.map(r => r.student_id)).size;
+          const meta = getMeta(type);
 
           return {
-            category: receiptTypeConfig[type as keyof typeof receiptTypeConfig].name,
+            category: meta.name,
             count: uniqueStudents,
-            color: receiptTypeConfig[type as keyof typeof receiptTypeConfig].color,
-            icon: receiptTypeConfig[type as keyof typeof receiptTypeConfig].icon
+            color: meta.color,
+            icon: meta.icon
           };
         }).filter(stat => stat.count > 0);
 
@@ -117,16 +121,17 @@ const PaymentBreakdownComponent: React.FC = () => {
         const categoryMap: Record<string, { studentIds: number[] }> = {};
 
         students.forEach((student: Student) => {
-          const category = categoryIdToName[student.category_id] || 'Unknown';
+          const catId = (student as any).category_id;
+          const category = categoryIdToName[catId] || 'Unknown';
           if (!categoryMap[category]) {
             categoryMap[category] = { studentIds: [] };
           }
-          categoryMap[category].studentIds.push(student.id);
+          categoryMap[category].studentIds.push(Number(student.id));
         });
 
         const categoryStats = Object.entries(categoryMap).map(([category, data]) => {
           const totalAmount = receipts
-            .filter(r => data.studentIds.includes(r.student_id!))
+            .filter(r => data.studentIds.includes(Number(r.student_id)))
             .reduce((sum, r) => sum + Number(r.amount), 0);
 
           return {

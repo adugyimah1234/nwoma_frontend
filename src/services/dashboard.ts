@@ -1,8 +1,4 @@
-/* eslint-disable import/no-anonymous-default-export */
-import axios from 'axios';
-
-// Base API URL
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001/api';
+import api from '@/lib/axios';
 
 // Types for dashboard data
 export interface FinancialSummary {
@@ -26,13 +22,13 @@ export interface CollectionProgress {
 
 export interface Transaction {
   id: string;
-  student_id: number;
+  student_id: string;
   student_name: string;
   amount: number;
   type: 'payment' | 'pending' | 'overdue' | 'refund';
   date: string;
-  receipt_id?: number;
-  payment_id?: number;
+  receipt_id?: string;
+  payment_id?: string;
   fee_type?: string;
 }
 
@@ -40,225 +36,122 @@ export interface FinancialOverview {
   summary: FinancialSummary;
   collectionProgress: CollectionProgress;
   recentTransactions: Transaction[];
+  extendedMetrics?: {
+      total_debt: number;
+      monthly_expenses: number;
+      active_exeats: number;
+  };
+  cashFlow?: {
+      month: string;
+      inflow: number;
+      outflow: number;
+  }[];
 }
 
 /**
  * Get financial summary data
- * @param schoolId Optional school ID to filter data
- * @param period Optional period to filter data (month/year or date range)
- * @returns Financial summary statistics
  */
 export const getFinancialSummary = async (
-  schoolId?: number,
+  schoolId?: string,
   period?: { start?: string; end?: string } | string
 ): Promise<FinancialSummary> => {
-  try {
     // Build query parameters
-    const queryParams = new URLSearchParams();
+    const params: any = {};
     
-    if (schoolId) {
-      queryParams.append('school_id', schoolId.toString());
-    }
+    if (schoolId) params.school_id = schoolId;
     
     if (period) {
       if (typeof period === 'string') {
-        queryParams.append('period', period);
+        params.period = period;
       } else {
-        if (period.start) queryParams.append('start_date', period.start);
-        if (period.end) queryParams.append('end_date', period.end);
+        if (period.start) params.start_date = period.start;
+        if (period.end) params.end_date = period.end;
       }
     }
-    
-    const response = await axios.get<FinancialSummary>(
-      `${API_URL}/dashboard/financial-summary${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
-    );
-    
+
+    const response = await api.get<FinancialSummary>('/dashboard/financial-summary', { params });
     return response.data;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      throw new Error(error.response?.data?.error || 'Failed to fetch financial summary');
-    }
-    throw error;
-  }
 };
 
 /**
  * Get collection progress data
- * @param schoolId Optional school ID to filter data
- * @param period Optional period to filter data (month/year)
- * @returns Collection progress data
  */
 export const getCollectionProgress = async (
-  schoolId?: number,
+  schoolId?: string,
   period?: string
 ): Promise<CollectionProgress> => {
-  try {
-    // Build query parameters
-    const queryParams = new URLSearchParams();
+    const params: any = {};
+    if (schoolId) params.school_id = schoolId;
+    if (period) params.period = period;
     
-    if (schoolId) {
-      queryParams.append('school_id', schoolId.toString());
-    }
-    
-    if (period) {
-      queryParams.append('period', period);
-    }
-    
-    const response = await axios.get<CollectionProgress>(
-      `${API_URL}/dashboard/collection-progress${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
-    );
-    
+    const response = await api.get<CollectionProgress>('/dashboard/collection-progress', { params });
     return response.data;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      throw new Error(error.response?.data?.error || 'Failed to fetch collection progress');
-    }
-    throw error;
-  }
 };
 
 /**
  * Get recent transactions
- * @param limit Number of transactions to retrieve (default 10)
- * @param schoolId Optional school ID to filter transactions
- * @returns Array of recent transactions
  */
 export const getRecentTransactions = async (
   limit: number = 10,
-  schoolId?: number
+  schoolId?: string
 ): Promise<Transaction[]> => {
-  try {
-    // Build query parameters
-    const queryParams = new URLSearchParams();
+    const params: any = { limit };
+    if (schoolId) params.school_id = schoolId;
     
-    queryParams.append('limit', limit.toString());
-    
-    if (schoolId) {
-      queryParams.append('school_id', schoolId.toString());
-    }
-    
-    const response = await axios.get<Transaction[]>(
-      `${API_URL}/dashboard/recent-transactions?${queryParams.toString()}`
-    );
-    
+    const response = await api.get<Transaction[]>('/dashboard/recent-transactions', { params });
     return response.data;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      throw new Error(error.response?.data?.error || 'Failed to fetch recent transactions');
-    }
-    throw error;
-  }
 };
 
 /**
  * Get complete financial overview with all dashboard data
- * @param schoolId Optional school ID to filter data
- * @param period Optional period to filter data (month/year)
- * @returns Complete financial overview data
  */
 export const getFinancialOverview = async (
-  schoolId?: number,
+  schoolId?: string,
   period?: string
 ): Promise<FinancialOverview> => {
-  try {
-    // Build query parameters
-    const queryParams = new URLSearchParams();
+    const params: any = {};
+    if (schoolId) params.school_id = schoolId;
+    if (period) params.period = period;
     
-    if (schoolId) {
-      queryParams.append('school_id', schoolId.toString());
-    }
-    
-    if (period) {
-      queryParams.append('period', period);
-    }
-    
-    const response = await axios.get<FinancialOverview>(
-      `${API_URL}/dashboard/financial-overview${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
-    );
-    
+    const response = await api.get<FinancialOverview>('/dashboard/financial-overview', { params });
     return response.data;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      throw new Error(error.response?.data?.error || 'Failed to fetch financial overview');
-    }
-    throw error;
-  }
 };
 
 /**
  * Get monthly fee collection data for charts
- * @param year Year to get data for (defaults to current year)
- * @param schoolId Optional school ID to filter data
- * @returns Monthly fee collection data for charting
  */
 export const getMonthlyFeeCollectionData = async (
   year?: number,
-  schoolId?: number
+  schoolId?: string
 ): Promise<{ month: string; collected: number; target: number }[]> => {
-  try {
-    // Default to current year if not provided
-    const targetYear = year || new Date().getFullYear();
+    const params: any = { year: year || new Date().getFullYear() };
+    if (schoolId) params.school_id = schoolId;
     
-    // Build query parameters
-    const queryParams = new URLSearchParams();
-    
-    queryParams.append('year', targetYear.toString());
-    
-    if (schoolId) {
-      queryParams.append('school_id', schoolId.toString());
-    }
-    
-    const response = await axios.get<{ month: string; collected: number; target: number }[]>(
-      `${API_URL}/dashboard/monthly-collection?${queryParams.toString()}`
-    );
-    
+    const response = await api.get<{ month: string; collected: number; target: number }[]>('/dashboard/monthly-collection', { params });
     return response.data;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      throw new Error(error.response?.data?.error || 'Failed to fetch monthly collection data');
-    }
-    throw error;
-  }
 };
 
 /**
  * Get fee type distribution data for charts
- * @param schoolId Optional school ID to filter data
- * @param period Optional period to filter data (month/year or date range)
- * @returns Fee type distribution data for charting
  */
 export const getFeeTypeDistribution = async (
-  schoolId?: number,
+  schoolId?: string,
   period?: { start?: string; end?: string } | string
 ): Promise<{ feeType: string; amount: number; percentage: number }[]> => {
-  try {
-    // Build query parameters
-    const queryParams = new URLSearchParams();
-    
-    if (schoolId) {
-      queryParams.append('school_id', schoolId.toString());
-    }
+    const params: any = {};
+    if (schoolId) params.school_id = schoolId;
     
     if (period) {
       if (typeof period === 'string') {
-        queryParams.append('period', period);
+        params.period = period;
       } else {
-        if (period.start) queryParams.append('start_date', period.start);
-        if (period.end) queryParams.append('end_date', period.end);
+        if (period.start) params.start_date = period.start;
+        if (period.end) params.end_date = period.end;
       }
     }
-    
-    const response = await axios.get<{ feeType: string; amount: number; percentage: number }[]>(
-      `${API_URL}/dashboard/fee-distribution${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
-    );
-    
+
+    const response = await api.get<{ feeType: string; amount: number; percentage: number }[]>('/dashboard/fee-distribution', { params });
     return response.data;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      throw new Error(error.response?.data?.error || 'Failed to fetch fee type distribution');
-    }
-    throw error;
-  }
 };
 
 // Export all functions

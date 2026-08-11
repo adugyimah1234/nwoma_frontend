@@ -1,10 +1,10 @@
 import api from "@/lib/axios";
 
 export interface ClassData {
-  id: number;
+  id: string;
   name: string;
   level?: number;
-  school_id: number;
+  school_id: string;
   school_name?: string;
   slots: number;
   capacity: number;
@@ -17,14 +17,14 @@ const classService = {
     return res.data;
   },
 
-  getBySchool: async (schoolId: number): Promise<ClassData[]> => {
+  getBySchool: async (schoolId: string): Promise<ClassData[]> => {
     const res = await api.get('/classes', {
       params: { school_id: schoolId }
     });
     return res.data;
   },
 
-  getById: async (id: number): Promise<ClassData> => {
+  getById: async (id: string): Promise<ClassData> => {
     const res = await api.get(`/classes/${id}`);
     return res.data;
   },
@@ -40,7 +40,7 @@ update: async (cls: ClassData): Promise<ClassData> => {
 },
 
 
-  delete: async (id: number): Promise<void> => {
+  delete: async (id: string): Promise<void> => {
     await api.delete(`/classes/${id}`);
   },
 };

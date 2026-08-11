@@ -1,26 +1,29 @@
-export type ReceiptType = 'registration' | 'levy' | 'textBooks' | 'exerciseBooks' | 'furniture' | 'jersey' | 'crest';
+export type ReceiptType = 'registration' | 'levy' | 'textBooks' | 'exerciseBooks' | 'furniture' | 'jersey' | 'crest' | string;
 
 export interface ReceiptItem {
-  id: number;
+  id: string;
+  receipt_id?: string;
   receipt_type: ReceiptType;
   amount: number;
 }
 
 export interface Receipt {
-  id: number;
-  student_id: number;
-  payment_id?: number | null;
-  receipt_items: ReceiptItem[];
+  id: string;
+  student_id?: string;
+  payment_id?: string | null;
+  receipt_items?: ReceiptItem[];
+  receipt_type?: ReceiptType;
   amount: number;
-  issued_by?: number;
+  issued_by?: string;
   date_issued: string;
   venue?: string;
   logo_url?: string;
-  exam_date?: string;
-  class_id?: number;
-  registration_id: number;
-  fee_id?: number;
-  school_id?: number;
+  assessment_date?: string;
+  class_id?: string;
+  registration_id?: string;
+  fee_id?: string;
+  school_id?: string;
+  garrison_id?: string;
   student_name?: string;
   class_name?: string;
   issued_by_name?: string;
@@ -39,22 +42,24 @@ export interface ReceiptFilters {
   receipt_type?: string;
   date_from?: string;
   date_to?: string;
-  student_id?: number;
-  school_id?: number;
-  registration_id?: number;
-  class_id?: number;
+  student_id?: string;
+  school_id?: string;
+  garrison_id?: string;
+  registration_id?: string;
+  class_id?: string;
 }
 
 export interface CreateReceiptPayload {
-  student_id: number;
-  payment_id?: number;
-  fee_id: number;
-  receipt_type: string;
+  student_id?: string;
+  payment_id?: string;
+  fee_id?: string;
+  receipt_type: any; // backend expects array of objects or single type
   amount: number;
   date_issued?: string;
   venue?: string;
   logo_url?: string;
-  exam_date?: string;
-  class_id?: number;
-  school_id?: number;
+  assessment_date?: string;
+  class_id?: string;
+  school_id?: string;
+  garrison_id?: string;
 }

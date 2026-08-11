@@ -8,7 +8,7 @@ import { type ReceiptWithDetails } from '../types/fee';
  * @param receiptId The ID of the receipt to print
  * @param baseUrl The base URL of the API (optional, defaults to env variable)
  */
-export const openPrintableReceipt = (receiptId: number, baseUrl?: string): void => {
+export const openPrintableReceipt = (receiptId: string | number, baseUrl?: string): void => {
   const apiUrl = baseUrl || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
   const receiptUrl = `${apiUrl}/fees/receipts/${receiptId}/print`;
   
@@ -21,7 +21,7 @@ export const openPrintableReceipt = (receiptId: number, baseUrl?: string): void 
  * @param receiptId The ID of the receipt to print
  * @param baseUrl The base URL of the API (optional, defaults to env variable)
  */
-export const printReceipt = (receiptId: number, baseUrl?: string): void => {
+export const printReceipt = (receiptId: string | number, baseUrl?: string): void => {
   const apiUrl = baseUrl || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
   const receiptUrl = `${apiUrl}/fees/receipts/${receiptId}/print`;
   
@@ -55,8 +55,11 @@ export const printReceipt = (receiptId: number, baseUrl?: string): void => {
  * @param receiptId The ID of the receipt
  * @returns A formatted receipt number
  */
-export const formatReceiptNumber = (receiptId: number): string => {
-  return `R-${receiptId.toString().padStart(6, '0')}`;
+export const formatReceiptNumber = (receiptId: string | number): string => {
+  if (!receiptId) return 'R-000000';
+  return typeof receiptId === 'number'
+    ? `R-${receiptId.toString().padStart(6, '0')}`
+    : `R-${String(receiptId).slice(0, 8).toUpperCase()}`;
 };
 
 /**
@@ -74,14 +77,14 @@ export const formatReceiptDate = (date: string | Date): string => {
 };
 
 /**
- * Format an amount for receipt display
+ * Format receipt amount as currency
  * @param amount The amount to format
- * @returns A formatted amount string
+ * @returns Formatted currency string
  */
 export const formatReceiptAmount = (amount: number): string => {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('en-GH', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'GHS',
     minimumFractionDigits: 2
   }).format(amount);
 };
@@ -111,4 +114,3 @@ export default {
   formatReceiptAmount,
   formatReceiptForDisplay
 };
-

@@ -40,42 +40,22 @@ export default function ClassSettings() {
   const [classes, setClasses] = useState<Class[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<Class | null>(null);
-const [className, setClassName] = useState('');
-const [section, setSection] = useState('');
-const [capacity, setCapacity] = useState<number>(0);
-const [school, setSchool] = useState('');
-const [academicYear, setAcademicYear] = useState('');
+  const [className, setClassName] = useState('');
+  const [section, setSection] = useState('');
+  const [capacity, setCapacity] = useState<number>(0);
+  const [school, setSchool] = useState('');
+  const [academicYear, setAcademicYear] = useState('');
 
-  const handleAddClass = async (newClass: Omit<Class, 'id'>) => {
-  try {
-    const created = await classService.create({
-      name: newClass.name,
-      level: 1, // or get this from another input if applicable
-      school_id: newClass.school === 'primary' ? 1 : 2, // example mapping
-      slots: newClass.capacity,
-      capacity: newClass.capacity,
-      students_count: 0
-    });
-    setClasses(prev => [...prev, {
-      ...newClass,
-      id: created.id.toString(),
-    }]);
-    setIsDialogOpen(false);
-  } catch (error) {
-    console.error("Failed to create class", error);
-  }
-};
-
-useEffect(() => {
-  if (editingClass) {
-    setClassName(editingClass.name);
-    setSection(editingClass.section);
-    setCapacity(editingClass.capacity);
-    setSchool(editingClass.school);
-    setAcademicYear(editingClass.academicYear);
-    setIsDialogOpen(true);
-  }
-}, [editingClass]);
+  useEffect(() => {
+    if (editingClass) {
+      setClassName(editingClass.name);
+      setSection(editingClass.section);
+      setCapacity(editingClass.capacity);
+      setSchool(editingClass.school);
+      setAcademicYear(editingClass.academicYear);
+      setIsDialogOpen(true);
+    }
+  }, [editingClass]);
 
 
   return (
@@ -163,11 +143,11 @@ useEffect(() => {
 
     try {
       if (editingClass) {
-        const updated = await classService.update({
-          id: Number(editingClass.id),
+        await classService.update({
+          id: editingClass.id,
           name: payload.name,
           level: 1,
-          school_id: school === 'primary' ? 1 : 2,
+          school_id: school === 'primary' ? "1" : "2",
           slots: payload.capacity,
           capacity: payload.capacity,
           students_count: 0
@@ -184,7 +164,7 @@ useEffect(() => {
         const created = await classService.create({
           name: payload.name,
           level: 1,
-          school_id: school === 'primary' ? 1 : 2,
+          school_id: school === 'primary' ? "1" : "2",
           slots: payload.capacity,
           capacity: payload.capacity,
           students_count: 0
@@ -251,7 +231,7 @@ useEffect(() => {
   className="text-destructive"
   onClick={async () => {
     try {
-      await classService.delete(Number(cls.id));
+      await classService.delete(cls.id);
       setClasses(prev => prev.filter(c => c.id !== cls.id));
     } catch (err) {
       console.error("Failed to delete class", err);

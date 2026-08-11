@@ -43,7 +43,7 @@ import { getAllAcademicYear, type academicYear } from '@/services/academic_year'
 
 // Types
 import { type FeeType, type UpdateFeePayload, type FeeWithDetails } from '@/types/fee';
-import { type Category } from '@/types/exam';
+import { type Category } from '@/types/assessment';
 
 // Form schema with validation
 const feeFormSchema = z.object({
@@ -51,18 +51,18 @@ const feeFormSchema = z.object({
     .number({ required_error: "Amount is required" })
     .positive("Amount must be greater than zero"),
   category_id: z
-    .number({ required_error: "Category is required" }),
+    .string({ required_error: "Category is required" }),
   class_id: z
-    .number({ required_error: "Class is required" }),
+    .string({ required_error: "Class is required" }),
   fee_type: z
-    .enum(["registration", "admission", "tuition", "exam"] as const, {
+    .enum(["registration", "admission", "tuition", "assessment"] as const, {
       required_error: "Fee type is required",
     }),
   description: z
     .string()
     .optional(),
   academic_year_id: z
-    .number({ required_error: "Academic year is required" }),
+    .string({ required_error: "Academic year is required" }),
 });
 
 type FeeFormValues = z.infer<typeof feeFormSchema>;
@@ -85,18 +85,18 @@ export default function EditFeeDialog({ fee, open, onOpenChange, onSuccess }: Ed
   const [classes, setClasses] = useState<ClassData[]>([]);
   
   // Default values based on the fee being edited
-  const defaultValues: Partial<FeeFormValues> = {
+  const defaultValues: any = {
     amount: fee.amount,
-    category_id: fee.category_id,
-    class_id: fee.class_id ?? undefined,
-    fee_type: fee.fee_type as FeeType,
+    category_id: String(fee.category_id),
+    class_id: String(fee.class_id),
+    fee_type: fee.fee_type,
     description: fee.description ?? '',
-    academic_year_id: fee.academic_year_id ?? undefined,
+    academic_year_id: String(fee.academic_year_id),
   };
   
   // Form setup
-  const form = useForm<FeeFormValues>({
-    resolver: zodResolver(feeFormSchema),
+  const form = useForm<any>({
+    resolver: zodResolver(feeFormSchema) as any,
     defaultValues,
   });
   
@@ -112,11 +112,11 @@ export default function EditFeeDialog({ fee, open, onOpenChange, onSuccess }: Ed
     if (fee) {
       form.reset({
         amount: fee.amount,
-        category_id: fee.category_id,
-        class_id: fee.class_id ?? undefined,
+        category_id: String(fee.category_id),
+        class_id: fee.class_id ? String(fee.class_id) : undefined,
         fee_type: fee.fee_type as FeeType,
         description: fee.description ?? '',
-        academic_year_id: fee.academic_year_id ?? undefined,
+        academic_year_id: fee.academic_year_id ? String(fee.academic_year_id) : undefined,
       });
     }
   }, [fee, form]);
@@ -138,11 +138,11 @@ export default function EditFeeDialog({ fee, open, onOpenChange, onSuccess }: Ed
       
       // Set values if not already set
       if (!form.getValues('academic_year_id') && yearsData.length > 0) {
-        form.setValue('academic_year_id', fee.academic_year_id || yearsData[0].id);
+        form.setValue('academic_year_id', String(fee.academic_year_id || yearsData[0].id));
       }
       
       if (!form.getValues('class_id') && classesData.length > 0) {
-        form.setValue('class_id', fee.class_id || classesData[0].id);
+        form.setValue('class_id', String(fee.class_id || classesData[0].id));
       }
     } catch (error) {
       console.error('Error loading reference data:', error);
@@ -254,7 +254,7 @@ export default function EditFeeDialog({ fee, open, onOpenChange, onSuccess }: Ed
                       <SelectItem value="registration">Registration</SelectItem>
                       <SelectItem value="admission">Admission</SelectItem>
                       <SelectItem value="tuition">Tuition</SelectItem>
-                      <SelectItem value="exam">Exam</SelectItem>
+                      <SelectItem value="assessment">Assessment</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormDescription>
@@ -273,8 +273,8 @@ export default function EditFeeDialog({ fee, open, onOpenChange, onSuccess }: Ed
                 <FormItem>
                   <FormLabel>Category *</FormLabel>
                   <Select
-                    onValueChange={(value) => field.onChange(parseInt(value, 10))}
-                    defaultValue={field.value?.toString()}
+                    onValueChange={field.onChange}
+                    value={field.value?.toString()}
                     disabled={isSubmitting || isLoadingData || categories.length === 0}
                   >
                     <FormControl>
@@ -312,8 +312,8 @@ export default function EditFeeDialog({ fee, open, onOpenChange, onSuccess }: Ed
                 <FormItem>
                   <FormLabel>Class *</FormLabel>
                   <Select
-                    onValueChange={(value) => field.onChange(parseInt(value, 10))}
-                    defaultValue={field.value?.toString()}
+                    onValueChange={field.onChange}
+                    value={field.value?.toString()}
                     disabled={isSubmitting || isLoadingData || classes.length === 0}
                   >
                     <FormControl>
@@ -351,8 +351,8 @@ export default function EditFeeDialog({ fee, open, onOpenChange, onSuccess }: Ed
                 <FormItem>
                   <FormLabel>Academic Year *</FormLabel>
                   <Select
-                    onValueChange={(value) => field.onChange(parseInt(value, 10))}
-                    defaultValue={field.value?.toString()}
+                    onValueChange={field.onChange}
+                    value={field.value?.toString()}
                     disabled={isSubmitting || isLoadingData || academicYears.length === 0}
                   >
                     <FormControl>

@@ -4,18 +4,18 @@ import api from "@/lib/axios";
 const API_BASE_URL = "/registrations";
 
 export interface RegistrationData {
-  id?: number;
-  school_id?: number;
-  student_id?: number;
-  class_id?: number;
-  academic_year_id: number;
+  id?: string;
+  school_id?: string;
+  student_id?: string;
+  class_id?: string;
+  academic_year_id?: string;
   first_name: string;
   middle_name?: string;
   previous_school: string;
   academic_year: string;
   last_name: string;
   category: string;
-  category_id?: number;
+  category_id?: string;
   date_of_birth: string | null;
   class_applying_for: string;
   gender: "Male" | "Female" | "Other";
@@ -26,7 +26,7 @@ export interface RegistrationData {
   scores: number;
   payment_type?: "cash" | "momo" | "credit card";
   payment_status?: "unpaid" | "partial" | "paid";
-  status: "pending" | "approved" | "rejected";
+  status: "pending" | "approved" | "rejected" | "admitted";
   relationship: string;
   guardian_phone_number: string;
   registration_date?: string;
@@ -62,7 +62,7 @@ const registrationService = {
   },
   
 
-  async getById(id: number): Promise<RegistrationData> {
+  async getById(id: string): Promise<RegistrationData> {
     try {
       const response = await api.get<RegistrationData>(`${API_BASE_URL}/${id}`);
       return response.data;
@@ -71,16 +71,16 @@ const registrationService = {
     }
   },
 
-  async create(data: RegistrationCreateInput): Promise<number> {
+  async create(data: RegistrationCreateInput): Promise<string> {
     try {
-      const response = await api.post<{ id: number }>(`${API_BASE_URL}/create`, data);
+      const response = await api.post<{ id: string }>(`${API_BASE_URL}/create`, data);
       return response.data.id;
     } catch (error: any) {
       throw new Error(error.response?.data?.error || "Failed to create registration");
     }
   },
 
-  async update(id: number, data: RegistrationUpdateInput): Promise<RegistrationData> {
+  async update(id: string, data: RegistrationUpdateInput): Promise<RegistrationData> {
     try {
       const response = await api.put<RegistrationData>(`${API_BASE_URL}/${id}`, data);
       return response.data;
@@ -89,7 +89,7 @@ const registrationService = {
     }
   },
 
-  async remove(id: number): Promise<void> {
+  async remove(id: string): Promise<void> {
     try {
       await api.delete(`${API_BASE_URL}/${id}`);
     } catch (error: any) {
@@ -97,7 +97,7 @@ const registrationService = {
     }
   },
 
-  async updatePartial(id: number, data: RegistrationUpdateInput): Promise<RegistrationData> {
+  async updatePartial(id: string, data: RegistrationUpdateInput): Promise<RegistrationData> {
   try {
     const response = await api.patch<RegistrationData>(`${API_BASE_URL}/${id}`, data);
     return response.data;
@@ -112,7 +112,9 @@ const registrationService = {
       // Filter by date range if provided
       const filteredRegistrations = startDate && endDate 
         ? registrations.filter(reg => {
-            const date = new Date(reg.registration_date || '');
+            const dateStr = reg.registration_date || (reg as any).created_at || (reg as any).createdAt;
+            if (!dateStr) return true; // If no date info, include it in the "all" range
+            const date = new Date(dateStr);
             return date >= new Date(startDate) && date <= new Date(endDate);
           })
         : registrations;
@@ -120,15 +122,23 @@ const registrationService = {
       // Calculate totals
       const stats: RegistrationStats = {
         totalRegistered: filteredRegistrations.length,
-        totalPending: filteredRegistrations.filter(r => r.status === 'pending').length,
- totalAccepted: filteredRegistrations.filter(r => r.status === 'approved').length,
-        totalRejected: filteredRegistrations.filter(r => r.status === 'rejected').length,
+        totalPending: filteredRegistrations.filter(r => (r.status || '').toLowerCase() === 'pending').length,
+        totalAccepted: filteredRegistrations.filter(r => {
+          const s = (r.status || '').toLowerCase();
+          return s === 'approved' || s === 'admitted';
+        }).length,
+        totalRejected: filteredRegistrations.filter(r => (r.status || '').toLowerCase() === 'rejected').length,
         metrics: []
       };
 
       // Group by date and status for metrics
       const groupedByDate = filteredRegistrations.reduce((acc, reg) => {
-        const date = reg.registration_date?.split('T')[0] || '';
+        const dateStr = reg.registration_date || (reg as any).created_at || (reg as any).createdAt;
+        let date = 'Unknown';
+        if (dateStr) {
+          const d = new Date(dateStr);
+          date = !isNaN(d.getTime()) ? d.toISOString().split('T')[0] : 'Unknown';
+        }
         if (!acc[date]) {
           acc[date] = {
             pending: 0,
@@ -136,7 +146,16 @@ const registrationService = {
             rejected: 0
           };
         }
-        acc[date][reg.status]++;
+
+        const rawStatus = (reg.status as string || '').toLowerCase();
+
+        if (rawStatus === 'approved' || rawStatus === 'admitted') {
+          acc[date]['approved']++;
+        } else if (rawStatus === 'pending') {
+          acc[date]['pending']++;
+        } else if (rawStatus === 'rejected') {
+          acc[date]['rejected']++;
+        }
         return acc;
       }, {} as Record<string, Record<'pending' | 'approved' | 'rejected', number>>);
 

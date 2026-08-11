@@ -1,387 +1,168 @@
-/* eslint-disable no-console */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState, useEffect } from 'react';
+import React from 'react';
 import { 
-  BarChart2, 
-  CreditCard, 
+  CreditCard,
   DollarSign,
-  ArrowUp,
-  ArrowDown,
-  Calendar,
+  TrendingUp,
+  History,
+  Activity,
+  RefreshCw,
   Download,
-  AlertCircle,
-  RefreshCw
+  AlertCircle
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatsCard } from '@/components/ui/stats-card';
+import { motion } from 'framer-motion';
 
-// Import services
-import dashboardService, { type FinancialSummary, type CollectionProgress, type Transaction } from '@/services/dashboard';
-import financialReports, { type ExportFormat } from '@/services/financial-reports';
-
-type TrendDirection = 'up' | 'down' | 'neutral';
-
-interface FinancialStatCard {
-  title: string;
-  value: string;
-  change: string;
-  trend: TrendDirection;
-  icon: any;  // LucideIcon type
-  description: string;
-}
+import { useFinanceOverview } from '../hooks/useFinanceOverview';
+import financialReports from '@/services/financial-reports';
 
 export default function FeesOverview() {
-  // State for data
-  const [financialSummary, setFinancialSummary] = useState<FinancialSummary | null>(null);
-  const [collectionProgress, setCollectionProgress] = useState<CollectionProgress | null>(null);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  
-  // State for UI
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [exporting, setExporting] = useState<boolean>(false);
-  const [refreshing, setRefreshing] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState('overview');
+  const { summary, progress, transactions, loading, refreshing, refresh } = useFinanceOverview();
 
-  // Fetch data on component mount
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
-
-  // Function to fetch all dashboard data
-  const fetchDashboardData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      // Fetch financial overview data
-      const financialOverview = await dashboardService.getFinancialOverview();
-      
-      setFinancialSummary(financialOverview.summary);
-      setCollectionProgress(financialOverview.collectionProgress);
-      setTransactions(financialOverview.recentTransactions);
-      
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-      setError(error instanceof Error ? error.message : 'Failed to load dashboard data');
-      setLoading(false);
-    }
-  };
-
-  // Refresh data function
-  const refreshData = async () => {
-    try {
-      setRefreshing(true);
-      await fetchDashboardData();
-    } finally {
-      setRefreshing(false);
-    }
-  };
-
-  // Export report function
-  const exportReport = async (format: ExportFormat = 'pdf') => {
-    try {
-      setExporting(true);
-      await financialReports.downloadReport('income', {
-        period: 'monthly',
-        include_details: true
-      }, format);
-    } catch (error) {
-      console.error('Error exporting report:', error);
-      setError(error instanceof Error ? error.message : 'Failed to export report');
-    } finally {
-      setExporting(false);
-    }
-  };
-
-  // Format financial stats for display
-  const getFormattedStats = (): FinancialStatCard[] => {
-    if (!financialSummary) return [];
-    
-    return [
-      { 
-        title: 'Total Collections', 
-        value: financialReports.formatCurrency(financialSummary.totalCollections), 
-        change: `${financialSummary.totalCollectionsChange > 0 ? '+' : ''}${financialSummary.totalCollectionsChange.toFixed(1)}%`, 
-        trend: financialSummary.totalCollectionsChange > 0 ? 'up' : 'down',
-        icon: DollarSign,
-        description: 'Total fees collected this month'
-      },
-      { 
-        title: 'Pending Payments', 
-        value: financialReports.formatCurrency(financialSummary.pendingPayments), 
-        change: `${financialSummary.pendingPaymentsChange > 0 ? '+' : ''}${financialSummary.pendingPaymentsChange.toFixed(1)}%`, 
-        trend: financialSummary.pendingPaymentsChange > 0 ? 'up' : 'down',
-        icon: CreditCard,
-        description: 'Awaiting payment processing'
-      },
-      { 
-        title: 'Outstanding Balance', 
-        value: financialReports.formatCurrency(financialSummary.outstandingBalance), 
-        change: `${financialSummary.outstandingBalanceChange > 0 ? '+' : ''}${financialSummary.outstandingBalanceChange.toFixed(1)}%`, 
-        trend: financialSummary.outstandingBalanceChange < 0 ? 'up' : 'down', // For outstanding balance, negative change is good
-        icon: BarChart2,
-        description: 'Total unpaid fees'
-      },
-      { 
-        title: 'Overdue Payments', 
-        value: financialReports.formatCurrency(financialSummary.overduePayments), 
-        change: `${financialSummary.overduePaymentsChange > 0 ? '+' : ''}${financialSummary.overduePaymentsChange.toFixed(1)}%`, 
-        trend: financialSummary.overduePaymentsChange < 0 ? 'up' : 'down', // For overdue payments, negative change is good
-        icon: Calendar,
-        description: 'Past due payments'
-      }
-    ];
-  };
-
-  // Format transactions for display
-  const formattedTransactions = transactions.map(transaction => ({
-    id: transaction.id,
-    student: transaction.student_name,
-    amount: transaction.amount,
-    type: transaction.type,
-    date: new Date(transaction.date).toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
-    })
-  }));
-
-  if (error) {
+  if (loading) {
     return (
-      <Alert variant="destructive" className="mb-6">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Error</AlertTitle>
-        <AlertDescription>{error}</AlertDescription>
-        <Button variant="outline" size="sm" className="mt-2" onClick={refreshData}>
-          Try Again
-        </Button>
-      </Alert>
+      <div className="space-y-10">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-32 rounded-3xl" />)}
+        </div>
+        <Skeleton className="h-[400px] rounded-[2rem]" />
+      </div>
     );
   }
 
+  const metrics = [
+    {
+        title: 'Total Collections',
+        value: financialReports.formatCurrency(summary?.totalCollections || 0),
+        trend: { value: summary?.totalCollectionsChange || 0, label: "this month" },
+        icon: DollarSign
+    },
+    {
+        title: 'Pending Payments',
+        value: financialReports.formatCurrency(summary?.pendingPayments || 0),
+        trend: { value: summary?.pendingPaymentsChange || 0, label: "in queue" },
+        icon: CreditCard
+    },
+    {
+        title: 'Outstanding Balance',
+        value: financialReports.formatCurrency(summary?.outstandingBalance || 0),
+        trend: { value: summary?.outstandingBalanceChange || 0, label: "unpaid" },
+        icon: Activity
+    },
+    {
+        title: 'Overdue Payments',
+        value: financialReports.formatCurrency(summary?.overduePayments || 0),
+        trend: { value: summary?.overduePaymentsChange || 0, label: "critical" },
+        icon: AlertCircle
+    }
+  ];
+
   return (
-    <div className="space-y-6">
-      {/* Header with Actions */}
+    <div className="space-y-10 animate-in fade-in duration-500">
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold tracking-tight">Financial Overview</h2>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={refreshData} disabled={loading || refreshing}>
-            <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-            {refreshing ? 'Refreshing...' : 'Refresh'}
-          </Button>
-          <Button 
-            variant="outline" 
-            onClick={() => exportReport('pdf')} 
-            disabled={loading || exporting}
-          >
-            <Download className="mr-2 h-4 w-4" />
-            {exporting ? 'Exporting...' : 'Export Report'}
-          </Button>
+        <div className="space-y-1">
+            <h3 className="text-xl font-black tracking-tight uppercase">Institutional Treasury</h3>
+            <p className="text-[10px] font-black uppercase tracking-widest text-primary/60 opacity-60">Real-time revenue monitoring</p>
         </div>
+        <Button variant="outline" className="h-10 rounded-xl border-2 font-bold text-xs" onClick={refresh}>
+            <RefreshCw className={refreshing ? "mr-2 h-4 w-4 animate-spin" : "mr-2 h-4 w-4"} /> Sync
+        </Button>
       </div>
 
-      {/* Stats Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {loading ? (
-          // Loading skeletons for stats cards
-          Array(4).fill(0).map((_, index) => (
-            <Card key={index}>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <Skeleton className="h-5 w-24" />
-                <Skeleton className="h-4 w-4 rounded-full" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-8 w-24 mb-2" />
-                <div className="flex items-center pt-1">
-                  <Skeleton className="h-4 w-4 rounded-full" />
-                  <Skeleton className="h-3 w-10 ml-1" />
-                  <Skeleton className="h-3 w-20 ml-2" />
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        ) : (
-          // Actual stats cards
-          getFormattedStats().map((stat, index) => (
-            <Card key={index}>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-                <stat.icon className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
-                <div className="flex items-center pt-1">
-                  {stat.trend === 'up' ? (
-                    <ArrowUp className="h-4 w-4 text-green-500" />
-                  ) : (
-                    <ArrowDown className="h-4 w-4 text-red-500" />
-                  )}
-                  <span className={`text-xs ${
-                    stat.trend === 'up' ? 'text-green-500' : 'text-red-500'
-                  } ml-1`}>
-                    {stat.change}
-                  </span>
-                  <span className="text-xs text-muted-foreground ml-2">
-                    {stat.description}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        )}
+        {metrics.map((m, idx) => (
+            <StatsCard key={idx} {...m} className="shadow-xl shadow-black/5 border-none rounded-3xl p-8" />
+        ))}
       </div>
 
-      {/* Collection Progress */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Fee Collection Progress</CardTitle>
-          <CardDescription>
-            {collectionProgress ? 
-              `Collection period: ${collectionProgress.period}` : 
-              'Monthly collection targets and achievements'
-            }
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-8">
-          {loading ? (
-            // Loading skeleton for collection progress
-            <div className="space-y-4">
-              <div>
-                <div className="flex items-center justify-between">
-                  <Skeleton className="h-5 w-24" />
-                  <Skeleton className="h-5 w-10" />
-                </div>
-                <Skeleton className="h-2 w-full mt-2" />
-              </div>
-              <div className="grid grid-cols-3 gap-4 text-center text-sm">
-                <div>
-                  <Skeleton className="h-5 w-20 mx-auto" />
-                  <Skeleton className="h-6 w-24 mx-auto mt-1" />
-                </div>
-                <div>
-                  <Skeleton className="h-5 w-20 mx-auto" />
-                  <Skeleton className="h-6 w-24 mx-auto mt-1" />
-                </div>
-                <div>
-                  <Skeleton className="h-5 w-20 mx-auto" />
-                  <Skeleton className="h-6 w-24 mx-auto mt-1" />
-                </div>
-              </div>
-            </div>
-          ) : (
-            // Actual collection progress
-            collectionProgress && (
-              <div className="space-y-4">
-                <div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Current Collection Progress</span>
-                    <span className="text-sm text-muted-foreground">
-                      {`${collectionProgress.percentage.toFixed(1)}%`}
-                    </span>
-                  </div>
-                  <Progress value={collectionProgress.percentage} className="h-2 mt-2" />
-                </div>
-                <div className="grid grid-cols-3 gap-4 text-center text-sm">
-                  <div>
-                    <div className="text-muted-foreground">Target</div>
-                    <div className="font-medium mt-1">
-                      {financialReports.formatCurrency(collectionProgress.target)}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-muted-foreground">Collected</div>
-                    <div className="font-medium mt-1">
-                      {financialReports.formatCurrency(collectionProgress.collected)}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-muted-foreground">Remaining</div>
-                    <div className="font-medium mt-1">
-                      {financialReports.formatCurrency(collectionProgress.remaining)}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Recent Transactions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Transactions</CardTitle>
-          <CardDescription>Latest financial activities</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            // Loading skeleton for transactions
-            <div className="space-y-4">
-              {Array(3).fill(0).map((_, index) => (
-                <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div>
-                    <Skeleton className="h-5 w-32 mb-1" />
-                    <Skeleton className="h-4 w-20" />
-                  </div>
-                  <div className="text-right">
-                    <Skeleton className="h-5 w-20 mb-1 ml-auto" />
-                    <Skeleton className="h-5 w-16 ml-auto" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <ScrollArea className="h-[300px]">
-              {formattedTransactions.length > 0 ? (
-                <div className="space-y-4">
-                  {formattedTransactions.map((transaction) => (
-                    <div key={transaction.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div>
-                        <p className="font-medium">{transaction.student}</p>
-                        <p className="text-sm text-muted-foreground">{transaction.id}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium">{financialReports.formatCurrency(transaction.amount)}</p>
-                        <Badge variant={
-                          transaction.type === 'payment' ? 'default' :
-                          transaction.type === 'pending' ? 'secondary' : 'destructive'
-                        }>
-                          {transaction.type}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Collection Progress */}
+          <Card className="lg:col-span-7 border-none shadow-2xl shadow-black/5 rounded-[2rem] overflow-hidden">
+                <CardHeader className="bg-primary/5 px-8 py-8 border-b border-primary/10">
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                            <CardTitle className="text-lg font-black uppercase tracking-wider">Revenue Milestone</CardTitle>
+                            <CardDescription className="text-[10px] font-black uppercase tracking-widest opacity-60">Cycle: {progress?.period || 'Current Term'}</CardDescription>
+                        </div>
+                        <Badge className="bg-primary text-white border-none font-black text-xl px-4 py-2 rounded-2xl shadow-lg shadow-primary/20">
+                            {progress?.percentage.toFixed(0)}%
                         </Badge>
-                      </div>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-8">
-                  <p className="text-muted-foreground mb-2">No recent transactions found</p>
-                  <Button variant="outline" size="sm" onClick={refreshData}>
-                    Refresh
-                  </Button>
-                </div>
-              )}
-            </ScrollArea>
-          )}
-        </CardContent>
-        <CardFooter className="flex justify-between">
-          <div className="text-sm text-muted-foreground">
-            Showing the {transactions.length} most recent transactions
-          </div>
-          <Button variant="link" size="sm">
-            View All
-          </Button>
-        </CardFooter>
-      </Card>
+                </CardHeader>
+                <CardContent className="p-8 sm:p-12 space-y-12">
+                    <div className="space-y-6">
+                        <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/80">
+                            <span>Achievement Progress</span>
+                            <span>Target: {financialReports.formatCurrency(progress?.target || 0)}</span>
+                        </div>
+                        <div className="h-4 w-full bg-muted rounded-full overflow-hidden">
+                            <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${progress?.percentage}%` }}
+                                transition={{ duration: 1 }}
+                                className="h-full bg-primary"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-8">
+                        <div className="p-8 rounded-[2rem] bg-emerald-500/5 border border-emerald-500/10 space-y-2">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600/60">Collected Funds</p>
+                            <p className="text-2xl font-black tracking-tighter text-emerald-600">{financialReports.formatCurrency(progress?.collected || 0)}</p>
+                        </div>
+                        <div className="p-8 rounded-[2rem] bg-amber-500/5 border border-amber-500/10 space-y-2">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-amber-600/60">Remaining Dues</p>
+                            <p className="text-2xl font-black tracking-tighter text-amber-600">{financialReports.formatCurrency(progress?.remaining || 0)}</p>
+                        </div>
+                    </div>
+                </CardContent>
+          </Card>
+
+          {/* Recent Activity */}
+          <Card className="lg:col-span-5 border-none shadow-2xl shadow-black/5 rounded-[2rem] overflow-hidden">
+              <CardHeader className="bg-muted/20 px-8 py-8 border-b">
+                  <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                          <CardTitle className="text-lg font-black uppercase tracking-wider">Treasury Feed</CardTitle>
+                          <CardDescription className="text-[10px] font-black uppercase tracking-widest opacity-60">Real-time ledger updates</CardDescription>
+                      </div>
+                      <div className="size-10 rounded-xl bg-muted flex items-center justify-center">
+                          <Activity className="size-5 text-muted-foreground" />
+                      </div>
+                  </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                  <ScrollArea className="h-[400px]">
+                      <div className="divide-y divide-muted-foreground/5">
+                          {transactions.map((tx) => (
+                              <div key={tx.id} className="p-6 hover:bg-muted/30 transition-colors flex items-center justify-between gap-4">
+                                  <div className="flex items-center gap-4 min-w-0">
+                                      <div className="size-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">
+                                          <TrendingUp className="size-5" />
+                                      </div>
+                                      <div className="min-w-0">
+                                          <p className="font-black text-sm tracking-tight truncate uppercase">{tx.student_name}</p>
+                                          <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">ID: {String(tx.id).substring(0,8)}</p>
+                                      </div>
+                                  </div>
+                                  <div className="text-right shrink-0">
+                                      <p className="font-black text-sm text-primary">{financialReports.formatCurrency(tx.amount)}</p>
+                                      <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">{new Date(tx.date).toLocaleDateString()}</p>
+                                  </div>
+                              </div>
+                          ))}
+                      </div>
+                  </ScrollArea>
+              </CardContent>
+          </Card>
+      </div>
     </div>
   );
 }

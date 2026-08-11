@@ -35,7 +35,7 @@ const categoryFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   code: z.string().min(2, "Code must be at least 2 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
-  fees: z.number().min(0, "Fees cannot be negative"),
+  fees: z.coerce.number().min(0, "Fees cannot be negative"),
   status: z.enum(['active', 'inactive']) // Use enum for status
 
 });
@@ -94,7 +94,7 @@ export default function CategorySettings() {
         };
         
         if (editingCategory) {
-          await updateCategory(Number(editingCategory.id), apiData);
+          await updateCategory(editingCategory.id, apiData);
           toast({
             title: "Success",
             description: "Category updated successfully"

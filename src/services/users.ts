@@ -3,13 +3,13 @@
 import api from "@/lib/axios";
 
 export interface User {
-  id: number;
+  id: string;
   full_name: string;
   username: string;
   email: string; // Added email field
   phone_number?: string;
-  role_id: number;
-  school_id?: number | null;
+  role_id: string;
+  school_id?: string | null;
   status?: 'active' | 'inactive';
   created_at?: string;
   updated_at?: string;
@@ -21,7 +21,7 @@ export interface UpdateUserPayload {
   username?: string;
   email?: string; // Added email field
   password?: string;
-  role_id?: number;
+  role_id?: string;
   status?: 'active' | 'inactive';
 }
 
@@ -29,24 +29,26 @@ export interface CreateUserDTO {
   full_name: string;
   username: string;
   password: string;
-  role_id: number;
-  school_id?: number | null;
+  role_id: string;
+  school_id?: string | null;
 }
 
 export const getUserById = async (userId: string): Promise<User> => {
   try {
     const response = await api.get(`/users/${userId}`);
-    if (!response.data || !response.data.user) {
+    // If interceptor unwraps data.data, then response.data is the data object
+    if (!response.data) {
       throw new Error('Invalid response format');
     }
-    return response.data.user;
+    // Check if user is nested or direct
+    return response.data.user || response.data;
   } catch (error: any) {
     console.error("Error fetching user:", error);
     throw new Error(error.response?.data?.error || "Failed to fetch user");
   }
 };
 
-export const updateUser = async (userId: number, payload: UpdateUserPayload): Promise<User> => {
+export const updateUser = async (userId: string, payload: UpdateUserPayload): Promise<User> => {
   try {
     const response = await api.put(`/users/${userId}`, payload);
     return response.data;
@@ -72,7 +74,7 @@ export const getAllUsers = async (): Promise<User[]> => {
   }
 };
 
-export const deleteUser = async (userId: number): Promise<void> => {
+export const deleteUser = async (userId: string): Promise<void> => {
   try {
     await api.delete(`/users/${userId}`);
   } catch (error: any) {

@@ -2,12 +2,12 @@
 import api from '@/lib/axios';
 
 export interface Category {
-  id: number;
+  id: string;
   name: string;
   code: string;
   description: string;
   amount: number;
-  school_id: number;
+  school_id: string;
   status: 'active' | 'inactive';
   created_at?: string;
   updated_at?: string;
@@ -19,6 +19,7 @@ export interface CreateCategoryDTO {
   description: string;
   amount: number;
   status?: 'active' | 'inactive';
+  school_id?: string;
 }
 
 export const getAllCategories = async (): Promise<Category[]> => {
@@ -39,7 +40,7 @@ export const createCategory = async (data: CreateCategoryDTO): Promise<Category>
   }
 };
 
-export const updateCategory = async (id: number, data: Partial<CreateCategoryDTO>): Promise<Category> => {
+export const updateCategory = async (id: string, data: Partial<CreateCategoryDTO>): Promise<Category> => {
   try {
     const response = await api.put(`/categories/${id}`, data);
     return response.data;
@@ -48,7 +49,7 @@ export const updateCategory = async (id: number, data: Partial<CreateCategoryDTO
   }
 };
 
-export const deleteCategory = async (id: number): Promise<void> => {
+export const deleteCategory = async (id: string): Promise<void> => {
   try {
     await api.delete(`/categories/${id}`);
   } catch (error: any) {

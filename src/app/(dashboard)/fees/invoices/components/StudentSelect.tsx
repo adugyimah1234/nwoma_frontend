@@ -30,7 +30,7 @@ export default function StudentSelect({ value, onChange }: Props) {
     registrationService.getAll().then(setStudents).catch(console.error);
   }, []);
 
-  const selectedStudent = students.find((s) => s.id === value);
+  const selectedStudent = students.find((s) => String(s.id) === String(value));
 
   return (
     <div>
@@ -68,7 +68,7 @@ export default function StudentSelect({ value, onChange }: Props) {
                   <Check
                     className={cn(
                       "mr-2 h-4 w-4",
-                      student.id === selectedStudent?.id
+                      String(student.id) === String(selectedStudent?.id)
                         ? "opacity-100"
                         : "opacity-0"
                     )}

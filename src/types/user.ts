@@ -45,7 +45,7 @@ interface RegisterPayload {
   password: string;
   username: string;
   role: string;
-  school_id: number;
+  school_id: string;
 }
 
 /**

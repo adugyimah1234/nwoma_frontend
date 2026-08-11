@@ -1,25 +1,26 @@
-// app/(dashboard)/layout.tsx
-import { SideNav, TopNav } from "@/components/nav";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/layout/app-sidebar";
+import { Header } from "@/components/layout/header";
 import { DashboardProvider } from "@/contexts/DashboardContext";
-import { Toaster } from "sonner";
+// import { Toaster as SonnerToaster } from "sonner";
+// import { Toaster as RadixToaster } from "@/components/ui/toaster";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return (<>
-      <DashboardProvider>
-<TopNav title="3 GARRISON EDUCATION CENTRE" />
-    <div className="flex h-screen"> {/* Ensure a flex container for sidebar and main */}
-      <SideNav />
-        
-      <main className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-950 p-8">
-        {children} {/* The content from (dashboard)/page.tsx will render here */}
-      </main>
-      <Toaster richColors />
-    </div>
-      </DashboardProvider>
-  </>
+  return (
+    <DashboardProvider>
+      <SidebarProvider>
+        <AppSidebar />
+        <SidebarInset>
+          <Header fixed />
+          <main className="flex-1 overflow-y-auto">
+            {children}
+          </main>
+        </SidebarInset>
+      </SidebarProvider>
+    </DashboardProvider>
   );
 }

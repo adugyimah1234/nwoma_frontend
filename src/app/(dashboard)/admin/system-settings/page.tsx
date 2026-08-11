@@ -1,93 +1,79 @@
 'use client';
 
+import { PageHeader } from '@/components/layout/page-header';
 import { useState } from 'react';
-import { 
-  School, 
-  Calendar, 
-  Users, 
-  Tag, 
-  UserCog,
-  KeyRound
+import {
+  Settings,
+  Calendar,
+  Lock,
+  Wrench,
+  MessageSquare
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import SchoolSettings from './components/school-settings';
 import AcademicYearSettings from './components/academic-year-settings';
-// import CategorySettings from './components/category-settings';
-import ProfileSettings from './components/profile-settings';
+import GeneralSettings from './components/general-settings';
 import SecuritySettings from './components/security-settings';
-import AdminSchoolsPage from '../classes/page';
-import CategoryManagement from '../categories/page';
-import ExamManagement from '../exam-management/page';
-import RolesPage from '../roles/page';
+import SubjectSettings from './components/subject-settings';
+import RemarksSettings from './components/remarks-settings';
 
 export default function SystemSettings() {
-  const [activeTab, setActiveTab] = useState('schools');
+  const [activeTab, setActiveTab] = useState('general');
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">System Settings</h2>
-        <p className="text-muted-foreground">
-          Manage your system configuration and preferences
-        </p>
+    <div className="flex flex-1 flex-col gap-8 p-4 md:p-8 max-w-[1600px] mx-auto w-full pb-24">
+        <PageHeader
+          title="System Governance & Node Configuration"
+          description="Configure global application parameters, academic cycles, and security protocols for the garrison network."
+          breadcrumbs={[
+            { title: 'Home', href: '/' },
+            { title: 'Admin', href: '/admin' },
+            { title: 'Settings' }
+          ]}
+        />
+
+        <div className="space-y-8">
+          <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="flex flex-col md:flex-row gap-8">
+            <TabsList className="flex flex-col h-auto bg-transparent border-r rounded-none w-full md:w-64 space-y-1 p-0 items-start">
+              <TabsTrigger value="general" className="w-full justify-start gap-3 px-4 py-3 data-[state=active]:bg-primary/10 data-[state=active]:text-primary border-none rounded-r-none rounded-l-lg transition-all text-sm font-semibold uppercase tracking-widest text-[10px]">
+                <Wrench className="size-4" /> General Node
+              </TabsTrigger>
+              <TabsTrigger value="academic-years" className="w-full justify-start gap-3 px-4 py-3 data-[state=active]:bg-primary/10 data-[state=active]:text-primary border-none rounded-r-none transition-all text-sm font-semibold uppercase tracking-widest text-[10px]">
+                <Calendar className="size-4" /> Academic Cycles
+              </TabsTrigger>
+              <TabsTrigger value="curriculum" className="w-full justify-start gap-3 px-4 py-3 data-[state=active]:bg-primary/10 data-[state=active]:text-primary border-none rounded-r-none transition-all text-sm font-semibold uppercase tracking-widest text-[10px]">
+                <Settings className="size-4" /> Curriculum Standard
+              </TabsTrigger>
+              <TabsTrigger value="remarks" className="w-full justify-start gap-3 px-4 py-3 data-[state=active]:bg-primary/10 data-[state=active]:text-primary border-none rounded-r-none transition-all text-sm font-semibold uppercase tracking-widest text-[10px]">
+                <MessageSquare className="size-4" /> Remarks Repository
+              </TabsTrigger>
+              <TabsTrigger value="security" className="w-full justify-start gap-3 px-4 py-3 data-[state=active]:bg-primary/10 data-[state=active]:text-primary border-none rounded-r-none transition-all text-sm font-semibold uppercase tracking-widest text-[10px]">
+                <Lock className="size-4" /> Security Node
+              </TabsTrigger>
+            </TabsList>
+
+            <div className="flex-1">
+              <TabsContent value="general" className="mt-0 focus-visible:outline-none animate-in fade-in slide-in-from-bottom-2">
+                <GeneralSettings />
+              </TabsContent>
+
+              <TabsContent value="academic-years" className="mt-0 focus-visible:outline-none animate-in fade-in slide-in-from-bottom-2">
+                <AcademicYearSettings />
+              </TabsContent>
+
+              <TabsContent value="curriculum" className="mt-0 focus-visible:outline-none animate-in fade-in slide-in-from-bottom-2">
+                <SubjectSettings />
+              </TabsContent>
+
+              <TabsContent value="remarks" className="mt-0 focus-visible:outline-none animate-in fade-in slide-in-from-bottom-2">
+                <RemarksSettings />
+              </TabsContent>
+
+              <TabsContent value="security" className="mt-0 focus-visible:outline-none animate-in fade-in slide-in-from-bottom-2">
+                <SecuritySettings />
+              </TabsContent>
+            </div>
+          </Tabs>
+        </div>
       </div>
-
-      <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid grid-cols-3 lg:grid-cols-6 gap-4">
-          <TabsTrigger value="classes" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Classes
-          </TabsTrigger>
-          <TabsTrigger value="academic-years" className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            Academic Years
-          </TabsTrigger>
-
-          <TabsTrigger value="categories" className="flex items-center gap-2">
-            <Tag className="h-4 w-4" />
-            Categories
-          </TabsTrigger>
-
-          <TabsTrigger value="exams" className="flex items-center gap-2">
-            <School className="h-4 w-4" />
-          Exams
-          </TabsTrigger>
-          <TabsTrigger value="security" className="flex items-center gap-2">
-            <KeyRound className="h-4 w-4" />
-            Security
-          </TabsTrigger>
-   
-          <TabsTrigger value="roles">
-            <Users className="h-4 w-4" />
-          Roles
-          </TabsTrigger>
-
-        </TabsList>
-        <TabsContent value="schools">
-          <SchoolSettings />
-        </TabsContent>
-
-        <TabsContent value="academic-years">
-          <AcademicYearSettings />
-        </TabsContent>
-
-        <TabsContent value="exams">
-          <ExamManagement/>
-        </TabsContent>
-
-        
-                <TabsContent value="roles">
-                  <RolesPage />
-                </TabsContent>
-                
-        <TabsContent value="classes">
-          <AdminSchoolsPage />
-        </TabsContent>
-
-        <TabsContent value="security">
-          <SecuritySettings />
-        </TabsContent>
-      </Tabs>
-    </div>
   );
 }

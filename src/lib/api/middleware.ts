@@ -397,7 +397,7 @@ export function calculateLoginDelay(attempts: number): number {
  * Middleware composition utility
  * Combines multiple middleware functions into a single handler
  */
-export const withMiddleware = (handler: (req: NextRequest, context: any) => Promise<NextResponse>) => {
+export const withMiddleware = (handler: (req: NextRequest, context: any) => Promise<any>) => {
   return async (req: NextRequest, context: any = {}) => {
     try {
       // Add request logging
@@ -408,13 +408,13 @@ export const withMiddleware = (handler: (req: NextRequest, context: any) => Prom
       const enrichedContext = { ...context, ...logContext };
       
       // Execute the handler with the enriched context
-      const response = await withErrorHandling(() => handler(req, enrichedContext));
+      const response = await withErrorHandling(() => handler(req, enrichedContext)) as any;
       
       // Add security headers to the response
-      return addSecurityHeaders(response);
+      return addSecurityHeaders(response) as any;
     } catch (error) {
       // Handle any unhandled errors
-      return errorResponse(error);
+      return errorResponse(error) as any;
     }
   };
 };

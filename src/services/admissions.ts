@@ -1,7 +1,7 @@
 import api from "@/lib/axios";
 
 export interface School {
-  id: number;
+  id: string | number;
   name: string;
   maxCapacity: number;
   currentCapacity: number;
@@ -9,19 +9,19 @@ export interface School {
 }
 
 export interface SchoolClass {
-  id: number;
+  id: string | number;
   name: string;
   maxStudents: number;
   currentStudents: number;
 }
 
 export interface Student {
-  id: number;
+  id: string | number;
   name: string;
-  examScore: number;
+  assessmentScore: number;
   status: 'pending' | 'assigned' | 'enrolled';
-  schoolId?: number;
-  classId?: number;
+  schoolId?: string | number;
+  classId?: string | number;
   admissionDate?: string;
   contactInfo: {
     email: string;
@@ -39,7 +39,7 @@ export const getSchools = async () => {
   return response.data;
 };
 
-export const assignSchool = async (studentId: number, schoolId: number, classId: number) => {
+export const assignSchool = async (studentId: string | number, schoolId: string | number, classId: string | number) => {
   const response = await api.post(`/admissions/assign`, {
     studentId,
     schoolId,
@@ -51,4 +51,15 @@ export const assignSchool = async (studentId: number, schoolId: number, classId:
 export const getEnrolledStudents = async () => {
   const response = await api.get('/admissions/enrolled');
   return response.data;
+};
+
+export interface BulkAdmitOptions {
+    registration_ids: string[];
+    verify_payment?: boolean;
+    generate_initial_fees?: boolean;
+}
+
+export const bulkAdmit = async (options: BulkAdmitOptions) => {
+    const response = await api.post('/admissions/bulk', options);
+    return response.data;
 };

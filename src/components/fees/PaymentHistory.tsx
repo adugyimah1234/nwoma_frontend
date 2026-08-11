@@ -77,15 +77,15 @@ import { getStudents } from '@/services/students';
 
 // Student type
 interface Student {
-  id: number;
+  id: string | number;
   name: string;
   admission_number?: string;
 }
 
 // Component props
 interface PaymentHistoryProps {
-  studentId?: number; // Optional - if provided, only shows payments for this student
-  schoolId?: number;
+  studentId?: string | number; // UUID strings or numbers
+  schoolId?: string | number;
   showFilters?: boolean;
   limit?: number;
 }
@@ -106,7 +106,7 @@ export default function PaymentHistory({
 
   // Filter state
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedStudent, setSelectedStudent] = useState<string>(studentId ? studentId.toString() : '');
+  const [selectedStudent, setSelectedStudent] = useState<string>(studentId ? String(studentId) : '');
   const [paymentMethod, setPaymentMethod] = useState<string>('');
   const [paymentStatus, setPaymentStatus] = useState<string>('');
   const [dateFrom, setDateFrom] = useState(format(subDays(new Date(), 30), 'yyyy-MM-dd')); // Last 30 days
@@ -115,7 +115,7 @@ export default function PaymentHistory({
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [pageSize, setPageSize] = useState(limit || 10);
+  const pageSize = limit || 10;
   
   // UI state
   const [loading, setLoading] = useState(true);
@@ -148,9 +148,9 @@ export default function PaymentHistory({
       
       // Add optional filters
       if (studentId) {
-        params.student_id = studentId;
+        params.student_id = String(studentId);
       } else if (selectedStudent) {
-        params.student_id = parseInt(selectedStudent, 10);
+        params.student_id = selectedStudent;
       }
       
       if (paymentMethod) {
@@ -162,14 +162,14 @@ export default function PaymentHistory({
       }
       
       if (schoolId) {
-        params.school_id = schoolId;
+        params.school_id = String(schoolId);
       }
 
       let results: PaymentWithDetails[];
       
       // Get payments - either for a specific student or all payments
       if (studentId || selectedStudent) {
-        const studentIdToUse = studentId || parseInt(selectedStudent, 10);
+        const studentIdToUse = (studentId || selectedStudent) as string;
         results = await getStudentPaymentHistory(studentIdToUse);
       } else {
         results = await getPayments(params);
@@ -207,11 +207,11 @@ export default function PaymentHistory({
   // Load students for filter dropdown
   const loadStudents = async () => {
     try {
-      const studentsData = await getStudents({ school_id: schoolId });
-      const formattedStudents = studentsData.map(student => ({
-        id: student.id,
-        name: `${student.first_name} ${student.middle_name || ''} ${student.last_name}`,
-        admission_number: student.admission_number
+      const studentsData = await getStudents({ school_id: String(schoolId) });
+      const formattedStudents = (studentsData || []).map((student: any) => ({
+        id: String(student.id),
+        name: `${student.first_name || ''} ${student.middle_name || ''} ${student.last_name || ''}`.trim(),
+        admission_number: student.admission_number || student.admission_no || ''
       }));
       setStudents(formattedStudents);
     } catch (error) {
@@ -242,7 +242,7 @@ export default function PaymentHistory({
     try {
       if (payment.receipt_id) {
         // Get the HTML representation of the receipt for printing
-        const html = await getPrintableReceipt(payment.receipt_id);
+        const html = await getPrintableReceipt(String(payment.receipt_id));
         setReceiptHtml(html);
       } else {
         // No receipt exists, show a message
@@ -257,9 +257,9 @@ export default function PaymentHistory({
   };
 
   // Generate receipt for a payment that doesn't have one
-  const createReceiptForPayment = async (paymentId: number) => {
+  const createReceiptForPayment = async (paymentId: string | number) => {
     try {
-      await generateReceipt(paymentId);
+      await generateReceipt(String(paymentId));
       toast.success('Receipt generated successfully');
       // Reload payment data
       loadPayments();
@@ -271,13 +271,10 @@ export default function PaymentHistory({
 
   // Print the currently viewed receipt
   const printReceipt = () => {
-    // Create an iframe to print the receipt without affecting the current page
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
     
-    iframe.contentDocument?.open();
-    iframe.contentDocument?.write(`
+    printWindow.document.write(`
       <!DOCTYPE html>
       <html>
         <head>
@@ -298,12 +295,9 @@ export default function PaymentHistory({
         </body>
       </html>
     `);
-    iframe.contentDocument?.close();
-    
-    // Print and remove the iframe
-    iframe.contentWindow?.focus();
-    iframe.contentWindow?.print();
-    document.body.removeChild(iframe);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
   };
 
   // Export payment history to CSV
@@ -317,9 +311,9 @@ export default function PaymentHistory({
       };
       
       if (studentId) {
-        params.student_id = studentId;
+        params.student_id = String(studentId);
       } else if (selectedStudent) {
-        params.student_id = parseInt(selectedStudent, 10);
+        params.student_id = selectedStudent;
       }
       
       if (paymentMethod) {
@@ -331,13 +325,13 @@ export default function PaymentHistory({
       }
       
       if (schoolId) {
-        params.school_id = schoolId;
+        params.school_id = String(schoolId);
       }
 
       // Get all payments for export, not just current page
       let allPayments: PaymentWithDetails[];
       if (studentId || selectedStudent) {
-        const studentIdToUse = studentId || parseInt(selectedStudent, 10);
+        const studentIdToUse = String(studentId || selectedStudent);
         allPayments = await getStudentPaymentHistory(studentIdToUse);
       } else {
         allPayments = await getPayments(params);
@@ -419,7 +413,7 @@ export default function PaymentHistory({
 
   // Format payment method for display
   const formatPaymentMethod = (method: PaymentMethodType | string) => {
-    return method.split('_').map(word => 
+    return (method || '').split('_').map(word =>
       word.charAt(0).toUpperCase() + word.slice(1)
     ).join(' ');
   };
@@ -512,7 +506,7 @@ export default function PaymentHistory({
                     <SelectContent>
                       <SelectItem value="">All Students</SelectItem>
                       {students.map(student => (
-                        <SelectItem key={student.id} value={student.id.toString()}>
+                        <SelectItem key={String(student.id)} value={String(student.id)}>
                           {student.name} {student.admission_number ? `(${student.admission_number})` : ''}
                         </SelectItem>
                       ))}
@@ -636,20 +630,20 @@ export default function PaymentHistory({
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={studentId ? 7 : 8} className="h-24 text-center">
+                  <TableCell colSpan={studentId ? 8 : 9} className="h-24 text-center">
                     Loading payment data...
                   </TableCell>
                 </TableRow>
               ) : payments.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={studentId ? 7 : 8} className="h-24 text-center">
+                  <TableCell colSpan={studentId ? 8 : 9} className="h-24 text-center">
                     No payment records found
                   </TableCell>
                 </TableRow>
               ) : (
                 payments.map((payment) => (
                   <TableRow key={payment.id}>
-                    <TableCell>{payment.id}</TableCell>
+                    <TableCell className="text-[10px] font-mono opacity-60 uppercase">{String(payment.id).substring(0, 8)}</TableCell>
                     <TableCell>{format(new Date(payment.payment_date), 'dd MMM yyyy')}</TableCell>
                     {!studentId && <TableCell>{payment.student_name || 'Unknown'}</TableCell>}
                     <TableCell className="capitalize">

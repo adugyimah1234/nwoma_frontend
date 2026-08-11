@@ -3,33 +3,34 @@
 /* eslint-disable no-console */
 // contexts/AuthContext.tsx
 'use client';
-import { createContext, useState, useEffect, type ReactNode, useContext, useCallback } from 'react';
+import { createContext, useState, useEffect, type ReactNode, useContext, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { getUserById, updateUser, type UpdateUserPayload } from '@/services/users';
 import api from '@/lib/axios';
 
-// Define your User interface (adjust based on your backend response)
 interface User {
   phone_number?: string;
-  id: number;
+  id: string; // UUID String
   full_name?: string;
   email: string;
   username: string;
-  role_id: number;
-  role: string; // Add this line
-  school_id?: number | null;
-  // Add other user properties
+  role_id: string;
+  role: string;
+  school_id?: string | null;
+  garrison_id?: string | null;
+  garrison_name?: string | null;
+  school_name?: string | null;
 }
 
 interface AuthContextType {
   user: User | null;
   token: string | null;
-  login: (token: string, initialUser: { id: number; role: string }) => Promise<void>;
-  logout: () => void;
+  login: (token: string, user: User) => Promise<void>;
+  logout: (showMessage?: boolean) => Promise<void>;
   isLoading: boolean;
   isAuthenticated: boolean;
   updateUserProfile: (data: UpdateUserPayload) => Promise<void>;
-  isAdmin: boolean; // Add this line
+  isAdmin: boolean;
 }
 
 export type { AuthContextType };
@@ -45,124 +46,97 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const isInitialMount = useRef(true);
 
-  // Memoized logout function to prevent infinite re-renders
   const logout = useCallback(async (showMessage = true) => {
+    // Optimistically clear local state first to stop loops
+    const currentToken = token || localStorage.getItem('authToken');
+
+    setToken(null);
+    setUser(null);
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('user');
+    delete api.defaults.headers.common['Authorization'];
+
     try {
-      // Call backend logout if token exists
-      if (token) {
-        await api.post('/auth/logout');
+      // Background server-side session invalidation
+      if (currentToken) {
+        await api.post('/auth/logout', {}, {
+          headers: { Authorization: `Bearer ${currentToken}` },
+          // Don't trigger interceptors for this cleanup call
+          _noAuthRedirect: true
+        } as any);
       }
     } catch (error) {
-      console.warn('Backend logout failed:', error);
-      // Continue with client-side logout even if backend fails
+      console.warn('Backend logout failed or session already expired');
     } finally {
-      // Clear client-side state
-      setToken(null);
-      setUser(null);
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('user');
-      delete api.defaults.headers.common['Authorization'];
-      
       if (showMessage) {
-        console.log('User logged out successfully');
+        console.log('User session terminated');
       }
-      
-      // router.push('/login');
+      router.replace('/login');
     }
   }, [token, router]);
 
-  // Setup Axios interceptor to handle token expiration/invalid responses
+  // Unified Response Interceptor for Authentication
   useEffect(() => {
     const responseInterceptor = api.interceptors.response.use(
       (response) => response,
       async (error) => {
-        // Check if the error is due to authentication issues
-        if (error.response?.status === 401) {
-          console.warn('Authentication failed, logging out...');
-          await logout(false); // Don't show message for automatic logout
+        const originalRequest = error.config;
+
+        // Skip if explicitly marked to ignore auth redirects
+        if (originalRequest?._noAuthRedirect) {
+          return Promise.reject(error);
+        }
+
+        if (error.response?.status === 401 && !window.location.pathname.includes('/login')) {
+          console.warn('Session invalid, logging out...');
+          await logout(false);
         }
         return Promise.reject(error);
       }
     );
 
-    // Cleanup interceptor on unmount
-    return () => {
-      api.interceptors.response.eject(responseInterceptor);
-    };
+    return () => api.interceptors.response.eject(responseInterceptor);
   }, [logout]);
 
-  // Monitor localStorage changes (for when token is removed from another tab)
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'authToken' && !e.newValue && token) {
-        console.warn('Auth token removed from localStorage, logging out...');
-        logout(false);
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, [token, logout]);
-
-  // Token validation function
   const validateToken = useCallback(async (tokenToValidate: string): Promise<boolean> => {
     try {
-      const response = await api.get('/auth/validate', {
-        headers: {
-          Authorization: `Bearer ${tokenToValidate}`
-        }
-      });
-      return response.data.success === true;
+      // Note: axios.ts interceptor unwraps the success envelope
+      await api.get('/auth/validate', {
+        headers: { Authorization: `Bearer ${tokenToValidate}` },
+        _noAuthRedirect: true // Prevent validation error from triggering global logout prematurely
+      } as any);
+      return true;
     } catch (error: any) {
-      console.warn('Token validation failed:', error.response?.data?.message || error.message);
       return false;
     }
   }, []);
 
-  // Periodic token validation (check every 5 minutes)
   useEffect(() => {
-    if (!token) return;
+    if (!isInitialMount.current) return;
+    isInitialMount.current = false;
 
-    const validateAndLogout = async () => {
-      const isValid = await validateToken(token);
-      if (!isValid) {
-        console.warn('Token validation failed, logging out...');
-        await logout(false);
-      }
-    };
-
-    // Validate immediately and then every 5 minutes
-    validateAndLogout();
-    const interval = setInterval(validateAndLogout, 5 * 60 * 1000); // 5 minutes
-
-    return () => clearInterval(interval);
-  }, [token, validateToken, logout]);
-
-  // Check for stored token and user on mount
-  useEffect(() => {
     const initializeAuth = async () => {
       const storedToken = localStorage.getItem('authToken');
       const storedUser = localStorage.getItem('user');
 
       if (storedToken && storedUser) {
         try {
-          // Validate the stored token
+          const parsedUser = JSON.parse(storedUser);
+
+          // Background validation
           const isValid = await validateToken(storedToken);
-          
+
           if (isValid) {
-            const parsedUser = JSON.parse(storedUser);
             setToken(storedToken);
             setUser(parsedUser);
             api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
           } else {
-            // Token is invalid, clear stored data
             localStorage.removeItem('authToken');
             localStorage.removeItem('user');
           }
         } catch (error) {
-          console.error('Error initializing auth:', error);
-          // Clear invalid stored data
           localStorage.removeItem('authToken');
           localStorage.removeItem('user');
         }
@@ -173,63 +147,56 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     initializeAuth();
   }, [validateToken]);
 
-  const login = async (newToken: string, initialUser: { id: number; role: string }) => {
+  const login = async (newToken: string, fullUser: User) => {
     setToken(newToken);
+    setUser(fullUser);
     localStorage.setItem('authToken', newToken);
+    localStorage.setItem('user', JSON.stringify(fullUser));
     api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
 
-    try {
-      const fullUserDataResponse = await getUserById(String(initialUser.id));
-      if (fullUserDataResponse) {
-        setUser({ ...fullUserDataResponse, role: initialUser.role });
-        localStorage.setItem('user', JSON.stringify({ ...fullUserDataResponse, role: initialUser.role }));
-        router.push('/');
-      } else {
-        console.error('Failed to fetch full user data or invalid response.');
-        await logout();
-      }
-    } catch (error: unknown) {
-      console.error('Error fetching full user data after login:', error);
-      await logout();
+    // Clear any previous loading state
+    setIsLoading(false);
+
+    // Professional Redirect based on role
+    const userRole = (fullUser.role || '').toLowerCase().replace(/_/g, '');
+    if (userRole === 'superadmin') {
+      router.replace('/super-admin');
+    } else if (userRole === 'garrisondirector') {
+      router.replace('/garrison-director');
+    } else {
+      router.replace('/');
     }
   };
 
   const updateUserProfile = async (data: UpdateUserPayload) => {
-    if (!user?.id) {
-      throw new Error('No authenticated user');
-    }
+    if (!user?.id) throw new Error('No authenticated user');
 
     try {
       const updatedUser = await updateUser(user.id, data);
-      setUser(updatedUser);
+      setUser(updatedUser as any);
       localStorage.setItem('user', JSON.stringify(updatedUser));
     } catch (error: any) {
-      console.error('Profile update error:', error);
-      // If update fails due to auth issues, logout
-      if (error.response?.status === 401) {
-        await logout(false);
-      }
-      throw new Error(error.message || 'Failed to update profile');
+      throw error;
     }
   };
 
   const isAuthenticated = !!token && !!user;
-  const isAdmin = user?.role?.toLowerCase() === 'admin'; // Add this line
+  const isAdmin = !!(user?.role && ['admin', 'super_admin', 'garrison_director'].includes(user.role.toLowerCase()));
 
   const value: AuthContextType = { 
     user, 
     token, 
     login, 
-    logout: () => logout(), 
+    logout,
     isLoading,
     isAuthenticated, 
     updateUserProfile,
-    isAdmin // Add this line
+    isAdmin
   };
 
-  // Show loading state while initializing
+  // Prevent flicker during initial session restoration
   if (isLoading) {
-    return <div>Loading...</div>; // or your loading component
+    return null;
   }
 
   return (
@@ -239,8 +206,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };

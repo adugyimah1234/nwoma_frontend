@@ -33,7 +33,7 @@ const schoolFormSchema = z.object({
 export default function SchoolSettings() {
   const [schools, setSchools] = useState<School[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState<number | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof schoolFormSchema>>({
     resolver: zodResolver(schoolFormSchema),
@@ -84,14 +84,14 @@ const onSubmit = async (data: z.infer<typeof schoolFormSchema>) => {
     setEditing(school.id);
     form.reset({
       name: school.name,
-      address: school.address,
-      phone: school.phone,
-      email: school.email,
+      address: school.address || '',
+      phone: school.phone || school.phone_number || '',
+      email: school.email || '',
       website: school.website || '',
     });
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this school?")) return;
     
     try {

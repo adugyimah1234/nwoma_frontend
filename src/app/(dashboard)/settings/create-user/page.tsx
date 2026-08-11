@@ -1,12 +1,21 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// app/(dashboard)/settings/create-user/page.tsx
 'use client';
 import { useState } from 'react';
 import { register } from '@/services/auth';
 import { RegisterPayload } from '@/services/auth';
-
-
-
+import { PageHeader } from '@/components/layout/page-header';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { UserPlus, CheckCircle, AlertCircle } from 'lucide-react';
 
 const CreateUserPage = () => {
   const [formData, setFormData] = useState<RegisterPayload>({
@@ -19,8 +28,9 @@ const CreateUserPage = () => {
   });
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
@@ -29,9 +39,9 @@ const CreateUserPage = () => {
     e.preventDefault();
     setMessage(null);
     setError(null);
+    setIsSubmitting(true);
 
     try {
-      // Create a RegisterPayload from the form data
       const registerPayload: RegisterPayload = {
         full_name: formData.full_name,
         email: formData.email,
@@ -42,49 +52,131 @@ const CreateUserPage = () => {
       };
 
       const response = await register(registerPayload);
-      setMessage(response);
-      // Optionally reset the form after successful creation
+      setMessage(typeof response === 'string' ? response : 'User created successfully.');
       setFormData({ full_name: '', email: '', username: '', password: '', role: '', school_id: null });
     } catch (err: any) {
       setError(err.message || 'Could not create user');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div>
-      <h1 className="text-xl font-semibold mb-4">Create New User</h1>
-      {message && <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">{message}</div>}
-      {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">{error}</div>}
-      <form onSubmit={handleSubmit} className="max-w-md space-y-4">
-        <div>
-          <label htmlFor="full_name" className="block text-sm font-medium text-gray-700">Full Name</label>
-          <input type="text" id="full_name" name="full_name" value={formData.full_name} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required />
+    <div className="flex flex-1 flex-col gap-4 p-6">
+        <PageHeader
+          title="Create New User"
+          description="Provision a new system user account"
+          breadcrumbs={[
+            { title: 'Home', href: '/' },
+            { title: 'Settings', href: '/settings' },
+            { title: 'Create User' }
+          ]}
+        />
+
+        <div className="max-w-lg">
+          {message && (
+            <div className="mb-4 flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700 dark:border-green-800 dark:bg-green-950/30 dark:text-green-400">
+              <CheckCircle className="h-4 w-4 shrink-0" />
+              {message}
+            </div>
+          )}
+          {error && (
+            <div className="mb-4 flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              {error}
+            </div>
+          )}
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <UserPlus className="h-4 w-4" />
+                User Details
+              </CardTitle>
+              <CardDescription>
+                Fill in the details below to create a new user account.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="full_name">Full Name</Label>
+                  <Input
+                    id="full_name"
+                    name="full_name"
+                    placeholder="e.g. John Mensah"
+                    value={formData.full_name}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="username">Username</Label>
+                  <Input
+                    id="username"
+                    name="username"
+                    placeholder="e.g. john.mensah"
+                    value={formData.username}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email Address</Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    placeholder="e.g. john@example.com"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    placeholder="Minimum 8 characters"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="role">Role</Label>
+                  <Select
+                    value={formData.role}
+                    onValueChange={(val) => setFormData({ ...formData, role: val })}
+                    required
+                  >
+                    <SelectTrigger id="role">
+                      <SelectValue placeholder="Select a role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="frontdesk">Front Desk</SelectItem>
+                      <SelectItem value="accountant">Accountant</SelectItem>
+                      <SelectItem value="teacher">Teacher</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  {isSubmitting ? 'Creating User...' : 'Create User'}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
         </div>
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
-          <input type="email" id="email" name="email" value={formData.email} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required />
-        </div>
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
-          <input type="password" id="password" name="password" value={formData.password} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required />
-        </div>
-        <div>
-          <label htmlFor="role" className="block text-sm font-medium text-gray-700">Role</label>
-          <select id="role" name="role" value={formData.role} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required>
-            <option value="">Select Role</option>
-            <option value="admin">Admin</option>
-            <option value="staff">Staff</option>
-            <option value="student">Student</option>
-            {/* Add other roles as needed */}
-          </select>
-        </div>
-        <div>
-          <label htmlFor="school_id" className="block text-sm font-medium text-gray-700">School ID</label>
-          <input type="number" id="school_id" name="school_id" value={formData.school_id || ''} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
-        </div>
-        <button type="submit" className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Create User</button>
-      </form>
-    </div>
+      </div>
   );
 };
 

@@ -19,12 +19,11 @@ import {
   CartesianGrid, 
   XAxis, 
   YAxis, 
-  ResponsiveContainer, 
-  Tooltip,
   PieChart,
   Pie,
   Cell
 } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import registrationService from '@/services/registrations';
 import SlotsChart from './components/SlotsChart';
 import DailyPaymentDashboard from './components/PaymentSummaryCard';
@@ -32,6 +31,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getAllRoles } from '@/services/roles';
 import PaymentBreakdownComponent from './components/PaymentBreakdownComponent';
 import CategoryStatsCards from './components/CategoryStatsCards';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface RegistrationStats {
   totalRegistered: number;
@@ -62,49 +62,30 @@ const MetricCard: React.FC<MetricCardProps> = ({
   icon: Icon, 
   trend, 
   trendValue, 
-  color = 'blue' 
 }) => {
-  const colorVariants: Record<string, string> = {
-    blue: 'bg-blue-50 border-blue-200 text-blue-700',
-    green: 'bg-green-50 border-green-200 text-green-700',
-    yellow: 'bg-yellow-50 border-yellow-200 text-yellow-700',
-    red: 'bg-red-50 border-red-200 text-red-700'
-  };
-
-  const iconColors: Record<string, string> = {
-    blue: 'text-blue-600',
-    green: 'text-green-600',
-    yellow: 'text-yellow-600',
-    red: 'text-red-600'
-  };
-
   return (
-    <div className=" rounded-xl border p-6 shadow-sm hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
-          <p className="text-3xl font-bold  mb-2">{value.toLocaleString()}</p>
-          {trend && (
-            <div className="flex items-center gap-1">
-              {trend === 'up' ? (
-                <TrendingUp className="h-4 w-4 text-green-600" />
-              ) : (
-                <TrendingDown className="h-4 w-4 text-red-600" />
-              )}
-              <span className={`text-sm font-medium ${
-                trend === 'up' ? 'text-green-600' : 'text-red-600'
-              }`}>
-                {trendValue?.toFixed(1)}%
-              </span>
-              <span className="text-sm text-gray-500">vs last period</span>
-            </div>
-          )}
-        </div>
-        <div className={`p-3 rounded-lg ${colorVariants[color]}`}>
-          <Icon className={`h-6 w-6 ${iconColors[color]}`} />
-        </div>
-      </div>
-    </div>
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
+        {Icon && <Icon className="h-4 w-4 text-muted-foreground" />}
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">{value.toLocaleString()}</div>
+        {trend && (
+          <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
+            {trend === 'up' ? (
+              <TrendingUp className="h-3 w-3 text-emerald-500" />
+            ) : (
+              <TrendingDown className="h-3 w-3 text-destructive" />
+            )}
+            <span className={trend === 'up' ? 'text-emerald-500 font-medium' : 'text-destructive font-medium'}>
+              {trend === 'up' ? '+' : ''}{trendValue?.toFixed(1)}%
+            </span>
+            <span>vs last period</span>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 
@@ -117,54 +98,18 @@ interface ChartCardProps {
 }
 
 const ChartCard: React.FC<ChartCardProps> = ({ title, description, children, className = "" }) => (
-  <div className={`rounded-xl border  shadow-sm ${className}`}>
-    <div className="p-6 pb-4">
-      <h3 className="text-lg font-semibold  mb-1">{title}</h3>
+  <Card className={className}>
+    <CardHeader className="pb-2">
+      <CardTitle className="text-lg">{title}</CardTitle>
       {description && (
-        <p className="text-sm text-gray-600">{description}</p>
+        <p className="text-sm text-muted-foreground">{description}</p>
       )}
-    </div>
-    <div className="px-6 pb-6">
+    </CardHeader>
+    <CardContent>
       {children}
-    </div>
-  </div>
+    </CardContent>
+  </Card>
 );
-
-// Custom Tooltip Component
-interface TooltipPayload {
-  color: string;
-  name: string;
-  value: number;
-}
-
-interface CustomTooltipProps {
-  active?: boolean;
-  payload?: TooltipPayload[];
-  label?: string;
-}
-
-const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label }) => {
-  if (active && payload && payload.length && label) {
-    return (
-      <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-        <p className="text-sm font-medium text-gray-900 mb-2">
-          {new Date(label).toLocaleDateString()}
-        </p>
-        {payload.map((entry, index) => (
-          <div key={index} className="flex items-center gap-2 text-sm">
-            <div 
-              className="w-3 h-3 rounded-full"
-              style={{ backgroundColor: entry.color }}
-            />
-            <span className="text-gray-600">{entry.name}:</span>
-            <span className="font-medium text-gray-900">{entry.value}</span>
-          </div>
-        ))}
-      </div>
-    );
-  }
-  return null;
-};
 
 // Main Dashboard Component
 export default function ProfessionalDashboard() {
@@ -178,13 +123,14 @@ export default function ProfessionalDashboard() {
   useEffect(() => {
     const loadRole = async () => {
       const roles = await getAllRoles();
-      const role = roles.find(r => Number(r.id) === user?.role_id);
+      const role = roles.find(r => String(r.id) === user?.role_id);
       setRoleName(role?.name?.toLowerCase() || '');
     };
     if (user?.role_id) loadRole();
   }, [user?.role_id]);
 
-  const isAdmin = roleName === 'admin';
+  const userRole = (user?.role || roleName || '').toLowerCase().replace(/_/g, '');
+  const isAdmin = ['admin', 'garrisondirector', 'accountant', 'frontdesk', 'teacher', 'staff'].includes(userRole);
 
 
 
@@ -291,16 +237,7 @@ export default function ProfessionalDashboard() {
     <div className="min-h-screen">
       <div className="max-w-full mx-auto space-y-4">
         
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold ">Dashboard</h1>
-            <p className="text-gray-600 mt-1">Registration analytics and insights</p>
-          </div>
-          <div className="flex items-center gap-2">
-            
-          </div>
-        </div>
+
 
         {/* Metrics Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -373,7 +310,11 @@ export default function ProfessionalDashboard() {
                 <div className="text-gray-500">Loading chart...</div>
               </div>
             ) : (
-              <ResponsiveContainer width="100%" height={300}>
+              <ChartContainer config={{
+                approved: { label: 'Approved', color: '#10B981' },
+                pending: { label: 'Pending', color: '#F59E0B' },
+                rejected: { label: 'Rejected', color: '#EF4444' },
+              }} className="h-[300px] w-full">
                 <AreaChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis 
@@ -385,13 +326,13 @@ export default function ProfessionalDashboard() {
                     })}
                   />
                   <YAxis tick={{ fontSize: 12, fill: '#6b7280' }} />
-                  <Tooltip content={<CustomTooltip />} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
                   <Area
-                  type="monotone"
-                  dataKey="approved"
+                    type="monotone"
+                    dataKey="approved"
                     stackId="1"
-                    stroke="#10B981"
-                    fill="#10B981"
+                    stroke="var(--color-approved)"
+                    fill="var(--color-approved)"
                     fillOpacity={0.6}
                     name="Approved"
                   />
@@ -399,8 +340,8 @@ export default function ProfessionalDashboard() {
                     type="monotone"
                     dataKey="pending"
                     stackId="1"
-                    stroke="#F59E0B"
-                    fill="#F59E0B"
+                    stroke="var(--color-pending)"
+                    fill="var(--color-pending)"
                     fillOpacity={0.6}
                     name="Pending"
                   />
@@ -408,13 +349,13 @@ export default function ProfessionalDashboard() {
                     type="monotone"
                     dataKey="rejected"
                     stackId="1"
-                    stroke="#EF4444"
-                    fill="#EF4444"
+                    stroke="var(--color-rejected)"
+                    fill="var(--color-rejected)"
                     fillOpacity={0.6}
                     name="Rejected"
                   />
-                  </AreaChart>
-                  </ResponsiveContainer>
+                </AreaChart>
+              </ChartContainer>
                 )}
                 </ChartCard>
                 
@@ -429,43 +370,37 @@ export default function ProfessionalDashboard() {
               </div>
             ) : (
               <>
-                <ResponsiveContainer width="100%" height={300}>
+                <ChartContainer config={{
+                  Approved: { label: 'Approved', color: '#10B981' },
+                  Pending: { label: 'Pending', color: '#F59E0B' },
+                  Rejected: { label: 'Rejected', color: '#EF4444' },
+                }} className="h-[250px] w-full">
                   <PieChart>
                     <Pie
                       data={pieData}
                       cx="50%"
                       cy="50%"
                       innerRadius={60}
-                      outerRadius={100}
+                      outerRadius={90}
                       paddingAngle={2}
                       dataKey="value"
+                      nameKey="name"
                     >
                       {pieData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip 
-                    formatter={(value, name) => [value, name]}
-                    contentStyle={{
-                        backgroundColor: 'white',
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '8px',
-                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                      }}
-                    />
+                    <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
                   </PieChart>
-                </ResponsiveContainer>
+                </ChartContainer>
                 <div className="mt-4 space-y-2">
                   {pieData.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between">
+                    <div key={index} className="flex items-center justify-between text-xs">
                       <div className="flex items-center gap-2">
-                      <div 
-                      className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: item.color }}
-                        />
-                        <span className="text-sm text-gray-600">{item.name}</span>
+                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+                        <span className="text-muted-foreground">{item.name}</span>
                       </div>
-                      <span className="text-sm font-medium text-gray-600">
+                      <span className="font-medium text-foreground">
                         {item.value} ({Math.round((item.value / (stats?.totalRegistered ?? 1)) * 100)}%)
                       </span>
                     </div>
@@ -494,7 +429,11 @@ export default function ProfessionalDashboard() {
               <div className="text-gray-500">Loading chart...</div>
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={300}>
+            <ChartContainer config={{
+              approved: { label: 'Approved', color: '#10B981' },
+              pending: { label: 'Pending', color: '#F59E0B' },
+              rejected: { label: 'Rejected', color: '#EF4444' },
+            }} className="h-[300px] w-full">
               <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis 
@@ -505,12 +444,12 @@ export default function ProfessionalDashboard() {
                   })}
                 />
                 <YAxis tick={{ fontSize: 12, fill: '#6b7280' }} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="approved" fill="#10B981" name="Approved" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="pending" fill="#F59E0B" name="Pending" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="rejected" fill="#EF4444" name="Rejected" radius={[4, 4, 0, 0]} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar dataKey="approved" fill="var(--color-approved)" name="Approved" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="pending" fill="var(--color-pending)" name="Pending" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="rejected" fill="var(--color-rejected)" name="Rejected" radius={[4, 4, 0, 0]} />
               </BarChart>
-            </ResponsiveContainer>
+            </ChartContainer>
           )}
         </ChartCard>
       </div>

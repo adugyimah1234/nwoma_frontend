@@ -27,7 +27,7 @@ import { type FeeType } from '@/types/fee';
 import { type academicYear, getAllAcademicYear } from '@/services/academic_year';
 import { getAllCategories } from '@/services/categories';
 import classService, { type ClassData } from '@/services/class';
-import { type Category } from '@/types/exam';
+import { type Category } from '@/types/assessment';
 
 interface AddFeeDialogProps {
   onSuccess: () => void;
@@ -37,13 +37,13 @@ export default function AddFeeDialog({ onSuccess }: AddFeeDialogProps) {
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
-  const [categoryId, setCategoryId] = useState<number | null>(null);
-  const [classId, setClassId] = useState<number | null>(null);
+  const [categoryId, setCategoryId] = useState<string | null>(null);
+  const [classId, setClassId] = useState<string | null>(null);
   const [feeType, setFeeType] = useState<FeeType>('tuition');
   const [academicYears, setAcademicYears] = useState<academicYear[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [classes, setClasses] = useState<ClassData[]>([]);
-  const [academicYearId, setAcademicYearId] = useState<number | null>(null);
+  const [academicYearId, setAcademicYearId] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -150,8 +150,8 @@ export default function AddFeeDialog({ onSuccess }: AddFeeDialogProps) {
           />
 
           <Select
-            onValueChange={(val) => setCategoryId(Number(val))}
-            value={categoryId?.toString() ?? ''}
+            onValueChange={setCategoryId}
+            value={categoryId ?? ''}
             aria-label="Select Fee Category"
           >
             <SelectTrigger>
@@ -159,8 +159,25 @@ export default function AddFeeDialog({ onSuccess }: AddFeeDialogProps) {
             </SelectTrigger>
             <SelectContent>
               {categories.map(cat => (
-                <SelectItem key={cat.id} value={cat.id.toString()}>
+                <SelectItem key={cat.id} value={String(cat.id)}>
                   {cat.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            onValueChange={setClassId}
+            value={classId ?? ''}
+            aria-label="Select Target Unit"
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select Target Unit" />
+            </SelectTrigger>
+            <SelectContent>
+              {classes.map(cls => (
+                <SelectItem key={cls.id} value={String(cls.id)}>
+                  {cls.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -178,13 +195,13 @@ export default function AddFeeDialog({ onSuccess }: AddFeeDialogProps) {
               <SelectItem value="registration">Registration</SelectItem>
               <SelectItem value="admission">Admission</SelectItem>
               <SelectItem value="tuition">Tuition</SelectItem>
-              <SelectItem value="exam">Exam</SelectItem>
+              <SelectItem value="assessment">Assessment</SelectItem>
             </SelectContent>
           </Select>
 
           <Select
-            onValueChange={(val) => setAcademicYearId(Number(val))}
-            value={academicYearId?.toString() ?? ''}
+            onValueChange={setAcademicYearId}
+            value={academicYearId ?? ''}
             aria-label="Select Academic Year"
           >
             <SelectTrigger>
@@ -192,7 +209,7 @@ export default function AddFeeDialog({ onSuccess }: AddFeeDialogProps) {
             </SelectTrigger>
             <SelectContent>
               {academicYears.map(year => (
-                <SelectItem key={year.id} value={year.id.toString()}>
+                <SelectItem key={year.id} value={String(year.id)}>
                   {year.year}
                 </SelectItem>
               ))}

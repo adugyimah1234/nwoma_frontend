@@ -34,7 +34,11 @@ import {
   Trash2, 
   FilterX, 
   FileDown,
-  Loader2
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+  ChevronFirst,
+  ChevronLast
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -57,7 +61,7 @@ import {
   type FeeWithDetails, 
   type FeeQueryParams
 } from '@/types/fee';
-import { type Category } from '@/types/exam';
+import { type Category } from '@/types/assessment';
 import { type ClassData } from '@/services/class';
 import { type academicYear } from '@/services/academic_year';
 
@@ -66,7 +70,7 @@ import AddFeeDialog from './AddFeeDialog';
 import EditFeeDialog from './EditFeeDialog';
 
 interface FeeListProps {
-  schoolId?: number;
+  schoolId?: string | number;
 }
 
 export default function FeeList({ schoolId }: FeeListProps) {
@@ -80,7 +84,7 @@ export default function FeeList({ schoolId }: FeeListProps) {
   const [selectedFee, setSelectedFee] = useState<FeeWithDetails | null>(null);
   
   // Delete operation state
-  const [deletingFeeId, setDeletingFeeId] = useState<number | null>(null);
+  const [deletingFeeId, setDeletingFeeId] = useState<string | number | null>(null);
 
   // State for filter options
   const [categories, setCategories] = useState<Category[]>([]);
@@ -98,6 +102,10 @@ export default function FeeList({ schoolId }: FeeListProps) {
   const [sortField, setSortField] = useState<keyof FeeWithDetails>('id');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
   // Load initial data
   useEffect(() => {
     loadData();
@@ -114,7 +122,7 @@ export default function FeeList({ schoolId }: FeeListProps) {
       // Load fees
       const params: FeeQueryParams = {};
       if (schoolId) {
-        params.school_id = schoolId;
+        params.school_id = String(schoolId);
       }
       
       const feesData = await getAllFees(params);
@@ -158,17 +166,17 @@ export default function FeeList({ schoolId }: FeeListProps) {
     
     // Apply category filter
     if (selectedCategory) {
-      result = result.filter(fee => fee.category_id.toString() === selectedCategory);
+      result = result.filter(fee => String(fee.category_id) === selectedCategory);
     }
     
     // Apply class filter
     if (selectedClass) {
-      result = result.filter(fee => fee.class_id?.toString() === selectedClass);
+      result = result.filter(fee => String(fee.class_id) === selectedClass);
     }
     
     // Apply academic year filter
     if (selectedAcademicYear) {
-      result = result.filter(fee => fee.academic_year_id?.toString() === selectedAcademicYear);
+      result = result.filter(fee => String(fee.academic_year_id) === selectedAcademicYear);
     }
     
     // Apply sorting
@@ -196,12 +204,12 @@ export default function FeeList({ schoolId }: FeeListProps) {
     }
   };
 
-  const handleDeleteFee = async (id: number) => {
+  const handleDeleteFee = async (id: string | number) => {
     if (!confirm('Are you sure you want to delete this fee?')) return;
     
     setDeletingFeeId(id);
     try {
-      await deleteFee(id);
+      await deleteFee(id as any);
       toast.success('Fee deleted successfully');
       // Refresh data
       loadData();
@@ -290,7 +298,7 @@ export default function FeeList({ schoolId }: FeeListProps) {
                   <SelectItem value="registration">Registration</SelectItem>
                   <SelectItem value="admission">Admission</SelectItem>
                   <SelectItem value="tuition">Tuition</SelectItem>
-                  <SelectItem value="exam">Exam</SelectItem>
+                  <SelectItem value="assessment">Assessment</SelectItem>
                 </SelectContent>
               </Select>
               
@@ -304,7 +312,7 @@ export default function FeeList({ schoolId }: FeeListProps) {
                 <SelectContent>
                   <SelectItem value="">All Categories</SelectItem>
                   {categories.map(category => (
-                    <SelectItem key={category.id} value={category.id.toString()}>
+                    <SelectItem key={category.id} value={String(category.id)}>
                       {category.name}
                     </SelectItem>
                   ))}
@@ -321,7 +329,7 @@ export default function FeeList({ schoolId }: FeeListProps) {
                 <SelectContent>
                   <SelectItem value="">All Classes</SelectItem>
                   {classes.map(cls => (
-                    <SelectItem key={cls.id} value={cls.id.toString()}>
+                    <SelectItem key={cls.id} value={String(cls.id)}>
                       {cls.name}
                     </SelectItem>
                   ))}
@@ -338,7 +346,7 @@ export default function FeeList({ schoolId }: FeeListProps) {
                 <SelectContent>
                   <SelectItem value="">All Academic Years</SelectItem>
                   {academicYears.map(year => (
-                    <SelectItem key={year.id} value={year.id.toString()}>
+                    <SelectItem key={year.id} value={String(year.id)}>
                       {year.year}
                     </SelectItem>
                   ))}
@@ -412,69 +420,143 @@ export default function FeeList({ schoolId }: FeeListProps) {
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredFees.map((fee) => (
-                  <TableRow key={fee.id}>
-                    <TableCell>{fee.id}</TableCell>
-                    <TableCell className="capitalize">{fee.fee_type}</TableCell>
-                    <TableCell>{fee.category_name || '-'}</TableCell>
-                    <TableCell>{fee.class_name || '-'}</TableCell>
-                    <TableCell>{fee.amount.toLocaleString()}</TableCell>
-                    <TableCell className="max-w-xs truncate">
-                      {fee.description || '-'}
-                    </TableCell>
-                    <TableCell>
-                      <span className={`px-2 py-1 rounded-full text-xs ${
-                        fee.status === 'active' 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {fee.status || 'active'}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Open menu</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditFee(fee);
-                            }}
-                            className="flex items-center gap-2 cursor-pointer"
-                          >
-                            <Pencil className="h-4 w-4" /> Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteFee(fee.id);
-                            }}
-                            className="flex items-center gap-2 text-red-600 cursor-pointer"
-                            disabled={deletingFeeId === fee.id}
-                          >
-                            {deletingFeeId === fee.id ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Trash2 className="h-4 w-4" />
-                            )}
-                            {deletingFeeId === fee.id ? 'Deleting...' : 'Delete'}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))
+                (() => {
+                  const startIdx = (page - 1) * pageSize;
+                  const paginatedFees = filteredFees.slice(startIdx, startIdx + pageSize);
+                  return paginatedFees.map((fee) => (
+                    <TableRow key={fee.id}>
+                      <TableCell className="text-[10px] font-mono opacity-60 uppercase">{String(fee.id).substring(0, 8)}</TableCell>
+                      <TableCell className="capitalize">{fee.fee_type}</TableCell>
+                      <TableCell>{fee.category_name || '-'}</TableCell>
+                      <TableCell>{fee.class_name || '-'}</TableCell>
+                      <TableCell>{fee.amount.toLocaleString()}</TableCell>
+                      <TableCell className="max-w-xs truncate">
+                        {fee.description || '-'}
+                      </TableCell>
+                      <TableCell>
+                        <span className={`px-2 py-1 rounded-full text-xs ${
+                          fee.status === 'active' 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {fee.status || 'active'}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Open menu</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditFee(fee);
+                              }}
+                              className="flex items-center gap-2 cursor-pointer"
+                            >
+                              <Pencil className="h-4 w-4" /> Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteFee(fee.id);
+                              }}
+                              className="flex items-center gap-2 text-red-600 cursor-pointer"
+                              disabled={deletingFeeId === fee.id}
+                            >
+                              {deletingFeeId === fee.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Trash2 className="h-4 w-4" />
+                              )}
+                              {deletingFeeId === fee.id ? 'Deleting...' : 'Delete'}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ));
+                })()
               )}
             </TableBody>
           </Table>
         </div>
+
+        {/* Pagination Controls */}
+        {!loading && filteredFees.length > 0 && (
+          <div className="flex items-center justify-between px-2 py-4">
+            <div className="flex-1 text-sm text-muted-foreground">
+              Showing {Math.min((page - 1) * pageSize + 1, filteredFees.length)} to{' '}
+              {Math.min(page * pageSize, filteredFees.length)} of {filteredFees.length} entries
+            </div>
+            <div className="flex items-center space-x-6 lg:space-x-8">
+              <div className="flex items-center space-x-2">
+                <p className="text-sm font-medium">Rows per page</p>
+                <Select
+                  value={`${pageSize}`}
+                  onValueChange={(value) => {
+                    setPageSize(Number(value));
+                    setPage(1);
+                  }}
+                >
+                  <SelectTrigger className="h-8 w-[70px]">
+                    <SelectValue placeholder={pageSize} />
+                  </SelectTrigger>
+                  <SelectContent side="top">
+                    {[10, 20, 30, 50].map((size) => (
+                      <SelectItem key={size} value={`${size}`}>
+                        {size}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex w-[100px] items-center justify-center text-sm font-medium">
+                Page {page} of {Math.ceil(filteredFees.length / pageSize) || 1}
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  className="hidden h-8 w-8 p-0 lg:flex"
+                  onClick={() => setPage(1)}
+                  disabled={page === 1}
+                >
+                  <ChevronFirst className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-8 w-8 p-0"
+                  onClick={() => setPage((p) => Math.max(p - 1, 1))}
+                  disabled={page === 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-8 w-8 p-0"
+                  onClick={() => setPage((p) => Math.min(p + 1, Math.ceil(filteredFees.length / pageSize) || 1))}
+                  disabled={page >= Math.ceil(filteredFees.length / pageSize) || Math.ceil(filteredFees.length / pageSize) === 0}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="hidden h-8 w-8 p-0 lg:flex"
+                  onClick={() => setPage(Math.ceil(filteredFees.length / pageSize) || 1)}
+                  disabled={page >= Math.ceil(filteredFees.length / pageSize) || Math.ceil(filteredFees.length / pageSize) === 0}
+                >
+                  <ChevronLast className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </CardContent>
       
       {/* Edit Dialog */}
@@ -497,4 +579,3 @@ export default function FeeList({ schoolId }: FeeListProps) {
     </Card>
   );
 }
-

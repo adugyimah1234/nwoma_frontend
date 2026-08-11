@@ -11,6 +11,8 @@ export enum UserRole {
   STUDENT = 'student',
   PARENT = 'parent',
   STAFF = 'staff',
+  SUPER_ADMIN = 'super_admin',
+  GARRISON_DIRECTOR = 'garrison_director',
 }
 
 /**
@@ -46,8 +48,8 @@ export function requireAuth() {
       // For this example, we'll use mock user data
       const user = mockVerifyToken(token);
       
-      // Add the user to the request context
-      return { user };
+      (req as any).user = user;
+      return;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       return errorResponse('Authentication failed', 401);

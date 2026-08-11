@@ -10,13 +10,6 @@ import {
   CardTitle,
   CardFooter,
 } from '@/components/ui/card';
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -46,7 +39,32 @@ import * as z from 'zod';
 import { format } from 'date-fns';
 
 // Icons
-import { CalendarIcon, Receipt, CreditCard, DollarSign, AlertCircle } from 'lucide-react';
+import {
+  CalendarIcon,
+  Receipt,
+  CreditCard,
+  DollarSign,
+  AlertCircle,
+  Check,
+  ChevronsUpDown,
+  Search,
+  Loader2
+} from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
 
 // Services
 import { getOutstandingFees } from '@/services/fee';
@@ -61,13 +79,13 @@ import { type FeeWithDetails } from '@/types/fee';
 
 // Form validation schema
 const paymentFormSchema = z.object({
-  student_id: z.number({
+  student_id: z.string({
     required_error: "Student is required",
   }),
-  fee_id: z.number({
-    required_error: "Fee selection is required",
+  fee_id: z.string({
+    required_error: "Fee is required",
   }),
-  amount_paid: z.number({
+  amount_paid: z.coerce.number({
     required_error: "Payment amount is required",
   }).positive("Amount must be greater than zero"),
   payment_date: z.string().optional(),
@@ -82,14 +100,14 @@ const paymentFormSchema = z.object({
 
 // Component props
 interface PaymentFormProps {
-  schoolId?: number;
-  onPaymentSuccess?: (paymentId: number) => void;
+  schoolId?: string;
+  onPaymentSuccess?: (paymentId: string) => void;
 }
 
 export default function PaymentForm({ schoolId, onPaymentSuccess }: PaymentFormProps) {
   // Student state
-  const [students, setStudents] = useState<Array<{ id: number; name: string }>>([]);
-  const [selectedStudent, setSelectedStudent] = useState<number | null>(null);
+  const [students, setStudents] = useState<Array<{ id: string; name: string }>>([]);
+  const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
   
   // Fee state
   const [outstandingFees, setOutstandingFees] = useState<FeeWithDetails[]>([]);
@@ -97,7 +115,7 @@ export default function PaymentForm({ schoolId, onPaymentSuccess }: PaymentFormP
   
   // Payment method state
   const [paymentMethods, setPaymentMethods] = useState<Array<{
-    id: number;
+    id: string | number;
     name: string;
     type: PaymentMethodType;
     requires_reference: boolean;
@@ -109,9 +127,11 @@ export default function PaymentForm({ schoolId, onPaymentSuccess }: PaymentFormP
   const [processingPayment, setProcessingPayment] = useState(false);
   
   // Form setup
-  const form = useForm<z.infer<typeof paymentFormSchema>>({
-    resolver: zodResolver(paymentFormSchema),
+  const form = useForm<any>({
+    resolver: zodResolver(paymentFormSchema) as any,
     defaultValues: {
+      student_id: '',
+      fee_id: '',
       amount_paid: 0,
       payment_date: format(new Date(), 'yyyy-MM-dd'),
       installment_number: 1,
@@ -141,7 +161,7 @@ export default function PaymentForm({ schoolId, onPaymentSuccess }: PaymentFormP
       form.setValue('fee_id', selectedFee.id);
       form.setValue('amount_paid', selectedFee.amount);
     } else {
-      form.setValue('fee_id', 0);
+      form.setValue('fee_id', '');
       form.setValue('amount_paid', 0);
     }
   }, [selectedFee, form]);
@@ -151,8 +171,8 @@ export default function PaymentForm({ schoolId, onPaymentSuccess }: PaymentFormP
     setLoadingStudents(true);
     try {
       const response = await getStudents({ school_id: schoolId });
-      const formattedStudents = response.map(student => ({
-        id: student.id,
+      const formattedStudents = response.map((student: any) => ({
+        id: student.id.toString(),
         name: `${student.first_name} ${student.middle_name || ''} ${student.last_name} (${student.admission_number || 'No Adm'})`,
       }));
       setStudents(formattedStudents);
@@ -168,24 +188,32 @@ export default function PaymentForm({ schoolId, onPaymentSuccess }: PaymentFormP
   const loadPaymentMethods = async () => {
     try {
       const methods = await getPaymentMethods();
-      setPaymentMethods(methods.filter(m => m.is_active));
+      const activeMethods = methods
+        .filter(m => m.is_active)
+        .map(m => ({
+          id: m.id,
+          name: m.name,
+          type: m.type,
+          requires_reference: m.requires_reference,
+        }));
+      setPaymentMethods(activeMethods);
     } catch (error) {
       console.error('Error loading payment methods:', error);
       toast.error('Failed to load payment methods');
       // Set default payment methods
       setPaymentMethods([
-        { id: 1, name: 'Cash', type: 'cash', requires_reference: false },
-        { id: 2, name: 'Bank Transfer', type: 'bank_transfer', requires_reference: true },
-        { id: 3, name: 'Mobile Payment', type: 'mobile_payment', requires_reference: true },
+        { id: '1', name: 'Cash', type: 'cash', requires_reference: false },
+        { id: '2', name: 'Bank Transfer', type: 'bank_transfer', requires_reference: true },
+        { id: '3', name: 'Mobile Payment', type: 'mobile_payment', requires_reference: true },
       ]);
     }
   };
   
   // Load outstanding fees for a student
-  const loadOutstandingFees = async (studentId: number) => {
+  const loadOutstandingFees = async (studentId: string) => {
     setLoadingFees(true);
     try {
-      const fees = await getOutstandingFees(studentId);
+      const fees = await getOutstandingFees(studentId as any);
       setOutstandingFees(fees);
     } catch (error) {
       console.error('Error loading outstanding fees:', error);
@@ -198,9 +226,8 @@ export default function PaymentForm({ schoolId, onPaymentSuccess }: PaymentFormP
   
   // Handle student selection
   const handleStudentChange = (value: string) => {
-    const studentId = parseInt(value, 10);
-    setSelectedStudent(studentId);
-    form.setValue('student_id', studentId);
+    setSelectedStudent(value);
+    form.setValue('student_id', value);
     setSelectedFee(null);
   };
   
@@ -248,14 +275,14 @@ export default function PaymentForm({ schoolId, onPaymentSuccess }: PaymentFormP
       // Create payment
       const payment = await createPayment({
         student_id: data.student_id,
-        fee_id: data.fee_id,
+        fee_id: data.fee_id ? data.fee_id : undefined,
         amount: data.amount_paid,
         payment_date: data.payment_date || format(new Date(), 'yyyy-MM-dd'),
         payment_method: data.payment_method as PaymentMethodType,
         reference_number: data.reference_number,
         notes: data.remarks,
         generate_receipt: data.generate_receipt,
-        school_id: schoolId,
+        school_id: schoolId ? schoolId : undefined,
       });
       
       toast.success('Payment processed successfully!');
@@ -272,7 +299,7 @@ export default function PaymentForm({ schoolId, onPaymentSuccess }: PaymentFormP
       
       // Call success callback if provided
       if (onPaymentSuccess) {
-        onPaymentSuccess(payment.id);
+        onPaymentSuccess(payment.id.toString());
       }
       
     } catch (error: any) {
@@ -302,294 +329,306 @@ export default function PaymentForm({ schoolId, onPaymentSuccess }: PaymentFormP
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Student Selection */}
-            <FormField
-              control={form.control}
-              name="student_id"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Student</FormLabel>
-                  <Select 
-                    onValueChange={(value) => {
-                      field.onChange(parseInt(value, 10));
-                      handleStudentChange(value);
-                    }}
-                    value={field.value?.toString() || ''}
-                    disabled={loadingStudents}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a student" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {students.map((student) => (
-                        <SelectItem key={student.id} value={student.id.toString()}>
-                          {student.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormDescription>
-                    Select the student making the payment
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            {/* Outstanding Fees Display */}
-            {selectedStudent && (
-              <div className="mt-6">
-                <h3 className="text-lg font-medium mb-2">Outstanding Fees</h3>
-                {loadingFees ? (
-                  <p className="text-center py-4">Loading fees...</p>
-                ) : outstandingFees.length === 0 ? (
-                  <div className="bg-yellow-50 p-4 rounded-md flex items-center gap-2 text-yellow-800">
-                    <AlertCircle className="h-5 w-5" />
-                    <p>No outstanding fees found for this student.</p>
-                  </div>
-                ) : (
-                  <div className="border rounded-md">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-12"></TableHead>
-                          <TableHead>Fee Type</TableHead>
-                          <TableHead>Description</TableHead>
-                          <TableHead className="text-right">Amount</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {outstandingFees.map((fee) => (
-                          <TableRow 
-                            key={fee.id}
-                            className={`cursor-pointer ${selectedFee?.id === fee.id ? 'bg-primary/10' : ''}`}
-                            onClick={() => handleFeeSelection(fee)}
-                          >
-                            <TableCell>
-                              <Checkbox 
-                                checked={selectedFee?.id === fee.id}
-                                onCheckedChange={() => handleFeeSelection(fee)}
-                              />
-                            </TableCell>
-                            <TableCell className="font-medium capitalize">{fee.fee_type}</TableCell>
-                            <TableCell>{fee.description || '-'}</TableCell>
-                            <TableCell className="text-right">{fee.amount.toLocaleString()}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+            <div className={cn("grid gap-6", selectedStudent ? "lg:grid-cols-3" : "grid-cols-1")}>
+              {/* Left Column: Student Selection & Fees List */}
+              <div className={cn("space-y-6", selectedStudent ? "lg:col-span-2" : "")}>
+                {/* Student Selection (Searchable Combobox) */}
+                <FormField
+                  control={form.control}
+                  name="student_id"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Student</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              className={cn(
+                                "w-full justify-between text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                              disabled={loadingStudents}
+                            >
+                              {field.value
+                                ? students.find(
+                                    (student) => student.id === field.value
+                                  )?.name
+                                : "Search student..."}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[400px] p-0" align="start">
+                          <Command>
+                            <CommandInput placeholder="Search student by name or admission number..." />
+                            <CommandList>
+                              <CommandEmpty>No student found.</CommandEmpty>
+                              <CommandGroup>
+                                {students.map((student) => (
+                                  <CommandItem
+                                    value={student.name}
+                                    key={student.id}
+                                    onSelect={() => {
+                                      form.setValue("student_id", student.id);
+                                      handleStudentChange(student.id);
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        student.id === field.value
+                                          ? "opacity-100"
+                                          : "opacity-0"
+                                      )}
+                                    />
+                                    {student.name}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                      <FormDescription>
+                        Search and select the student making the payment
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Outstanding Fees Display */}
+                {selectedStudent && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-medium">Outstanding Fees</h3>
+                      {loadingFees && <Loader2 className="h-4 w-4 animate-spin" />}
+                    </div>
+                    {loadingFees ? (
+                      <div className="space-y-2">
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                      </div>
+                    ) : outstandingFees.length === 0 ? (
+                      <div className="bg-yellow-50 p-4 rounded-md flex items-center gap-2 text-yellow-800 border border-yellow-200">
+                        <AlertCircle className="h-5 w-5" />
+                        <p>No outstanding fees found for this student.</p>
+                      </div>
+                    ) : (
+                      <div className="border rounded-md overflow-hidden bg-white">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="bg-muted/50">
+                              <TableHead className="w-12"></TableHead>
+                              <TableHead>Fee Type</TableHead>
+                              <TableHead>Description</TableHead>
+                              <TableHead className="text-right">Amount</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {outstandingFees.map((fee) => (
+                              <TableRow
+                                key={fee.id}
+                                className={cn(
+                                  "cursor-pointer transition-colors hover:bg-muted/30",
+                                  selectedFee?.id === fee.id ? 'bg-primary/5' : ''
+                                )}
+                                onClick={() => handleFeeSelection(fee)}
+                              >
+                                <TableCell>
+                                  <Checkbox
+                                    checked={selectedFee?.id === fee.id}
+                                    onCheckedChange={() => handleFeeSelection(fee)}
+                                  />
+                                </TableCell>
+                                <TableCell className="font-medium capitalize">{fee.fee_type}</TableCell>
+                                <TableCell className="text-sm text-muted-foreground">{fee.description || '-'}</TableCell>
+                                <TableCell className="text-right font-semibold">{fee.amount.toLocaleString()}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
-            )}
-            
-            {selectedFee && (
-              <>
-                {/* Payment Details */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                  {/* Payment Amount */}
-                  <FormField
-                    control={form.control}
-                    name="amount_paid"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Payment Amount</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            step="0.01" 
-                            placeholder="0.00"
-                            {...field}
-                            onChange={e => field.onChange(parseFloat(e.target.value))}
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Amount being paid (max: {selectedFee.amount})
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+
+              {/* Right Column: Payment Details Form */}
+              {selectedStudent && (
+                <div className="lg:col-span-1 space-y-6 bg-muted/20 p-4 rounded-lg border border-border">
+                  <h3 className="text-lg font-medium border-bottom pb-2">Payment Details</h3>
                   
-                  {/* Payment Date */}
-                  <FormField
-                    control={form.control}
-                    name="payment_date"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Payment Date</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Input 
-                              type="date" 
-                              {...field}
-                              value={field.value || format(new Date(), 'yyyy-MM-dd')}
-                            />
-                            <CalendarIcon className="h-4 w-4 absolute right-3 top-3 text-gray-400" />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  {/* Installment Number */}
-                  <FormField
-                    control={form.control}
-                    name="installment_number"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Installment Number</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            min="1"
-                            {...field}
-                            onChange={e => field.onChange(parseInt(e.target.value, 10))}
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          For tracking partial payments
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  {/* Payment Method */}
-                  <FormField
-                    control={form.control}
-                    name="payment_method"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Payment Method</FormLabel>
-                        <FormControl>
-                          <RadioGroup
-                            value={field.value}
-                            onValueChange={(value) => {
-                              field.onChange(value);
-                              handlePaymentMethodChange(value);
-                            }}
-                            className="grid grid-cols-2 gap-2"
-                          >
-                            {paymentMethods.length > 0 ? (
-                              paymentMethods.map(method => (
-                                <div key={method.id} className="flex items-center space-x-2">
-                                  <RadioGroupItem value={method.type} id={`method-${method.id}`} />
-                                  <Label htmlFor={`method-${method.id}`}>{method.name}</Label>
-                                </div>
-                              ))
-                            ) : (
-                              <>
-                                <div className="flex items-center space-x-2">
-                                  <RadioGroupItem value="cash" id="method-cash" />
-                                  <Label htmlFor="method-cash">Cash</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <RadioGroupItem value="bank_transfer" id="method-bank" />
-                                  <Label htmlFor="method-bank">Bank Transfer</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <RadioGroupItem value="mobile_payment" id="method-mobile" />
-                                  <Label htmlFor="method-mobile">Mobile Payment</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <RadioGroupItem value="other" id="method-other" />
-                                  <Label htmlFor="method-other">Other</Label>
-                                </div>
-                              </>
-                            )}
-                          </RadioGroup>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  {/* Reference Number (shown conditionally) */}
-                  {doesPaymentMethodRequireReference() && (
-                    <FormField
-                      control={form.control}
-                      name="reference_number"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Reference Number</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Transaction reference"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Transaction reference for this payment
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
+                  {selectedFee ? (
+                    <div className="space-y-4">
+                      {/* Payment Amount */}
+                      <FormField
+                        control={form.control}
+                        name="amount_paid"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Amount to Pay (GHC)</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <DollarSign className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  placeholder="0.00"
+                                  className="pl-9"
+                                  {...field}
+                                  onChange={e => field.onChange(parseFloat(e.target.value))}
+                                />
+                              </div>
+                            </FormControl>
+                            <FormDescription>
+                              Full or partial payment (Max: {selectedFee.amount})
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Payment Date */}
+                      <FormField
+                        control={form.control}
+                        name="payment_date"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Date</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Input
+                                  type="date"
+                                  {...field}
+                                  value={field.value || format(new Date(), 'yyyy-MM-dd')}
+                                />
+                                <CalendarIcon className="h-4 w-4 absolute right-3 top-2.5 text-muted-foreground pointer-events-none" />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Payment Method */}
+                      <FormField
+                        control={form.control}
+                        name="payment_method"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Method</FormLabel>
+                            <FormControl>
+                              <RadioGroup
+                                value={field.value}
+                                onValueChange={(value) => {
+                                  field.onChange(value);
+                                  handlePaymentMethodChange(value);
+                                }}
+                                className="grid grid-cols-2 gap-2"
+                              >
+                                {paymentMethods.map(method => (
+                                  <div key={method.id} className={cn(
+                                    "flex items-center space-x-2 border rounded-md p-2 transition-colors cursor-pointer hover:bg-background",
+                                    field.value === method.type ? "border-primary bg-primary/5" : "border-input"
+                                  )}
+                                  onClick={() => {
+                                    field.onChange(method.type);
+                                    handlePaymentMethodChange(method.type);
+                                  }}
+                                  >
+                                    <RadioGroupItem value={method.type} id={`method-${method.id}`} />
+                                    <Label htmlFor={`method-${method.id}`} className="cursor-pointer text-xs">{method.name}</Label>
+                                  </div>
+                                ))}
+                              </RadioGroup>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Reference Number */}
+                      {doesPaymentMethodRequireReference() && (
+                        <FormField
+                          control={form.control}
+                          name="reference_number"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Reference #</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="Transaction ID"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                       )}
-                    />
+
+                      {/* Remarks */}
+                      <FormField
+                        control={form.control}
+                        name="remarks"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Remarks</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Notes..."
+                                className="resize-none min-h-[80px]"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Receipt Toggle */}
+                      <FormField
+                        control={form.control}
+                        name="generate_receipt"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-center space-x-3 space-y-0 p-2 border rounded-md bg-background">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                            <div className="space-y-1 leading-none">
+                              <FormLabel className="text-sm">Auto-generate Receipt</FormLabel>
+                            </div>
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Submit Button */}
+                      <Button
+                        type="submit"
+                        disabled={processingPayment || !selectedFee}
+                        className="w-full mt-4 h-12 text-lg"
+                      >
+                        {processingPayment ?
+                          <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing</> :
+                          <><DollarSign className="mr-2 h-5 w-5" /> Complete Payment</>
+                        }
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="h-full flex flex-col items-center justify-center text-center p-6 text-muted-foreground animate-pulse">
+                      <Receipt className="h-12 w-12 mb-2 opacity-20" />
+                      <p>Select a fee from the left to start payment</p>
+                    </div>
                   )}
-                  
-                  {/* Remarks */}
-                  <FormField
-                    control={form.control}
-                    name="remarks"
-                    render={({ field }) => (
-                      <FormItem className="col-span-full">
-                        <FormLabel>Remarks (Optional)</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Additional notes about this payment"
-                            className="resize-none"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  {/* Generate Receipt */}
-                  <FormField
-                    control={form.control}
-                    name="generate_receipt"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center space-x-3 space-y-0 col-span-full">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>Generate Receipt</FormLabel>
-                          <FormDescription>
-                            Automatically generate a receipt for this payment
-                          </FormDescription>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
                 </div>
-              </>
-            )}
-            
-            {/* Submit Button */}
-            <div className="flex justify-end">
-              <Button 
-                type="submit" 
-                disabled={processingPayment || !selectedFee}
-                className="flex items-center gap-2"
-              >
-                {processingPayment ? 
-                  'Processing...' : 
-                  <>
-                    <DollarSign className="h-4 w-4" /> 
-                    Process Payment
-                  </>
-                }
-              </Button>
+              )}
             </div>
           </form>
         </Form>

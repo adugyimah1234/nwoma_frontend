@@ -48,7 +48,7 @@ export const CreateInvoiceForm: FC<CreateInvoiceFormProps> = ({ onSuccess, onCan
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="tuition">Tuition Fee</SelectItem>
-              <SelectItem value="examination">Examination Fee</SelectItem>
+              <SelectItem value="assessment">Assessment Fee</SelectItem>
               <SelectItem value="transportation">Transportation</SelectItem>
               <SelectItem value="materials">Study Materials</SelectItem>
               <SelectItem value="other">Other</SelectItem>

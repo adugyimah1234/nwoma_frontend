@@ -1,7 +1,6 @@
-/* eslint-disable no-console */
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   Download, 
   Plus, 
@@ -10,295 +9,144 @@ import {
   History, 
   BarChart, 
   Loader2,
-  AlertCircle 
+  FileText
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { 
+import {
   Dialog, 
   DialogContent, 
   DialogDescription, 
   DialogHeader, 
   DialogTitle,
-  DialogTrigger 
 } from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Badge } from '@/components/ui/badge';
+import { PageHeader } from '@/components/layout/page-header';
+import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
 
-// Import components
 import FeesOverview from './components/overview';
 import InvoicesPage from './invoices/page';
 import PaymentHistoryPage from './payment-history/page';
 import FinancialRecordsPage from './records/page';
 import { CreateInvoiceForm } from '@/components/invoice/create-invoice-form';
-
-// Define component props
-interface InvoicesPageProps {
-  onCreateInvoice: () => void;
-}
-
-// Import services
 import financialReports, { ExportFormat, ReportType } from '@/services/financial-reports';
-import { useToast } from '@/hooks/use-toast';
-
-// Define prop types
-interface CreateInvoiceFormProps {
-  onSuccess: () => void;
-  onCancel: () => void;
-}
 
 export default function FeesPage() {
-  // State
   const [activeTab, setActiveTab] = useState('overview');
   const [showNewInvoiceDialog, setShowNewInvoiceDialog] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  
-  // Toast for notifications
-  const { toast } = useToast();
 
-  // Define tabs
+  const handleExport = async (format: ExportFormat = 'pdf') => {
+    setIsExporting(true);
+    try {
+      let reportType: ReportType = 'income';
+      if (activeTab === 'invoices') reportType = 'outstanding_payments';
+      if (activeTab === 'payments') reportType = 'fee_collection';
+      if (activeTab === 'records') reportType = 'student_statement';
+
+      await financialReports.downloadReport(reportType, { include_details: true }, format);
+      toast.success("Intelligence report exported successfully.");
+    } catch (error) {
+      toast.error("Export operation failed.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const tabs = [
     { id: 'overview', label: 'Overview', icon: BarChart },
     { id: 'invoices', label: 'Invoices', icon: Receipt },
     { id: 'payments', label: 'Payments', icon: Wallet },
     { id: 'records', label: 'Records', icon: History },
   ];
-  
-  // Initial loading effect
-  useEffect(() => {
-    // Simulate initial data loading
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1000);
-    
-    return () => clearTimeout(timer);
-  }, []);
-  
-  // Handle tab change
-  const handleTabChange = (value: string) => {
-    setActiveTab(value);
-    // Optional: prefetch data for the selected tab
-  };
-
-  // Export data based on active tab
-  const handleExport = async (format: ExportFormat = 'pdf') => {
-    try {
-      setIsExporting(true);
-      setError(null);
-      
-      let reportType: ReportType;
-      
-      // Determine report type based on active tab
-      switch (activeTab) {
-        case 'overview':
-          reportType = 'income';
-          break;
-        case 'invoices':
-          reportType = 'outstanding_payments';
-          break;
-        case 'payments':
-          reportType = 'fee_collection';
-          break;
-        case 'records':
-          reportType = 'student_statement';
-          break;
-        default:
-          reportType = 'income';
-      }
-      
-      await financialReports.downloadReport(
-        reportType, 
-        { include_details: true },
-        format
-      );
-      
-      toast({
-        title: "Export Successful",
-        description: `The GHC{activeTab} report has been downloaded.`,
-      });
-    } catch (error) {
-      console.error('Error exporting report:', error);
-      setError(error instanceof Error ? error.message : 'Failed to export report');
-      
-      toast({
-        variant: "destructive",
-        title: "Export Failed",
-        description: error instanceof Error ? error.message : 'An error occurred during export',
-      });
-    } finally {
-      setIsExporting(false);
-    }
-  };
-  
-  // Handle creating a new invoice
-  const handleNewInvoiceCreated = () => {
-    setShowNewInvoiceDialog(false);
-    
-    toast({
-      title: "Invoice Created",
-      description: "New invoice has been created successfully.",
-    });
-    
-    // If we're on the invoices tab, we should refresh the invoices list
-    if (activeTab === 'invoices') {
-      // Trigger a refresh of the invoices list
-      // This would typically be implemented with a context or state management
-    }
-  };
-  
-  if (error) {
-    return (
-      <Alert variant="destructive" className="max-w-lg mx-auto my-8">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Error</AlertTitle>
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
-    );
-  }
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <div className="border-b">
-        <div className="container flex flex-col gap-4 py-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold tracking-tight">Finance Management</h1>
-            <div className="flex items-center gap-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" disabled={isExporting}>
-                    {isExporting ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <Download className="h-4 w-4 mr-2" />
-                    )}
-                    {isExporting ? "Exporting..." : "Export"}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>Export Format</DropdownMenuLabel>
-                  <DropdownMenuItem onClick={() => handleExport('pdf')}>
-                    PDF Document
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleExport('excel')}>
-                    Excel Spreadsheet
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleExport('csv')}>
-                    CSV File
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              
-              <Dialog open={showNewInvoiceDialog} onOpenChange={setShowNewInvoiceDialog}>
-                <DialogTrigger asChild>
-                  <Button size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    New Invoice
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[600px]">
-                  <DialogHeader>
-                    <DialogTitle>Create New Invoice</DialogTitle>
-                    <DialogDescription>
-                      Create a new invoice for a student. Add items to the invoice.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <CreateInvoiceForm 
-                    onSuccess={handleNewInvoiceCreated}
-                    onCancel={() => setShowNewInvoiceDialog(false)}
-                  />
-                </DialogContent>
-              </Dialog>
-            </div>
-          </div>
+    <div className="flex flex-1 flex-col gap-8 p-4 md:p-8 max-w-[1600px] mx-auto w-full pb-24">
+        <PageHeader
+          title="Financial Intelligence"
+          description="Manage invoices, payments, and institutional financial records."
+          breadcrumbs={[{ title: 'Home', href: '/' }, { title: 'Finance' }]}
+        >
+            <div className="flex items-center gap-3">
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="h-12 rounded-2xl border-2 font-black uppercase tracking-widest text-[10px] px-6" disabled={isExporting}>
+                            {isExporting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+                            Export Data
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="rounded-2xl border-none shadow-2xl p-2 w-56">
+                        <DropdownMenuLabel className="text-[9px] font-black uppercase tracking-widest text-muted-foreground px-3 py-2">Select Format</DropdownMenuLabel>
+                        <DropdownMenuSeparator className="mx-2" />
+                        <DropdownMenuItem onClick={() => handleExport('pdf')} className="rounded-xl h-11 font-bold"><FileText className="mr-3 size-4 text-primary" /> PDF Document</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleExport('excel')} className="rounded-xl h-11 font-bold"><BarChart className="mr-3 size-4 text-primary" /> Excel Sheet</DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
 
-          <Tabs
-            defaultValue={activeTab}
-            onValueChange={handleTabChange}
-            className="w-full"
-          >
-            <TabsList className="grid w-full grid-cols-4">
+                <Button className="h-12 rounded-2xl font-black uppercase tracking-widest text-[10px] px-8 shadow-xl shadow-primary/20" onClick={() => setShowNewInvoiceDialog(true)}>
+                    <Plus className="h-4 w-4 mr-2" /> New Receipt
+                </Button>
+            </div>
+        </PageHeader>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+            <TabsList className="flex w-full h-auto p-1 bg-muted/50 rounded-2xl sm:w-fit gap-1 overflow-x-auto no-scrollbar">
               {tabs.map((tab) => (
-                <TabsTrigger
-                  key={tab.id}
-                  value={tab.id}
-                  className="flex items-center gap-2"
-                >
+                <TabsTrigger key={tab.id} value={tab.id} className="flex-1 sm:flex-none flex items-center gap-3 px-6 py-3.5 rounded-xl font-black text-[10px] uppercase tracking-widest data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-lg transition-all whitespace-nowrap">
                   <tab.icon className="h-4 w-4" />
                   {tab.label}
                 </TabsTrigger>
               ))}
             </TabsList>
 
-            <TabsContent value="overview" className="space-y-4">
-              <Card>
-                <CardContent className="pt-6">
-                  {loading ? (
-                    <div className="flex items-center justify-center h-96">
-                      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                    </div>
-                  ) : (
-                    <FeesOverview />
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
+            <AnimatePresence mode="wait">
+                <motion.div
+                    key={activeTab}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                >
+                    <TabsContent value="overview" className="mt-0 outline-none">
+                        <FeesOverview />
+                    </TabsContent>
+                    <TabsContent value="invoices" className="mt-0 outline-none">
+                        <InvoicesPage />
+                    </TabsContent>
+                    <TabsContent value="payments" className="mt-0 outline-none">
+                        <PaymentHistoryPage />
+                    </TabsContent>
+                    <TabsContent value="records" className="mt-0 outline-none">
+                        <FinancialRecordsPage />
+                    </TabsContent>
+                </motion.div>
+            </AnimatePresence>
+        </Tabs>
 
-            <TabsContent value="invoices" className="space-y-4">
-              <Card>
-                <CardContent className="pt-6">
-                  {loading ? (
-                    <div className="flex items-center justify-center h-96">
-                      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                    </div>
-                  ) : (
-                    <InvoicesPage  />
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="payments" className="space-y-4">
-              <Card>
-                <CardContent className="pt-6">
-                  {loading ? (
-                    <div className="flex items-center justify-center h-96">
-                      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                    </div>
-                  ) : (
-                    <PaymentHistoryPage />
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="records" className="space-y-4">
-              <Card>
-                <CardContent className="pt-6">
-                  {loading ? (
-                    <div className="flex items-center justify-center h-96">
-                      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                    </div>
-                  ) : (
-                    <FinancialRecordsPage />
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </div>
-      {showNewInvoiceDialog && (
-        <CreateInvoiceForm onSuccess={handleNewInvoiceCreated} onCancel={() => setShowNewInvoiceDialog(false)} />
-      )}
+        <Dialog open={showNewInvoiceDialog} onOpenChange={setShowNewInvoiceDialog}>
+            <DialogContent className="sm:max-w-[700px] rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden">
+                <div className="bg-primary p-8 text-white relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12"><Receipt className="size-32" /></div>
+                    <DialogHeader className="relative z-10 space-y-2">
+                        <Badge className="w-fit bg-white/20 text-white border-none font-black text-[10px] tracking-[0.2em] px-4 py-1.5 uppercase">Treasury Entry</Badge>
+                        <DialogTitle className="text-3xl font-black tracking-tighter">Issue New Receipt</DialogTitle>
+                        <DialogDescription className="text-white/60 text-sm font-medium italic">Execute a financial transaction for the institutional registry.</DialogDescription>
+                    </DialogHeader>
+                </div>
+                <div className="p-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                    <CreateInvoiceForm onSuccess={() => setShowNewInvoiceDialog(false)} onCancel={() => setShowNewInvoiceDialog(false)} />
+                </div>
+            </DialogContent>
+        </Dialog>
     </div>
   );
 }

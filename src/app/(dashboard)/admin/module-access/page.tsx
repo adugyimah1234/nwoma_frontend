@@ -4,6 +4,7 @@
 'use client';
 
 import { useState, useEffect, Fragment } from 'react';
+import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -268,29 +269,40 @@ export default function ModuleAccess() {
   const selectedUserDetails = selectedUser ? getUserById(selectedUser) : undefined;
   
   return (
-    <Card className="shadow-md">
-      <CardHeader>
-        <div className="flex justify-between items-center">
-          <div>
-            <CardTitle>Module Access Management</CardTitle>
-            <CardDescription>
-              Manage user access to different modules in the system
-            </CardDescription>
+    <div className="flex flex-1 flex-col gap-4 p-6">
+      <PageHeader
+        title="Module Access Control"
+        description="Fine-grained user permission management for system features."
+        breadcrumbs={[
+          { title: 'Home', href: '/' },
+          { title: 'Admin', href: '/admin' },
+          { title: 'Module Access' }
+        ]}
+      />
+
+      <Card className="shadow-md">
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle>Access Configuration</CardTitle>
+              <CardDescription>
+                Toggle system modules for individual user accounts.
+              </CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={refreshAll}
+              disabled={isLoadingUsers || isLoadingModules || isLoadingAccess}
+            >
+              <RefreshCw
+                className={`h-4 w-4 mr-2 ${(isLoadingUsers || isLoadingModules || isLoadingAccess) ? 'animate-spin' : ''}`}
+              />
+              Refresh
+            </Button>
           </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={refreshAll}
-            disabled={isLoadingUsers || isLoadingModules || isLoadingAccess}
-          >
-            <RefreshCw 
-              className={`h-4 w-4 mr-2 ${(isLoadingUsers || isLoadingModules || isLoadingAccess) ? 'animate-spin' : ''}`} 
-            />
-            Refresh
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
+        </CardHeader>
+        <CardContent>
         {/* Error display for users */}
         {userError && (
           <Alert variant="destructive" className="mb-4">
@@ -472,5 +484,6 @@ export default function ModuleAccess() {
         )}
       </CardContent>
     </Card>
+    </div>
   );
 }

@@ -1,15 +1,9 @@
-// Jersey price map by size
-const jerseyPriceMap: Record<string, number> = {
-  S: 115,
-  M: 115,
-  L: 115,
-  XL: 115,
-};
 export function calculateStudentTotalDue(
   student: any, // Student | RegistrationData
-  categories: { id: number; name: string }[],
-  classes: { id: number; name: string }[],
-  paidTypes: string[] = []
+  categories: { id: string; name: string }[],
+  classes: { id: string; name: string }[],
+  paidTypes: string[] = [],
+  jerseyPriceMap: Record<string, number> = { S: 115, M: 115, L: 115, XL: 115 }
 ): number {
   if (!student) return 0;
 
@@ -62,21 +56,15 @@ const exerciseBooksMap: Record<string, number> = {
   'basic 9': 333,
 };
   // Partial match fallback
-  const categoryName = categories.find(c => Number(c.id) === Number(categoryId))?.name || "";
+  const categoryName = categories.find(c => String(c.id) === String(categoryId))?.name || "";
 // With this (handles both ID and name):
 const classNameRaw =
   classes.find(
     cls =>
-      Number(cls.id) === Number(classId) ||
+      String(cls.id) === String(classId) ||
     cls.name.trim().toLowerCase() === String(classId).trim().toLowerCase()
   )?.name || "";
   const normalizedClassName = classNameRaw.trim().toLowerCase().replace(/\s+/g, ' ');
-  // console.log('classId:', classId, 'classNameRaw:', classNameRaw, 'normalizedClassName:', normalizedClassName);
-  // console.log('clasName:', normalizedClassName, 'classes:', classes);
-let textBookKey = Object.keys(textBooksMap).find(key => normalizedClassName.startsWith(key));
-let exerciseBookKey = Object.keys(exerciseBooksMap).find(key => normalizedClassName.startsWith(key));
-
-// console.log('classId:', classId, 'classes:', classes);
 
   const feeTypes = isApplicant
     ? ["registration", "levy", "furniture", "jersey", "crest", "textBooks", "exerciseBooks"]
@@ -104,7 +92,7 @@ let exerciseBookKey = Object.keys(exerciseBooksMap).find(key => normalizedClassN
         break;
       }
       case "crest":
-        fixedAmount = 30; // <-- Crest is always 10
+        fixedAmount = 30;
         break;
       case "textBooks": {
         const textBookKey = Object.keys(textBooksMap).find(key => normalizedClassName.startsWith(key));
@@ -121,9 +109,5 @@ let exerciseBookKey = Object.keys(exerciseBooksMap).find(key => normalizedClassN
     }
     total += fixedAmount;
   }
-    // console.log('classes:', classes.map(c => ({ id: c.id, name: c.name })));
-    // console.log('classId:', classId, typeof classId, 'classes ids:', classes.map(c => c.id));
-    // console.log('exerciseBookKey:', classNameRaw, 'normalizedClassName:', normalizedClassName);
-    // console.log('Unpaid types:', feeTypes.filter(type => !paidTypes.includes(type)), 'Total left:', total);
   return Number.isNaN(total) ? 0 : total;
 }

@@ -54,12 +54,12 @@ export enum Permission {
   UPDATE_ADMISSION_STATUS = 'update_admission_status',
   DELETE_ADMISSION = 'delete_admission',
   
-  // Exams
-  VIEW_EXAMS = 'view_exams',
-  CREATE_EXAM = 'create_exam',
-  UPDATE_EXAM = 'update_exam',
-  DELETE_EXAM = 'delete_exam',
-  RECORD_EXAM_RESULTS = 'record_exam_results',
+  // Assessments
+  VIEW_ASSESSMENTS = 'view_assessments',
+  CREATE_ASSESSMENT = 'create_assessment',
+  UPDATE_ASSESSMENT = 'update_assessment',
+  DELETE_ASSESSMENT = 'delete_assessment',
+  RECORD_ASSESSMENT_RESULTS = 'record_assessment_results',
   
   // Fees
   VIEW_FEES = 'view_fees',
@@ -85,7 +85,7 @@ export enum PermissionCategory {
   MODULE_ACCESS = 'Module Access',
   REGISTRATION = 'Registration',
   ADMISSIONS = 'Admissions',
-  EXAMS = 'Exams',
+  ASSESSMENTS = 'Assessments',
   FEES = 'Fees',
   SYSTEM_SETTINGS = 'System Settings',
 }
@@ -139,12 +139,12 @@ export const permissionCategories: Record<Permission, PermissionCategory> = {
   [Permission.UPDATE_ADMISSION_STATUS]: PermissionCategory.ADMISSIONS,
   [Permission.DELETE_ADMISSION]: PermissionCategory.ADMISSIONS,
   
-  // Exams
-  [Permission.VIEW_EXAMS]: PermissionCategory.EXAMS,
-  [Permission.CREATE_EXAM]: PermissionCategory.EXAMS,
-  [Permission.UPDATE_EXAM]: PermissionCategory.EXAMS,
-  [Permission.DELETE_EXAM]: PermissionCategory.EXAMS,
-  [Permission.RECORD_EXAM_RESULTS]: PermissionCategory.EXAMS,
+  // Assessments
+  [Permission.VIEW_ASSESSMENTS]: PermissionCategory.ASSESSMENTS,
+  [Permission.CREATE_ASSESSMENT]: PermissionCategory.ASSESSMENTS,
+  [Permission.UPDATE_ASSESSMENT]: PermissionCategory.ASSESSMENTS,
+  [Permission.DELETE_ASSESSMENT]: PermissionCategory.ASSESSMENTS,
+  [Permission.RECORD_ASSESSMENT_RESULTS]: PermissionCategory.ASSESSMENTS,
   
   // Fees
   [Permission.VIEW_FEES]: PermissionCategory.FEES,
@@ -229,11 +229,11 @@ export const defaultRolesByUserType: Record<UserRole, Permission[]> = {
     // Teachers can view class information
     Permission.VIEW_CLASSES,
     
-    // Teachers can view and work with exams
-    Permission.VIEW_EXAMS,
-    Permission.CREATE_EXAM,
-    Permission.UPDATE_EXAM,
-    Permission.RECORD_EXAM_RESULTS,
+    // Teachers can view and work with assessments
+    Permission.VIEW_ASSESSMENTS,
+    Permission.CREATE_ASSESSMENT,
+    Permission.UPDATE_ASSESSMENT,
+    Permission.RECORD_ASSESSMENT_RESULTS,
     
     // Teachers can view registrations
     Permission.VIEW_REGISTRATIONS,
@@ -249,8 +249,8 @@ export const defaultRolesByUserType: Record<UserRole, Permission[]> = {
     // Students can view registrations
     Permission.VIEW_REGISTRATIONS,
     
-    // Students can view their own exam results (but not create/update)
-    Permission.VIEW_EXAMS,
+    // Students can view their own assessment results (but not create/update)
+    Permission.VIEW_ASSESSMENTS,
     
     // Students can view fee information
     Permission.VIEW_FEES,
@@ -260,8 +260,8 @@ export const defaultRolesByUserType: Record<UserRole, Permission[]> = {
     // Parents can view registrations
     Permission.VIEW_REGISTRATIONS,
     
-    // Parents can view exam results
-    Permission.VIEW_EXAMS,
+    // Parents can view assessment results
+    Permission.VIEW_ASSESSMENTS,
     
     // Parents can view and pay fees
     Permission.VIEW_FEES,
@@ -289,6 +289,20 @@ export const defaultRolesByUserType: Record<UserRole, Permission[]> = {
     Permission.CREATE_FEE,
     Permission.UPDATE_FEE,
     Permission.RECORD_PAYMENT,
+  ],
+
+  [UserRole.SUPER_ADMIN]: Object.values(Permission), // Super Admin has all permissions
+
+  [UserRole.GARRISON_DIRECTOR]: [
+    Permission.VIEW_USERS,
+    Permission.VIEW_SCHOOLS,
+    Permission.VIEW_CLASSES,
+    Permission.VIEW_CATEGORIES,
+    Permission.VIEW_REGISTRATIONS,
+    Permission.VIEW_ADMISSIONS,
+    Permission.VIEW_ASSESSMENTS,
+    Permission.VIEW_FEES,
+    Permission.VIEW_SETTINGS,
   ],
 };
 

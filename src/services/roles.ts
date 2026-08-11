@@ -6,7 +6,7 @@ export interface Role {
   id: string;
   name: string;
   description: string;
-  permissions: string[];
+  permissions?: string[];
   created_at?: string;
   updated_at?: string;
 }
@@ -14,7 +14,7 @@ export interface Role {
 export interface CreateRoleDTO {
   name: string;
   description: string;
-  permissions: string[];
+  permissions?: string[];
 }
 
 export interface CreateUserDTO {
@@ -23,7 +23,7 @@ export interface CreateUserDTO {
   email: string;
   password: string;
   role: string; // This will now come from your roles API
-  school_id?: number | null;
+  school_id?: string | null;
 }
 
 export interface UpdateRoleDTO extends Partial<CreateRoleDTO> {}
@@ -40,7 +40,7 @@ export const getAllRoles = async (): Promise<Role[]> => {
   }
 };
 
-export const getRoleById = async (id: number): Promise<Role> => {
+export const getRoleById = async (id: string): Promise<Role> => {
   try {
     const response = await api.get(`/roles/${id}`);
     return response.data;
@@ -64,7 +64,7 @@ export const createRole = async (data: CreateRoleDTO): Promise<Role> => {
   }
 };
 
-export const updateRole = async (id: number, data: UpdateRoleDTO): Promise<Role> => {
+export const updateRole = async (id: string, data: UpdateRoleDTO): Promise<Role> => {
   try {
     const response = await api.put(`/roles/${id}`, data);
     return response.data;

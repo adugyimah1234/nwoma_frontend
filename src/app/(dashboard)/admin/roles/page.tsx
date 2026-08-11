@@ -1,16 +1,11 @@
-/* eslint-disable @typescript-eslint/consistent-type-imports */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable react-hooks/exhaustive-deps */
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from '@/hooks/use-toast';
-import { Role, getAllRoles, createRole, updateRole, deleteRole } from '@/services/roles';
+import { Role, getAllRoles, createRole, deleteRole } from '@/services/roles';
 import {
   Form,
   FormControl,
@@ -30,39 +25,40 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
+import { DataTable, type DataTableColumn } from '@/components/ui/data-table';
+import { PageHeader } from "@/components/layout/page-header";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Card, CardContent } from "@/components/ui/card";
 
 const roleSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
-  permissions: z.array(z.string()).min(1, "At least one permission is required")
 });
 
 type RoleFormValues = z.infer<typeof roleSchema>;
-export interface CreateUserDTO {
-  username: string;
-  full_name: string;
-  email: string;
-  password: string;
-  role: string; // This will now come from your roles API
-  school_id?: number | null;
-}
+
 export default function RolesPage() {
   const [roles, setRoles] = useState<Role[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
+
   const form = useForm<RoleFormValues>({
     resolver: zodResolver(roleSchema),
     defaultValues: {
       name: "",
       description: "",
-      permissions: []
     }
   });
 
@@ -76,11 +72,7 @@ export default function RolesPage() {
       const data = await getAllRoles();
       setRoles(data);
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive"
-      });
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -90,18 +82,12 @@ export default function RolesPage() {
     try {
       setIsLoading(true);
       await createRole(values);
-      toast({
-        title: "Success",
-        description: "Role created successfully",
-      });
+      toast({ title: "Success", description: "Role created successfully" });
       fetchRoles();
       form.reset();
+      setIsDialogOpen(false);
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive"
-      });
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -109,163 +95,137 @@ export default function RolesPage() {
 
   const handleDeleteRole = async (roleId: string) => {
     try {
-      setIsLoading(true);
       await deleteRole(roleId);
       await fetchRoles();
-      toast({
-        title: "Success",
-        description: "Role deleted successfully",
-      });
+      toast({ title: "Success", description: "Role deleted successfully" });
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete role",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
+      toast({ title: "Error", description: "Failed to delete role", variant: "destructive" });
     }
   };
 
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Roles & Permissions</CardTitle>
-      </CardHeader>
-      <CardContent>
+  const columns: DataTableColumn<Role>[] = [
+    {
+      key: 'name',
+      header: 'Role Name',
+      cell: (row) => <Badge variant="secondary" className="font-mono">{row.name}</Badge>,
+    },
+    {
+      key: 'description',
+      header: 'Description',
+      cell: (row) => <span className="text-sm text-muted-foreground">{row.description || '—'}</span>,
+    },
+    {
+      key: 'id',
+      header: 'Actions',
+      headerClassName: 'text-right',
+      className: 'text-right',
+      cell: (row) => (
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button>Add Role</Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+              <Trash2 className="h-4 w-4" />
+            </Button>
           </AlertDialogTrigger>
-          <AlertDialogContent className="sm:max-w-[600px]">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)}>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Create New Role</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Define a new role and its permissions
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <div className="grid gap-4 py-4">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Role Name</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="Enter role name" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Description</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="Enter role description" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  {/* <FormField
-                    control={form.control}
-                    name="permissions"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Permissions</FormLabel>
-                        <ScrollArea className="h-[200px] border rounded-md p-4">
-                          {roles.map((role) => (
-                            <div key={role.id} className="flex items-center space-x-2 py-2">
-                              <Checkbox
-                                checked={field.value?.includes(role.id)}
-                                onCheckedChange={(checked) => {
-                                  const value = field.value || [];
-                                  if (checked) {
-                                    field.onChange([...value, role.id]);
-                                  } else {
-                                    field.onChange(value.filter((v) => v !== role.id));
-                                  }
-                                }}
-                              />
-                              <div>
-                                <label className="font-medium">{role.name}</label>
-                                <p className="text-sm text-muted-foreground">
-                                  {role.description}
-                                </p>
-                              </div>
-                              <Badge variant="outline" className="ml-auto">
-                                {role.name}
-                              </Badge>
-                            </div>
-                          ))}
-                        </ScrollArea>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  /> */}
-                </div>
-                <AlertDialogFooter>
-                  <Button type="button" variant="outline">
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={isLoading}>
-                    {isLoading ? "Creating..." : "Create Role"}
-                  </Button>
-                </AlertDialogFooter>
-              </form>
-            </Form>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Role</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete the <strong>{row.name}</strong> role? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => handleDeleteRole(row.id)}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {roles.map((role) => (
-              <TableRow key={role.id}>
-                <TableCell>{role.name}</TableCell>
-                <TableCell>{role.description}</TableCell>
-                <TableCell>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="icon" className="text-destructive">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Role</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete this role? This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleDeleteRole(role.id)}
-                          className="bg-destructive text-destructive-foreground"
-                        >
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+      ),
+    },
+  ];
+
+  const toolbar = (
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm">
+          <Plus className="h-4 w-4 mr-2" />
+          Add Role
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[500px]">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <DialogHeader>
+              <DialogTitle>Create New Role</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Role Name</FormLabel>
+                    <FormControl><Input {...field} placeholder="e.g. accountant" /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl><Input {...field} placeholder="Describe what this role can do" /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? "Creating..." : "Create Role"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+
+  return (
+    <div className="flex flex-1 flex-col gap-4 p-6">
+      <PageHeader
+        title="Roles & Permissions"
+        description="Manage system access levels"
+        breadcrumbs={[
+          { title: 'Home', href: '/' },
+          { title: 'Admin', href: '/admin' },
+          { title: 'Roles' }
+        ]}
+      />
+
+      <Card>
+        <CardContent className="p-6">
+          <DataTable
+            data={roles as any}
+            columns={columns as any}
+            searchKey="name"
+            searchPlaceholder="Search roles..."
+            toolbar={toolbar}
+            loading={isLoading}
+            emptyMessage="No roles found."
+            rowKey="id"
+          />
+        </CardContent>
+      </Card>
+    </div>
   );
 }

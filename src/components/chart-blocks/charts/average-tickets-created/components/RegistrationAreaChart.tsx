@@ -1,8 +1,8 @@
 import React from 'react';
 import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
+  AreaChart, Area, XAxis, YAxis, CartesianGrid
 } from 'recharts';
-import CustomTooltip from './CustomTooltip';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 
 interface ChartData {
   date: string;
@@ -11,8 +11,14 @@ interface ChartData {
   rejected: number;
 }
 
+const chartConfig = {
+  approved: { label: 'Approved', color: '#10B981' },
+  pending: { label: 'Pending', color: '#F59E0B' },
+  rejected: { label: 'Rejected', color: '#EF4444' },
+};
+
 const RegistrationAreaChart: React.FC<{ data: ChartData[] }> = ({ data }) => (
-  <ResponsiveContainer width="100%" height={300}>
+  <ChartContainer config={chartConfig} className="h-[300px] w-full">
     <AreaChart data={data}>
       <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
       <XAxis
@@ -23,12 +29,12 @@ const RegistrationAreaChart: React.FC<{ data: ChartData[] }> = ({ data }) => (
         }
       />
       <YAxis tick={{ fontSize: 12, fill: '#6b7280' }} />
-      <Tooltip content={<CustomTooltip />} />
-      <Area type="monotone" dataKey="approved" stackId="1" stroke="#10B981" fill="#10B981" fillOpacity={0.6} name="Approved" />
-      <Area type="monotone" dataKey="pending" stackId="1" stroke="#F59E0B" fill="#F59E0B" fillOpacity={0.6} name="Pending" />
-      <Area type="monotone" dataKey="rejected" stackId="1" stroke="#EF4444" fill="#EF4444" fillOpacity={0.6} name="Rejected" />
+      <ChartTooltip content={<ChartTooltipContent />} />
+      <Area type="monotone" dataKey="approved" stackId="1" stroke="var(--color-approved)" fill="var(--color-approved)" fillOpacity={0.6} name="Approved" />
+      <Area type="monotone" dataKey="pending" stackId="1" stroke="var(--color-pending)" fill="var(--color-pending)" fillOpacity={0.6} name="Pending" />
+      <Area type="monotone" dataKey="rejected" stackId="1" stroke="var(--color-rejected)" fill="var(--color-rejected)" fillOpacity={0.6} name="Rejected" />
     </AreaChart>
-  </ResponsiveContainer>
+  </ChartContainer>
 );
 
 export default RegistrationAreaChart;

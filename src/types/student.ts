@@ -1,71 +1,78 @@
-
 // Student profile types
 export interface StudentProfile {
-  id: number;
-  admission_status: string;
-  date_of_birth: string;
-first_name: string;
-middle_name: string;
-last_name: string; 
-dob: Date;
-gender: string;
-category_id: number;
-class_id: number;
-registration_date: string;
-status: string;
-school_id: number;
+  id: string;
+  admission_status?: string;
+  date_of_birth?: string;
+  first_name: string;
+  middle_name?: string;
+  last_name: string; 
+  dob?: Date | string;
+  gender?: string;
+  category_id?: string;
+  class_id?: string;
+  academic_year_id?: string;
+  registration_date?: string;
+  status?: string;
+  school_id?: string;
+  garrison_id?: string;
+  scores?: number;
+  jersey_size?: string;
 }
 
 // Guardian relationship with student
 export interface Guardian {
-  guardian_id: number;
+  guardian_id: string;
   full_name: string;
-  email: string;
-  relationship: string;
-  is_primary_contact: boolean;
-  contact_priority: number;
+  email?: string;
+  relationship?: string;
+  is_primary_contact?: boolean;
+  contact_priority?: number;
 }
-
 
 // Student with basic information
 export interface Student {
-  id: number;
-  admission_status: string;
-  date_of_birth: string;
-first_name: string;
-academic_year_id: number;
-student_name?: string;
-middle_name: string;
-last_name: string; 
-dob: Date;
-gender: string;
-category_id: number;
-class_id: number;
-registration_date: string;
-status: string;
-school_id: number;
- category?: 'SVC' | 'MOD' | 'CIV'; 
+  id: string;
+  admission_status?: string;
+  date_of_birth?: string;
+  first_name: string;
+  academic_year_id?: string;
+  student_name?: string;
+  middle_name?: string;
+  last_name: string; 
+  dob?: Date | string;
+  gender?: string;
+  category_id?: string;
+  class_id?: string;
+  registration_date?: string;
+  status?: string;
+  school_id?: string;
+  garrison_id?: string;
+  category?: 'SVC' | 'MOD' | 'CIV' | string; 
+  scores?: number;
+  jersey_size?: string;
 }
-
 
 // Request payloads
 export interface CreateStudentPayload {
-  id: number;
-  admission_status: string;
-  date_of_birth: string;
-first_name: string;
-middle_name: string;
-last_name: string; 
-dob: Date;
-gender: string;
-category_id: number;
-scores: string;
-class_id: number;
-registration_date: string;
-status: string;
-school_id: number;
+  id?: string;
+  admission_status?: string;
+  date_of_birth?: string;
+  first_name: string;
+  middle_name?: string;
+  last_name: string; 
+  dob?: Date | string;
+  gender?: string;
+  category_id?: string;
+  academic_year_id?: string;
+  scores?: number;
+  class_id?: string;
+  registration_date?: string;
+  status?: string;
+  school_id?: string;
+  garrison_id?: string;
+  jersey_size?: string;
   guardians?: {
-    guardian_id: number;
+    guardian_id: string;
     relationship?: string;
     is_primary_contact?: boolean;
     contact_priority?: number;
@@ -73,24 +80,26 @@ school_id: number;
 }
 
 export interface UpdateStudentPayload {
-  id: number;
-  admission_status: string;
-  date_of_birth: string;
-first_name: string;
-middle_name: string;
-last_name: string; 
-dob: Date;
-gender: string;
-category_id: number;
-class_id: number;
-registration_date: string;
-status: string;
-school_id: number;
+  id: string;
+  admission_status?: string;
+  date_of_birth?: string;
+  first_name?: string;
+  middle_name?: string;
+  last_name?: string; 
+  dob?: Date | string;
+  gender?: string;
+  category_id?: string;
+  academic_year_id?: string;
+  class_id?: string;
+  registration_date?: string;
+  status?: string;
+  school_id?: string;
+  garrison_id?: string;
+  jersey_size?: string;
   guardians?: {
-    guardian_id: number;
+    guardian_id: string;
     relationship?: string;
     is_primary_contact?: boolean;
     contact_priority?: number;
   }[];
 }
-

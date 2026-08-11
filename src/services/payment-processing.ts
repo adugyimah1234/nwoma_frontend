@@ -16,21 +16,21 @@ export type TransactionType = 'payment' | 'refund' | 'adjustment' | 'waiver' | '
 
 // Payment interface
 export interface Payment {
-  id: number;
-  student_id: number;
-  invoice_id?: number;
-  fee_id?: number;
+  id: string | number;
+  student_id: string | number;
+  invoice_id?: string | number;
+  fee_id?: string | number;
   amount: number;
   payment_date: string;
   payment_method: PaymentMethodType;
   reference_number?: string;
   status: PaymentStatus;
   notes?: string;
-  created_by?: number;
+  created_by?: string | number;
   created_at: string;
   updated_at: string;
-  receipt_id?: number;
-  school_id?: number;
+  receipt_id?: string | number;
+  school_id?: string | number;
 }
 
 // Payment with related details
@@ -48,14 +48,14 @@ export interface PaymentWithDetails extends Payment {
 
 // Payment transaction (used for recording payment history/audit)
 export interface PaymentTransaction {
-  id: number;
-  payment_id: number;
+  id: string | number;
+  payment_id: string | number;
   transaction_type: TransactionType;
   amount: number;
   date: string;
   status: PaymentStatus;
   reference_number?: string;
-  processed_by?: number;
+  processed_by?: string | number;
   processed_by_name?: string;
   notes?: string;
   metadata?: Record<string, any>;
@@ -64,15 +64,15 @@ export interface PaymentTransaction {
 
 // Interface for creating a new payment
 export interface CreatePaymentPayload {
-  student_id: number;
-  invoice_id?: number;
-  fee_id?: number;
+  student_id: string | number;
+  invoice_id?: string | number;
+  fee_id?: string | number;
   amount: number;
   payment_date: string;
   payment_method: PaymentMethodType;
   reference_number?: string;
   notes?: string;
-  school_id?: number;
+  school_id?: string | number;
   generate_receipt?: boolean;
 }
 
@@ -95,12 +95,12 @@ export interface AdjustPaymentPayload {
 
 // Filter parameters for listing payments
 export interface PaymentFilterParams {
-  student_id?: number;
-  invoice_id?: number;
-  fee_id?: number;
+  student_id?: string | number;
+  invoice_id?: string | number;
+  fee_id?: string | number;
   status?: PaymentStatus | PaymentStatus[];
   payment_method?: PaymentMethodType | PaymentMethodType[];
-  school_id?: number;
+  school_id?: string | number;
   date_from?: string;
   date_to?: string;
   amount_min?: number;
@@ -113,7 +113,7 @@ export interface PaymentFilterParams {
  * @param filters Optional filter parameters
  * @returns Array of payments
  */
-export const getPayments = async (filters?: PaymentFilterParams): Promise<Payment[]> => {
+export const getPayments = async (filters?: PaymentFilterParams): Promise<PaymentWithDetails[]> => {
   try {
     // Build query parameters
     const queryParams = new URLSearchParams();
@@ -131,7 +131,7 @@ export const getPayments = async (filters?: PaymentFilterParams): Promise<Paymen
       });
     }
     
-    const response = await axios.get<Payment[]>(
+    const response = await axios.get<PaymentWithDetails[]>(
       `${API_URL}/payments${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
     );
     
@@ -149,7 +149,7 @@ export const getPayments = async (filters?: PaymentFilterParams): Promise<Paymen
  * @param id Payment ID
  * @returns Payment with full details
  */
-export const getPayment = async (id: number): Promise<PaymentWithDetails> => {
+export const getPayment = async (id: string | number): Promise<PaymentWithDetails> => {
   try {
     const response = await axios.get<PaymentWithDetails>(`${API_URL}/payments/${id}`);
     return response.data;
@@ -183,7 +183,7 @@ export const createPayment = async (payment: CreatePaymentPayload): Promise<Paym
  * @param paymentId Payment ID
  * @returns Array of payment transactions
  */
-export const getPaymentTransactions = async (paymentId: number): Promise<PaymentTransaction[]> => {
+export const getPaymentTransactions = async (paymentId: string | number): Promise<PaymentTransaction[]> => {
   try {
     const response = await axios.get<PaymentTransaction[]>(`${API_URL}/payments/${paymentId}/transactions`);
     return response.data;
@@ -201,7 +201,7 @@ export const getPaymentTransactions = async (paymentId: number): Promise<Payment
  * @param refundData Refund details
  * @returns Updated payment with refund details
  */
-export const refundPayment = async (paymentId: number, refundData: RefundPaymentPayload): Promise<PaymentWithDetails> => {
+export const refundPayment = async (paymentId: string | number, refundData: RefundPaymentPayload): Promise<PaymentWithDetails> => {
   try {
     const response = await axios.post<PaymentWithDetails>(
       `${API_URL}/payments/${paymentId}/refund`, 
@@ -222,7 +222,7 @@ export const refundPayment = async (paymentId: number, refundData: RefundPayment
  * @param reason Reason for voiding the payment
  * @returns Updated payment
  */
-export const voidPayment = async (paymentId: number, reason: string): Promise<PaymentWithDetails> => {
+export const voidPayment = async (paymentId: string | number, reason: string): Promise<PaymentWithDetails> => {
   try {
     const response = await axios.post<PaymentWithDetails>(
       `${API_URL}/payments/${paymentId}/void`, 
@@ -243,7 +243,7 @@ export const voidPayment = async (paymentId: number, reason: string): Promise<Pa
  * @param adjustmentData Adjustment details
  * @returns Updated payment
  */
-export const adjustPayment = async (paymentId: number, adjustmentData: AdjustPaymentPayload): Promise<PaymentWithDetails> => {
+export const adjustPayment = async (paymentId: string | number, adjustmentData: AdjustPaymentPayload): Promise<PaymentWithDetails> => {
   try {
     const response = await axios.post<PaymentWithDetails>(
       `${API_URL}/payments/${paymentId}/adjust`, 
@@ -263,7 +263,7 @@ export const adjustPayment = async (paymentId: number, adjustmentData: AdjustPay
  * @param studentId Student ID
  * @returns Array of payments with details
  */
-export const getStudentPaymentHistory = async (studentId: number): Promise<PaymentWithDetails[]> => {
+export const getStudentPaymentHistory = async (studentId: string | number): Promise<PaymentWithDetails[]> => {
   try {
     const response = await axios.get<PaymentWithDetails[]>(`${API_URL}/payments/student/${studentId}`);
     return response.data;
@@ -280,14 +280,14 @@ export const getStudentPaymentHistory = async (studentId: number): Promise<Payme
  * @param paymentId Payment ID
  * @returns Receipt details
  */
-export const generateReceipt = async (paymentId: number): Promise<{ 
-  receipt_id: number; 
+export const generateReceipt = async (paymentId: string | number): Promise<{ 
+  receipt_id: string | number; 
   receipt_number: string;
   message: string;
 }> => {
   try {
     const response = await axios.post<{ 
-      receipt_id: number; 
+      receipt_id: string | number; 
       receipt_number: string;
       message: string;
     }>(`${API_URL}/payments/${paymentId}/generate-receipt`, {});
@@ -307,25 +307,25 @@ export const generateReceipt = async (paymentId: number): Promise<{
  * @returns Created payments
  */
 export const processBulkPayment = async (bulkPaymentData: {
-  student_id: number;
+  student_id: string | number;
   total_amount: number;
   payment_date: string;
   payment_method: PaymentMethodType;
   reference_number?: string;
   notes?: string;
   items: {
-    fee_id?: number;
-    invoice_id?: number;
+    fee_id?: string | number;
+    invoice_id?: string | number;
     amount: number;
     description?: string;
   }[];
-  school_id?: number;
+  school_id?: string | number;
   generate_receipt?: boolean;
 }): Promise<{
   payments: PaymentWithDetails[];
   total_amount: number;
   payment_count: number;
-  receipt_id?: number;
+  receipt_id?: string | number;
   receipt_number?: string;
 }> => {
   try {
@@ -333,7 +333,7 @@ export const processBulkPayment = async (bulkPaymentData: {
       payments: PaymentWithDetails[];
       total_amount: number;
       payment_count: number;
-      receipt_id?: number;
+      receipt_id?: string | number;
       receipt_number?: string;
     }>(`${API_URL}/payments/bulk`, bulkPaymentData);
     
@@ -351,7 +351,7 @@ export const processBulkPayment = async (bulkPaymentData: {
  * @returns Array of available payment methods
  */
 export const getPaymentMethods = async (): Promise<{
-  id: number;
+  id: string | number;
   name: string;
   type: PaymentMethodType;
   description?: string;
@@ -361,7 +361,7 @@ export const getPaymentMethods = async (): Promise<{
 }[]> => {
   try {
     const response = await axios.get<{
-      id: number;
+      id: string | number;
       name: string;
       type: PaymentMethodType;
       description?: string;

@@ -1,9 +1,6 @@
-/* eslint-disable @typescript-eslint/consistent-type-imports */
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable no-console */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-"use client";
+'use client';
 
+import { PageHeader } from "@/components/layout/page-header";
 import React, { useEffect, useState } from "react";
 import {
   Card,
@@ -13,41 +10,31 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-
+import { Badge } from "@/components/ui/badge";
+import { Trash2, Save, Plus, Building2, LayoutGrid, RefreshCw } from "lucide-react";
 import schoolService from "@/services/schools";
 import classService, { ClassData } from "@/services/class";
 import { School } from "@/types/school";
 import { Toaster, toast } from 'sonner';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface ClassWithSlots extends ClassData {
   slots: number;
-  temp_id?: number; // 👈 add this
 }
 
-export default function AdminSchoolsPage() {
-
-
-  // List of all schools
+export default function ClassManagementPage() {
   const [schools, setSchools] = useState<School[]>([]);
-  // Selected school to edit
   const [selectedSchool, setSelectedSchool] = useState<School | null>(null);
-  // Classes under the selected school
   const [classes, setClasses] = useState<ClassWithSlots[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // Load all schools initially
-
+  useEffect(() => {
+    loadSchools();
+  }, []);
 
   async function loadSchools() {
-    setLoading(true);
     try {
       const allSchools = await schoolService.getAll();
       setSchools(allSchools);
@@ -55,452 +42,231 @@ export default function AdminSchoolsPage() {
         selectSchool(allSchools[0]);
       }
     } catch {
-      setError("Failed to load schools.");
+      toast.error("Failed to load schools.");
     }
-    setLoading(false);
   }
 
-  useEffect(() => {
-    loadSchools();
-  }, []);
-  
   async function selectSchool(school: School) {
-    setError(null);
     setSelectedSchool(school);
-    setLoading(true);
     try {
       const schoolClasses = await classService.getBySchool(school.id);
-      setClasses(
-        schoolClasses.map((cls) => ({
-          ...cls,
-          slots: cls.slots ?? 0,
-        }))
-      );
+      setClasses(schoolClasses.map((cls) => ({ ...cls, slots: cls.slots ?? 0 })));
     } catch {
-      setError("Failed to load classes.");
+      toast.error("Failed to load classes.");
       setClasses([]);
     }
-    setLoading(false);
   }
 
-  // Handle form change for school details
-  function onSchoolChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
-    const { name, value } = e.target;
-    if (!selectedSchool) return;
-    setSelectedSchool((prev) => (prev ? { ...prev, [name]: value } : prev));
-  }
-
-  // Handle class changes
-function onClassChange(
-  id: number,
-  field: "name" |  "slots",
-  value: string | number
-) {
-  setClasses((prev) =>
-    prev.map((cls) =>
-      (cls.id ?? cls.temp_id) === id
-        ? {
-            ...cls,
-            [field]: field === "slots" ? Number(value) : value,
+  function onClassChange(id: string | number, field: "name" | "slots", value: string | number) {
+    setClasses((prev) =>
+      prev.map((cls) => {
+        if (cls.id === id) {
+          if (field === "slots") {
+            const num = Number(value);
+            return { ...cls, slots: Number.isNaN(num) ? 0 : num };
           }
-        : cls
-    )
-  );
-}
+          return { ...cls, [field]: String(value) };
+        }
+        return cls;
+      })
+    );
+  }
 
-
-  // Add new empty class
-function addClass() {
-  if (!selectedSchool) return;
-
-  const tempId = Date.now() + Math.floor(Math.random() * 10000); // Unique fallback ID
-
-  const newClass: ClassWithSlots = {
-    id: tempId, // 👈 temp_id only
-    name: '',
-    school_id: selectedSchool.id,
-    school_name: selectedSchool.name,
-    slots: 0,
-    capacity: 0,
-    students_count: 0,
-  };
-
-  setClasses((prev) => [...prev, newClass]);
-}
-
-
-
-
-
-  // Delete class from UI and backend if exists
-  async function deleteClass(id: number) {
+  function addClass() {
     if (!selectedSchool) return;
-    setLoading(true);
+    const tempId = `TEMP-${Date.now()}`;
+    const newClass: ClassWithSlots = {
+      id: tempId,
+      name: '',
+      school_id: selectedSchool.id,
+      school_name: selectedSchool.name,
+      slots: 0,
+      capacity: 0,
+      students_count: 0,
+    };
+    setClasses((prev) => [...prev, newClass]);
+  }
+
+  async function deleteClass(id: string | number) {
     try {
-      if (id < 1000000000) {
-        // existing class
-        await classService.delete(id);
+      if (!String(id).startsWith('TEMP-')) {
+        await classService.delete(String(id));
       }
       setClasses((prev) => prev.filter((cls) => cls.id !== id));
-      toast.success("Class deleted successfully");
+      toast.success("Class removed");
     } catch {
-      toast.error("Failed to delete class");
+      toast.error("Failed to delete class.");
     }
-    setLoading(false);
   }
 
-  // Delete school and clear selection
-  async function deleteSchool(id: number) {
-    setLoading(true);
-    try {
-      await schoolService.delete(id);
-      setSchools((prev) => prev.filter((s) => s.id !== id));
-      setSelectedSchool(null);
-      setClasses([]);
-      toast.success("School deleted successfully");
-    } catch {
-      toast.error("Failed to delete school");
-    }
-    setLoading(false);
-  }
-
-  // Save school and classes (create or update)
   async function onSave() {
     if (!selectedSchool) return;
     setSaving(true);
-    setError(null);
-
     try {
-      
-if (!selectedSchool.name.trim()) {
-  toast.error("School name is required.");
-  setSaving(false);
-  return;
-}
+      const classRequests = classes.map((cls) => {
+        if (!cls.name) throw new Error("Class name is required.");
+        const payload = {
+          name: cls.name,
+          school_id: selectedSchool.id,
+          slots: cls.slots,
+          capacity: cls.slots,
+          students_count: cls.students_count,
+        };
 
-      // Save or update school
-      let savedSchool = selectedSchool;
-    if (!selectedSchool.id || selectedSchool.id === 0) {
-      const { id } = await schoolService.create(selectedSchool);
-      savedSchool = await schoolService.getById(id); // 🛠 Fetch full object
-      setSelectedSchool(savedSchool);
-      setSchools((prev) => [...prev, savedSchool]);
-    } else {
-      await schoolService.update(selectedSchool.id, {
-        name: selectedSchool.name,
-        address: selectedSchool.address,
-        phone_number: selectedSchool.phone_number,
-        email: selectedSchool.email,
+        if (String(cls.id).startsWith('TEMP-')) {
+          return classService.create(payload as any);
+        } else {
+          return classService.update({ id: cls.id, ...payload } as any);
+        }
       });
-      savedSchool = selectedSchool;
-      setSchools((prev) =>
-        prev.map((s) => (s.id === savedSchool.id ? savedSchool : s))
-      );
-    }
-
-      // Save or update classes
-const classRequests = classes.map((cls) => {
-  if (!cls.name) throw new Error("Class name is required");
-
-  if (cls.slots === null || cls.slots === undefined || isNaN(cls.slots)) {
-    throw new Error("Class slots are required");
-  }
-
-  const payload: Omit<ClassData, "id" | "school_name"> = {
-    name: cls.name,
-    school_id: savedSchool.id!,
-    slots: cls.slots,
-    capacity: cls.slots,
-    students_count: cls.students_count,
-  };
-
-if (cls.id >= 1000000000) {
-  // Temporary class – create new
-  return classService.create(payload);
-} else {
-  // Existing class – update
-  return classService.update({
-    id: cls.id,
-    ...payload,
-  });
-} 
-});
-
 
       await Promise.all(classRequests);
-
-      toast.success("School and classes saved successfully!");
+      toast.success("Changes saved successfully");
+      if (selectedSchool) selectSchool(selectedSchool);
     } catch (error: any) {
-      setError(error.message || "Failed to save data.");
-      toast.error(error.message || "Failed to save data. Please try again.");
+      toast.error(error.message || "Failed to save changes.");
     } finally {
       setSaving(false);
     }
   }
 
-  // Add new school (blank form)
- function addSchool() {
-  setSelectedSchool({
-    id: 0,
-    name: "",
-    address: "",
-    phone_number: "",
-    email: "",
-    phone: "",
-    website: "",
-    code: "",
-    capacity: 0,
-    status: "active", // or whatever default fits
-  });
-  setClasses([]);
-}
-
-// Suggested options
-const CLASS_OPTIONS = [
-  "KG 1 A",
-  "KG 1 B",
-  "KG 1 C",
-  "KG 1 D",
-  "KG 2 A",
-  "KG 2 B",
-  "KG 2 C",
-  "KG 2 D",
-  ...Array.from({ length: 9 }, (_, i) => `Basic ${i + 1}`),
-];
-
   return (
-    <div className="max-w-7xl mx-auto p-6 flex gap-6">
-      {/* Left sidebar: Schools list */}
-      <Toaster position="top-right" richColors />
-      <Card className="w-1/3 max-h-[80vh] overflow-auto">
-        <CardHeader>
-          <CardTitle>Schools</CardTitle>
-          <CardDescription>Manage all schools</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <Button variant="outline" className="w-full mb-4" onClick={addSchool}>
-            + Add New School
-          </Button>
+    <div className="flex flex-1 flex-col gap-8 p-4 md:p-8 max-w-[1600px] mx-auto w-full pb-24">
+        <Toaster position="top-right" richColors />
+        <PageHeader
+          title="Class & Unit Allocation"
+          description="Manage educational levels, capacity, and student enrollment quotas across nodes."
+          breadcrumbs={[
+            { title: 'Home', href: '/' },
+            { title: 'Admin', href: '/admin' },
+            { title: 'Classes' }
+          ]}
+        />
 
-          {loading && !selectedSchool && <p>Loading schools...</p>}
-          {schools.length === 0 && <p>No schools found.</p>}
-
-          <ul>
-            {schools.map((schoolItem) => (
-              <li
-                key={schoolItem.id}
-                className={`cursor-pointer p-3 rounded-md ${
-                  selectedSchool?.id === schoolItem.id
-                    ? "bg-primary text-primary-foreground font-semibold"
-                    : "hover:bg-muted"
-                } flex justify-between items-center`}
-                onClick={() => selectSchool(schoolItem)}
-              >
-                <span>{schoolItem.name}</span>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (
-                      window.confirm(
-                        `Are you sure you want to delete school "${schoolItem.name}"?`
-                      )
-                    ) {
-                      deleteSchool(schoolItem.id);
-                    }
-                  }}
-                >
-                  Delete
-                </Button>
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
-
-      {/* Right side: Selected school and classes */}
-      <div className="flex-1 space-y-6 overflow-auto max-h-[80vh]">
-        {!selectedSchool ? (
-          <Card>
-            <CardContent>
-              <p className="text-center text-muted-foreground">Select a school to edit or create a new one.</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <>
-            <Card>
-              <CardHeader>
-                <CardTitle>School Details</CardTitle>
-                <CardDescription>Edit school information</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="name">School Name</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    value={selectedSchool.name}
-                    onChange={onSchoolChange}
-                    placeholder="Example High School"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="address">Address</Label>
-                  <Textarea
-                    id="address"
-                    name="address"
-                    value={selectedSchool.address}
-                    onChange={onSchoolChange}
-                    placeholder="123 Main St, City"
-                    rows={2}
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="phone_number">Phone Number</Label>
-                    <Input
-                      id="phone_number"
-                      name="phone_number"
-                      value={selectedSchool.phone_number}
-                      onChange={onSchoolChange}
-                      placeholder="+1234567890"
-                      type="tel"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      name="email"
-                      value={selectedSchool.email}
-                      onChange={onSchoolChange}
-                      placeholder="email@example.com"
-                      type="email"
-                      required
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Classes & Slots</CardTitle>
-                <CardDescription>
-                  Add, edit or delete classes for this school
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {classes.length === 0 && (
-                  <p className="text-sm text-muted-foreground">
-                    No classes added yet.
-                  </p>
-                )}
-
-                {classes.map((cls) => (
-  <div
-    key={cls.id ?? cls.temp_id}
-    className="grid grid-cols-5 gap-4 items-center border-b border-border py-2"
-  >
-    <div>
-      <Label htmlFor={`class-name-${cls.id ?? cls.temp_id}`}>
-        Class Name
-      </Label>
-
-      {/* ✅ Combobox: Popover with list AND typing */}
-      <Popover>
-        <PopoverTrigger asChild>
-          <Input
-            value={cls.name}
-            placeholder="Type or select class"
-            onChange={(e) =>
-              onClassChange(cls.id ?? cls.temp_id!, "name", e.target.value)
-            }
-          />
-        </PopoverTrigger>
-        <PopoverContent className="p-0">
-          <div className="flex flex-col">
-            {CLASS_OPTIONS.map((option) => (
-              <button
-                key={option}
-                className={cn(
-                  "text-left w-full px-4 py-2 hover:bg-muted"
-                )}
-                onClick={() =>
-                  onClassChange(cls.id ?? cls.temp_id!, "name", option)
-                }
-              >
-                {option}
-              </button>
-            ))}
-          </div>
-        </PopoverContent>
-      </Popover>
-    </div>
-
-    <div>
-      <Label htmlFor={`class-slots-${cls.id ?? cls.temp_id}`}>
-        Slots Available
-      </Label>
-      <Input
-        id={`class-slots-${cls.id ?? cls.temp_id}`}
-        type="number"
-        min={0}
-        value={cls.slots}
-        onChange={(e) =>
-          onClassChange(cls.id ?? cls.temp_id!, "slots", e.target.value)
-        }
-        required
-      />
-    </div>
-
-    <div className="pt-6">
-      <Button
-        variant="destructive"
-        size="sm"
-        onClick={() => {
-          if (
-            window.confirm(
-              `Are you sure you want to delete class "${cls.name}"?`
-            )
-          ) {
-            deleteClass(cls.id);
-          }
-        }}
-      >
-        Delete
-      </Button>
-    </div>
-  </div>
-))}
-
-                <Button variant="outline" onClick={addClass}>
-                  + Add Class
-                </Button>
-              </CardContent>
-            </Card>
-
-            {error && (
-              <p className="text-red-600 font-semibold text-center">{error}</p>
-            )}
-
-            <div className="flex justify-end gap-2">
-              <Button
-                onClick={onSave}
-                disabled={saving}
-                className="w-40"
-                type="button"
-              >
-                {saving ? "Saving..." : "Save Changes"}
-              </Button>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* Sidebar: Schools list */}
+            <div className="lg:col-span-3 space-y-6">
+                <Card className="border-none shadow-2xl shadow-black/5 rounded-[2rem] overflow-hidden bg-background">
+                    <CardHeader className="bg-muted/20 border-b py-6 px-8">
+                        <div className="flex items-center gap-4">
+                            <div className="size-10 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20">
+                                <Building2 className="size-5" />
+                            </div>
+                            <CardTitle className="text-sm font-black uppercase tracking-widest">Network Units</CardTitle>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="p-4 space-y-1">
+                        {schools.map((school) => (
+                            <button
+                                key={school.id}
+                                onClick={() => selectSchool(school)}
+                                className={cn(
+                                    "w-full text-left px-6 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all",
+                                    selectedSchool?.id === school.id
+                                        ? "bg-primary text-white shadow-xl shadow-primary/20"
+                                        : "hover:bg-muted text-muted-foreground"
+                                )}
+                            >
+                                {school.name}
+                            </button>
+                        ))}
+                    </CardContent>
+                </Card>
             </div>
-          </>
-        )}
-      </div>
+
+            {/* Main Area */}
+            <div className="lg:col-span-9">
+                {!selectedSchool ? (
+                    <div className="h-full flex flex-col items-center justify-center py-32 border-2 border-dashed rounded-[3rem] bg-muted/5 text-center px-10">
+                        <div className="size-20 bg-muted/20 rounded-[2rem] flex items-center justify-center mb-6">
+                            <Building2 className="size-10 text-muted-foreground opacity-30" />
+                        </div>
+                        <h4 className="text-xl font-black uppercase tracking-tighter">No Unit Selected</h4>
+                        <p className="text-sm text-muted-foreground max-w-xs mt-2 font-medium">Select a tactical unit from the left panel to manage its educational classification.</p>
+                    </div>
+                ) : (
+                    <Card className="border-none shadow-2xl shadow-black/5 rounded-[3rem] overflow-hidden bg-background">
+                        <CardHeader className="bg-muted/20 border-b py-10 px-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+                            <div className="flex items-center gap-6">
+                                <div className="size-14 rounded-3xl bg-indigo-600 text-white flex items-center justify-center shadow-xl shadow-indigo-600/20">
+                                    <LayoutGrid className="size-7" />
+                                </div>
+                                <div className="space-y-1">
+                                    <CardTitle className="text-2xl font-black tracking-tighter uppercase">{selectedSchool.name}</CardTitle>
+                                    <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600/60 opacity-60">Classification & Capacity Control</CardDescription>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3 w-full sm:w-auto">
+                                <Button variant="outline" className="h-12 rounded-2xl border-none bg-background shadow-sm hover:bg-primary/5 font-black uppercase tracking-widest text-[9px] px-6 flex-1 sm:flex-none" onClick={addClass}>
+                                    <Plus className="mr-2 h-4 w-4" /> Add Class
+                                </Button>
+                                <Button className="h-12 rounded-2xl font-black uppercase tracking-widest text-[10px] px-8 shadow-xl shadow-primary/20 flex-1 sm:flex-none" onClick={onSave} disabled={saving}>
+                                    {saving ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                                    Sync Registry
+                                </Button>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                            <div className="overflow-x-auto">
+                                <Table>
+                                    <TableHeader className="bg-muted/10">
+                                        <TableRow className="hover:bg-transparent border-none">
+                                            <TableHead className="pl-10 py-6 text-[10px] font-black uppercase tracking-[0.2em]">Class Identity</TableHead>
+                                            <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-center">Authorized Slots</TableHead>
+                                            <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-center">Occupancy Node</TableHead>
+                                            <TableHead className="text-right pr-10 text-[10px] font-black uppercase tracking-[0.2em]">Operations</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {classes.map((cls) => (
+                                            <TableRow key={cls.id} className="group hover:bg-muted/30 border-b border-muted-foreground/5 last:border-none transition-colors">
+                                                <TableCell className="pl-10 py-6">
+                                                    <Input
+                                                        value={cls.name}
+                                                        onChange={(e) => onClassChange(cls.id, 'name', e.target.value)}
+                                                        placeholder="Class Identifier"
+                                                        className="h-12 rounded-xl bg-muted/30 border-none font-black px-6 focus:bg-background transition-all uppercase text-xs"
+                                                    />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="flex justify-center">
+                                                        <Input
+                                                            type="number"
+                                                            value={cls.slots}
+                                                            onChange={(e) => onClassChange(cls.id, 'slots', e.target.value)}
+                                                            className="h-12 w-24 rounded-xl bg-muted/30 border-none font-black text-center focus:bg-background transition-all"
+                                                        />
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="text-center">
+                                                    <div className="flex flex-col items-center">
+                                                        <span className="text-sm font-black text-primary tracking-tighter">{cls.students_count} / {cls.slots}</span>
+                                                        <Badge variant="outline" className={cn(
+                                                            "text-[8px] font-black uppercase border-none px-2",
+                                                            cls.students_count >= cls.slots ? "bg-rose-500/10 text-rose-600" : "bg-emerald-500/10 text-emerald-600"
+                                                        )}>
+                                                            {cls.students_count >= cls.slots ? 'Full Capacity' : 'Available'}
+                                                        </Badge>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="text-right pr-10">
+                                                    <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl text-destructive hover:bg-destructive/10 transition-all opacity-0 group-hover:opacity-100" onClick={() => deleteClass(cls.id)}>
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                        {classes.length === 0 && (
+                                            <TableRow><TableCell colSpan={4} className="text-center py-20 text-muted-foreground italic font-medium uppercase text-[10px] tracking-widest opacity-30">No educational classifications established for this unit.</TableCell></TableRow>
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
+            </div>
+        </div>
     </div>
   );
 }

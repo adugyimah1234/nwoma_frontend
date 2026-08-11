@@ -3,7 +3,7 @@
 "use client";
 
 import { TrendingUp } from "lucide-react";
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from "recharts";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import {
   Card,
   CardContent,
@@ -80,8 +80,7 @@ export default function Chart({ data }: ChartProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig}>
-          <ResponsiveContainer width="100%" height={400}>
+        <ChartContainer config={chartConfig} className="h-[400px]">
             <AreaChart
               data={transformedData}
               margin={{
@@ -126,7 +125,6 @@ export default function Chart({ data }: ChartProps) {
                 fillOpacity={0.4}
               />
             </AreaChart>
-          </ResponsiveContainer>
         </ChartContainer>
       </CardContent>
       <CardFooter>

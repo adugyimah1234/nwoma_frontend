@@ -7,6 +7,7 @@ import "@/style/globals.css";
 import { Providers } from "./providers";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { LoadingProvider } from "@/components/nav/side-nav/components/LoadingContext";
+import { NavigationProgressProvider } from "@/components/providers/navigation-progress-provider";
 // import { ToastContainer } from "react-toastify";
 // import "react-toastify/dist/ReactToastify.css";
 
@@ -26,15 +27,17 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={cn("bg-background font-sans", gabarito.variable)}>
         <Providers>
-        <LoadingProvider 
-        showOverlay={true} 
-        minLoadingTime={1500}
-        >
-        <AuthProvider>
-          <div className="flex min-h-[100dvh]">
-            <div className="flex-grow overflow-auto">{children}</div>
-          </div>
-          </AuthProvider>
+          {/* Global navigation progress bar — shows on every page transition */}
+          <NavigationProgressProvider />
+          <LoadingProvider
+            showOverlay={true}
+            minLoadingTime={1500}
+          >
+            <AuthProvider>
+              <div className="flex min-h-[100dvh]">
+                <div className="flex-grow w-full">{children}</div>
+              </div>
+            </AuthProvider>
           </LoadingProvider>
         </Providers>
       </body>

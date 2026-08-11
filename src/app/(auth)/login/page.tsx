@@ -1,182 +1,179 @@
 'use client';
-/* eslint-disable react/jsx-no-undef */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-console */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable react/no-unescaped-entities */
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { EyeIcon, EyeOffIcon, LockIcon, UserIcon, ArrowRightIcon } from 'lucide-react'; // ⬅️ Use UserIcon
+
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { EyeIcon, EyeOffIcon, LockIcon, UserIcon, ArrowRightIcon, Timer } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Loader } from '@/components/ui/loader';
 import Image from "next/image";
-import Link from 'next/link';
 
 export default function ProfessionalLogin() {
-  const { signIn, loading, error: authError } = useAuth();
-  const [username, setUsername] = useState(''); // ⬅️ changed
+  const { signIn, error: authError } = useAuth();
+  const searchParams = useSearchParams();
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const [socialLoading, setSocialLoading] = useState(false);
+  const [countdown, setCountdown] = useState<number | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    if (searchParams.get('expired')) {
+      setLocalError("Your session has expired. Please log in again.");
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (countdown !== null && countdown > 0) {
+      timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+    } else if (countdown === 0) {
+      setCountdown(null);
+      setLocalError(null);
+    }
+    return () => clearTimeout(timer);
+  }, [countdown]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (countdown) return;
+
     setLocalError(null);
     setSocialLoading(true);
 
     try {
-      await signIn(username, password); // ⬅️ changed
+      await signIn(username, password);
       router.push('/');
     } catch (err: any) {
-      setLocalError(err?.response?.data?.message || err?.message || 'Login failed. Please check your credentials.');
+      if (err.status === 429) {
+        setCountdown(err.retryAfter || 60);
+        setLocalError(`Too many login attempts. Restricted for ${err.retryAfter || 60} seconds.`);
+      } else {
+        setLocalError(err?.response?.data?.message || err?.message || 'Login failed. Please check your credentials.');
+      }
     } finally {
       setSocialLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-      {/* Left panel */}
-      <div className="hidden lg:flex lg:w-1/2 bg-indigo-600 items-center justify-center p-12">
-        <div className="max-w-md text-white">
-          <div className="text-4xl font-bold mb-6">Welcome back</div>
-          <p className="text-indigo-200 text-lg mb-8">
-            Access your dashboard and manage your business analytics with ease.
-          </p>
-          <div className="bg-white/10 p-6 rounded-lg backdrop-blur-sm">
-            <div className="text-xl font-medium mb-4">Why people love our platform</div>
-            <ul className="space-y-3">
-              {["Real-time analytics", "Secure cloud access", "24/7 technical support", "Mobile-friendly interface"].map((item, i) => (
-                <li key={i} className="flex items-center">
-                  <div className="h-2 w-2 rounded-full bg-indigo-300 mr-2"></div>
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
+    <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden font-sans">
+      {/* Background Image with Overlay */}
+      <div
+        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat transition-transform duration-1000"
+        style={{
+          backgroundImage: 'url("https://images.unsplash.com/photo-1541339907198-e08756c83f2d?q=80&w=2070&auto=format&fit=crop")',
+        }}
+      >
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px]" />
       </div>
 
-      {/* Right panel */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
-        <div className="w-full max-w-md">
-          <div className="text-center mb-10">
-            <div className="h-10 w-20 rounded-xl flex items-center justify-center mx-auto mb-8">
-              <Image src="/logo.png" alt="Logo" width={50} height={50} className='w-28 h-20'/>
-            </div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Sign in to Dashboard</h1>
-            <p className="mt-2 text-gray-600 dark:text-gray-400">Enter your credentials to access your account</p>
+      <div className="relative z-10 w-full max-w-xl px-6 flex flex-col items-center">
+        {/* Branding Header */}
+        <div className="text-center mb-8 space-y-2">
+          <div className="flex justify-center mb-6 drop-shadow-2xl">
+            <Image
+              src="/logo.png"
+              alt="Garrison Schools Logo"
+              width={120}
+              height={120}
+              className="w-24 h-auto"
+            />
           </div>
+          <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight drop-shadow-lg">
+            Ghana Garrison Schools
+          </h1>
+          <h2 className="text-xl font-medium text-gray-200 tracking-wide opacity-80">
+            Institution Login
+          </h2>
+          <p className="text-sm text-gray-300 max-w-xs mx-auto pt-2">
+            Login to access your school's secure management portal.
+          </p>
+        </div>
 
+        {/* Login Card */}
+        <div className="w-full bg-[#1e293b]/85 backdrop-blur-xl border border-white/10 p-8 md:p-12 rounded-[2.5rem] shadow-2xl">
           {(localError || authError) && (
-            <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 text-red-700 dark:bg-red-900/30 dark:border-red-800 dark:text-red-400">
-              <p className="text-sm font-medium">{localError || authError}</p>
+            <div className={`mb-8 p-4 rounded-2xl border flex items-start gap-3 ${countdown ? 'bg-amber-500/10 border-amber-500/20 text-amber-200' : 'bg-red-500/10 border-red-500/20 text-red-200'}`}>
+              {countdown && <Timer className="h-5 w-5 animate-pulse shrink-0" />}
+              <p className="text-xs font-semibold">{localError || authError}</p>
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* ✅ Username input */}
             <div className="space-y-2">
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Username
+              <label htmlFor="username" className="block text-xs font-medium text-gray-400 ml-1">
+                Your username
               </label>
-              <div className="relative rounded-lg shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <UserIcon className="h-5 w-5 text-gray-400" />
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500 group-focus-within:text-indigo-400 transition-colors">
+                  <UserIcon className="h-5 w-5" />
                 </div>
                 <input
                   id="username"
                   name="username"
                   required
+                  disabled={!!countdown || socialLoading}
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg bg-white dark:bg-gray-800 dark:border-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="block w-full pl-12 pr-4 py-4 bg-[#0f172a]/50 border border-white/5 rounded-2xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-medium"
                   placeholder="Your username"
                 />
               </div>
             </div>
 
-            {/* ✅ Password input (unchanged) */}
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Password
-                </label>
-                <Link href="/change-password" className="text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400">
-                  Forgot password?
-                </Link>
-              </div>
-              <div className="relative rounded-lg shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <LockIcon className="h-5 w-5 text-gray-400" />
+              <label htmlFor="password" className="block text-xs font-medium text-gray-400 ml-1">
+                Password
+              </label>
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500 group-focus-within:text-indigo-400 transition-colors">
+                  <LockIcon className="h-5 w-5" />
                 </div>
                 <input
                   id="password"
                   name="password"
                   type={showPassword ? "text" : "password"}
-                  autoComplete="current-password"
                   required
+                  disabled={!!countdown || socialLoading}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg bg-white dark:bg-gray-800 dark:border-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="block w-full pl-12 pr-12 py-4 bg-[#0f172a]/50 border border-white/5 rounded-2xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-medium"
                   placeholder="••••••••"
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-gray-300 transition-colors"
                   onClick={() => setShowPassword(!showPassword)}
                 >
-                  {showPassword ? (
-                    <EyeOffIcon className="h-5 w-5 text-gray-400" />
-                  ) : (
-                    <EyeIcon className="h-5 w-5 text-gray-400" />
-                  )}
+                  {showPassword ? <EyeOffIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
                 </button>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
-                  Remember me
-                </label>
               </div>
             </div>
 
             <button
               type="submit"
-              disabled={socialLoading}
-              className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+              disabled={socialLoading || !!countdown}
+              className="w-full h-16 flex justify-center items-center rounded-2xl text-base font-bold text-white bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] transition-all shadow-xl shadow-indigo-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {socialLoading ? (
-                <Loader className="h-5 w-5" />
+                <Loader className="h-6 w-6" />
+              ) : countdown ? (
+                `Locked (${countdown}s)`
               ) : (
-                <>
-                  Sign in
-                  <ArrowRightIcon className="ml-2 h-4 w-4" />
-                </>
+                <div className="flex items-center gap-2">
+                  <span>Enter Dashboard</span>
+                  <ArrowRightIcon className="h-5 w-5" />
+                </div>
               )}
             </button>
           </form>
-
-          <p className="mt-10 text-center text-sm text-gray-600 dark:text-gray-400">
-            Don't have an account?{' '}
-            <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400">
-              Create a free account
-            </a>
-          </p>
         </div>
+
+        <p className="mt-8 text-xs font-medium text-gray-400 tracking-widest opacity-60">
+          SECURE EDUCATIONAL COMMAND REGISTRY
+        </p>
       </div>
     </div>
   );

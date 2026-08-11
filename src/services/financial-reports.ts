@@ -1,14 +1,8 @@
-/* eslint-disable import/no-anonymous-default-export */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable no-console */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import api from '@/lib/axios';
 import axios from 'axios';
 import { format, subDays, subMonths, startOfMonth, getYear } from 'date-fns';
 import { type FeeType } from '../types/fee';
 import { type InvoiceStatus } from './invoice';
-
-// Base API URL
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001/api';
 
 // Period types for reports
 export type ReportPeriod = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly' | 'custom';
@@ -32,9 +26,9 @@ interface BaseReportParams {
   period?: ReportPeriod;
   start_date?: string;
   end_date?: string;
-  school_id?: number;
-  class_id?: number;
-  student_id?: number;
+  school_id?: string;
+  class_id?: string;
+  student_id?: string;
   include_details?: boolean;
 }
 
@@ -64,7 +58,7 @@ export interface FeeCollectionReportParams extends BaseReportParams {
 
 // Student financial statement parameters
 export interface StudentStatementParams {
-  student_id: number;
+  student_id: string;
   period?: ReportPeriod;
   start_date?: string;
   end_date?: string;
@@ -74,9 +68,9 @@ export interface StudentStatementParams {
 
 // Class financial summary parameters
 export interface ClassSummaryReportParams {
-  class_id?: number;
+  class_id?: string;
   grade_level?: string;
-  academic_year_id?: number;
+  academic_year_id?: string;
   include_student_details?: boolean;
   group_by?: 'student' | 'fee_type';
 }
@@ -112,13 +106,13 @@ export interface IncomeReportData {
     percentage: number;
   }[];
   details?: {
-    id: number;
+    id: string;
     date: string;
     student_name: string;
     fee_type: string;
     payment_method: string;
     amount: number;
-    receipt_id?: number;
+    receipt_id?: string;
   }[];
 }
 
@@ -144,9 +138,9 @@ export interface OutstandingPaymentsReportData {
     percentage: number;
   }[];
   details?: {
-    invoice_id: number;
+    invoice_id: string;
     invoice_number: string;
-    student_id: number;
+    student_id: string;
     student_name: string;
     due_date: string;
     days_overdue: number;
@@ -187,7 +181,7 @@ export interface FeeCollectionReportData {
     collection_rate: number;
   }[];
   details?: {
-    fee_id: number;
+    fee_id: string;
     fee_type: string;
     class_name?: string;
     amount: number;
@@ -200,7 +194,7 @@ export interface FeeCollectionReportData {
 // Data structure for student financial statement
 export interface StudentFinancialStatementData {
   student_info: {
-    id: number;
+    id: string;
     name: string;
     admission_number?: string;
     class_name?: string;
@@ -234,7 +228,7 @@ export interface StudentFinancialStatementData {
 // Data structure for class financial summary
 export interface ClassFinancialSummaryData {
   class_info: {
-    id: number;
+    id: string;
     name: string;
     grade_level?: string;
     academic_year?: string;
@@ -257,7 +251,7 @@ export interface ClassFinancialSummaryData {
     outstanding: number;
   }[];
   student_details?: {
-    id: number;
+    id: string;
     name: string;
     total_fees: number;
     total_paid: number;
@@ -291,7 +285,7 @@ export interface ReceivablesAgingReportData {
     percentage: number;
   }[];
   student_details?: {
-    id: number;
+    id: string;
     name: string;
     current: number;
     aging_buckets: {
@@ -311,8 +305,8 @@ export interface ReportResponse<T> {
     report_type: ReportType;
     generated_at: string;
     parameters: Record<string, any>;
-    user_id?: number;
-    school_id?: number;
+    user_id?: string;
+    school_id?: string;
   };
 }
 
@@ -332,12 +326,12 @@ export const generateIncomeReport = async (params: IncomeReportParams): Promise<
       }
     });
     
-    const response = await axios.get<ReportResponse<IncomeReportData>>(
-      `${API_URL}/reports/income?${queryParams.toString()}`
+    const response = await api.get<ReportResponse<IncomeReportData>>(
+      `/reports/income?${queryParams.toString()}`
     );
     
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
     if (axios.isAxiosError(error)) {
       throw new Error(error.response?.data?.error || 'Failed to generate income report');
     }
@@ -363,12 +357,12 @@ export const generateOutstandingPaymentsReport = async (
       }
     });
     
-    const response = await axios.get<ReportResponse<OutstandingPaymentsReportData>>(
-      `${API_URL}/reports/outstanding-payments?${queryParams.toString()}`
+    const response = await api.get<ReportResponse<OutstandingPaymentsReportData>>(
+      `/reports/outstanding-payments?${queryParams.toString()}`
     );
     
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
     if (axios.isAxiosError(error)) {
       throw new Error(error.response?.data?.error || 'Failed to generate outstanding payments report');
     }
@@ -394,12 +388,12 @@ export const generateFeeCollectionReport = async (
       }
     });
     
-    const response = await axios.get<ReportResponse<FeeCollectionReportData>>(
-      `${API_URL}/reports/fee-collection?${queryParams.toString()}`
+    const response = await api.get<ReportResponse<FeeCollectionReportData>>(
+      `/reports/fee-collection?${queryParams.toString()}`
     );
     
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
     if (axios.isAxiosError(error)) {
       throw new Error(error.response?.data?.error || 'Failed to generate fee collection report');
     }
@@ -429,12 +423,12 @@ export const generateStudentFinancialStatement = async (
       }
     });
     
-    const response = await axios.get<ReportResponse<StudentFinancialStatementData>>(
-      `${API_URL}/reports/student-statement?${queryParams.toString()}`
+    const response = await api.get<ReportResponse<StudentFinancialStatementData>>(
+      `/reports/student-statement?${queryParams.toString()}`
     );
     
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
     if (axios.isAxiosError(error)) {
       throw new Error(error.response?.data?.error || 'Failed to generate student financial statement');
     }
@@ -464,12 +458,12 @@ export const generateClassFinancialSummary = async (
       }
     });
     
-    const response = await axios.get<ReportResponse<ClassFinancialSummaryData>>(
-      `${API_URL}/reports/class-summary?${queryParams.toString()}`
+    const response = await api.get<ReportResponse<ClassFinancialSummaryData>>(
+      `/reports/class-summary?${queryParams.toString()}`
     );
     
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
     if (axios.isAxiosError(error)) {
       throw new Error(error.response?.data?.error || 'Failed to generate class financial summary');
     }
@@ -507,12 +501,12 @@ export const generateReceivablesAgingReport = async (
       }
     });
     
-    const response = await axios.get<ReportResponse<ReceivablesAgingReportData>>(
-      `${API_URL}/reports/receivables-aging?${queryParams.toString()}`
+    const response = await api.get<ReportResponse<ReceivablesAgingReportData>>(
+      `/reports/receivables-aging?${queryParams.toString()}`
     );
     
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
     if (axios.isAxiosError(error)) {
       throw new Error(error.response?.data?.error || 'Failed to generate receivables aging report');
     }
@@ -551,12 +545,12 @@ export const exportReport = async (
       }
     });
     
-    const response = await axios.get<{ export_url: string }>(
-      `${API_URL}/reports/export?${queryParams.toString()}`
+    const response = await api.get<{ export_url: string }>(
+      `/reports/export?${queryParams.toString()}`
     );
     
     return response.data.export_url;
-  } catch (error) {
+  } catch (error: any) {
     if (axios.isAxiosError(error)) {
       throw new Error(error.response?.data?.error || `Failed to export ${reportType} report`);
     }

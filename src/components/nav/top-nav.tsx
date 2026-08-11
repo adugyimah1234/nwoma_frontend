@@ -2,49 +2,61 @@
 /* eslint-disable no-console */
 "use client";
 
-import { useEffect, useState } from "react";
-import Container from "../container";
+import { useEffect, useState, useRef } from "react";
 import { ThemeToggle } from "../theme-toggle";
-import { Bell, Search, Menu, User, ChevronDown, LogOut, Settings, HelpCircle, KeyRound } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth"; // Import your useAuth hook
-import Image from "next/image"; // Import Image for profile picture
-import { useRouter } from 'next/navigation'; // Replace react-router-dom import
-import { Loader } from "@/components/ui/loader"; // Add this import
-import { Button } from "../ui/button";
+import { Bell, Search, Menu, User, ChevronDown, LogOut, Settings, HelpCircle, KeyRound, X } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useRouter } from 'next/navigation';
+import { Loader } from "@/components/ui/loader";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 
 export default function TopNav({ title }: { title: string }) {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { user, logout } = useAuth(); // Access the user object from the AuthContext
-  const [profileImage, setProfileImage] = useState<string | null>(null); // State for profile image
-  const router = useRouter(); // Use Next.js router instead
-  const [isOpen, setIsOpen] = useState(true);
+  const { user, logout } = useAuth();
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const router = useRouter();
 
-  // Add these states for loading
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const [isLoadingSettings] = useState(false);
   const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
 
+  const userMenuRef = useRef<HTMLDivElement>(null);
+  const notifMenuRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (user?.id) {
-      // Replace with your actual image loading mechanism
       setProfileImage(`/api/users/${user.id}/profile-image`);
     } else {
-      setProfileImage('/images/default-user.png'); // Default image
+      setProfileImage(null);
     }
   }, [user?.id]);
+
+  // Close dropdowns on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setIsUserMenuOpen(false);
+      }
+      if (notifMenuRef.current && !notifMenuRef.current.contains(e.target as Node)) {
+        setIsNotificationsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleLogout = async () => {
     try {
       setIsLoggingOut(true);
       await logout();
-      router.push('/login'); // Use Next.js navigation
+      router.push('/login');
     } catch (error: any) {
       console.error("Logout failed:", error.message);
-      // Optionally display an error
     } finally {
       setIsLoggingOut(false);
     }
@@ -53,8 +65,8 @@ export default function TopNav({ title }: { title: string }) {
   const handleProfileClick = async () => {
     try {
       setIsLoadingProfile(true);
-      await router.push('/profile'); // Use Next.js navigation
-      setIsUserMenuOpen(false); // Close menu after navigation
+      await router.push('/profile');
+      setIsUserMenuOpen(false);
     } finally {
       setIsLoadingProfile(false);
     }
@@ -63,56 +75,55 @@ export default function TopNav({ title }: { title: string }) {
   const handleNotificationClick = async () => {
     setIsLoadingNotifications(true);
     try {
-      // Your notification loading logic here
       setIsNotificationsOpen(!isNotificationsOpen);
     } finally {
       setIsLoadingNotifications(false);
     }
   };
 
-  // Mock data for notifications (keep this as is for now)
   const notifications = [
     { id: 1, message: "New comment on your post", time: "5m ago", read: false },
     { id: 2, message: "Your report is ready to download", time: "1h ago", read: false },
     { id: 3, message: "Server maintenance scheduled", time: "2h ago", read: true },
   ];
 
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .substring(0, 2)
+      .toUpperCase();
+  };
+
   return (
-    <Container className="flex h-16 items-center justify-between border-b border-border">
-      {/* Left side: Logo/Title and mobile menu toggle */}
-      <div className="flex items-center gap-4">
-      
-            {/* Logo */}
-            <div className="flex h-16 items-center px-4">
-              <div className={`flex items-center ${isOpen ? "justify-start" : "justify-center w-full"}`}>
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white">
-                  <span className="text-xl font-bold text-white">
-                  <Image src={"/logo.png"} alt={"logo"} width={40} height={40} className="h-8 w-8" />
-                  <span className="sr-only">Logo</span>
-                  </span>
-                </div>
-              </div>
-            </div>
-        <Button
-          className="md:hidden p-2 text-muted-foreground hover:text-foreground"
+    <header className="flex fixed h-14 shrink-0 items-center justify-between border-b border-border/50 bg-card px-4 md:px-6 z-20">
+      {/* Left: Mobile menu toggle + Title */}
+      <div className="flex items-center gap-3">
+        <button
+          className="md:hidden flex items-center justify-center h-8 w-8 rounded-lg hover:bg-accent text-muted-foreground transition-colors"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         >
-          <Menu size={20} />
-        </Button>
-        <h1 className="text-2xl font-medium">
-              <Link href="/" className="text-xl font-bold text-blue-600 hover:underline">
-        {title}
-      </Link>
+          <Menu size={18} />
+        </button>
+        <h1 className="text-sm font-semibold text-foreground tracking-tight hidden sm:block">
+          {title}
         </h1>
       </div>
 
-      {/* Right side: Search, notifications, user menu */}
-      <div className="flex items-center gap-3">
+      {/* Right: Actions */}
+      <div className="flex items-center gap-1">
+        {/* Search (placeholder) */}
+        <button className="flex items-center justify-center h-8 w-8 rounded-lg hover:bg-accent text-muted-foreground transition-colors">
+          <Search size={16} />
+        </button>
 
         {/* Notifications */}
-        <div className="relative">
+        <div className="relative" ref={notifMenuRef}>
           <button
-            className="p-2 rounded-md hover:bg-accent relative disabled:opacity-50"
+            className="flex items-center justify-center h-8 w-8 rounded-lg hover:bg-accent text-muted-foreground transition-colors relative"
             onClick={handleNotificationClick}
             disabled={isLoadingNotifications}
           >
@@ -120,9 +131,9 @@ export default function TopNav({ title }: { title: string }) {
               <Loader size="sm" showText={false} />
             ) : (
               <>
-                <Bell size={20} />
-                {notifications.filter(n => !n.read).length > 0 && (
-                  <span className="absolute top-1 right-1 bg-red-500 rounded-full w-2 h-2"></span>
+                <Bell size={16} />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive ring-2 ring-card" />
                 )}
               </>
             )}
@@ -130,8 +141,27 @@ export default function TopNav({ title }: { title: string }) {
 
           {/* Notifications dropdown */}
           {isNotificationsOpen && (
-            <div className="absolute right-0 mt-2 w-80 rounded-md border border-border bg-card shadow-lg z-10">
-              {/* ... notifications list ... */}
+            <div className="absolute right-0 mt-2 w-80 rounded-xl border border-border/50 bg-card shadow-lg shadow-black/5 z-50 overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
+                <h3 className="text-sm font-semibold text-foreground">Notifications</h3>
+                <span className="text-xs text-primary font-medium cursor-pointer hover:underline">Mark all read</span>
+              </div>
+              <div className="max-h-64 overflow-y-auto">
+                {notifications.map(n => (
+                  <div
+                    key={n.id}
+                    className={`flex items-start gap-3 px-4 py-3 hover:bg-accent/50 transition-colors cursor-pointer ${
+                      !n.read ? "bg-primary/5" : ""
+                    }`}
+                  >
+                    <div className={`mt-1 h-2 w-2 shrink-0 rounded-full ${!n.read ? "bg-primary" : "bg-transparent"}`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-foreground">{n.message}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{n.time}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
@@ -139,119 +169,137 @@ export default function TopNav({ title }: { title: string }) {
         {/* Theme Toggle */}
         <ThemeToggle />
 
+        {/* Divider */}
+        <div className="h-6 w-px bg-border/50 mx-1 hidden md:block" />
+
         {/* User Menu */}
-        <div className="relative">
+        <div className="relative" ref={userMenuRef}>
           <button
-            className="flex items-center gap-2 p-1 pl-2 rounded-md hover:bg-accent disabled:opacity-50"
+            className="flex items-center gap-2 h-8 pl-1 pr-2 rounded-lg hover:bg-accent transition-colors"
             onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-            
           >
-            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
-              {isLoadingProfile ? (
-                <Loader size="sm" showText={false} />
-              ) : profileImage ? (
-                <Image src={profileImage} alt="User avatar" width={32} height={32} className="h-full w-full object-cover" />
-              ) : (
-                <User size={16} className="text-primary" />
-              )}
-            </div>
-            {user && <span className="hidden md:inline text-sm font-medium truncate">{user.full_name}</span>}
-            <ChevronDown size={16} className="text-muted-foreground" />
+            <Avatar className="h-7 w-7">
+              <AvatarImage src={profileImage || undefined} alt="User avatar" />
+              <AvatarFallback className="bg-primary/10 text-primary font-semibold text-[10px]">
+                {user?.full_name ? getInitials(user.full_name) : <User size={14} />}
+              </AvatarFallback>
+            </Avatar>
+            <span className="hidden md:block text-sm font-medium text-foreground truncate max-w-[120px]">
+              {user?.full_name}
+            </span>
+            <ChevronDown size={14} className="text-muted-foreground hidden md:block" />
           </button>
 
-          {/* User dropdown menu */}
+          {/* User dropdown */}
           {isUserMenuOpen && user && (
-            <div className="absolute right-0 mt-2 w-56 rounded-md border border-border bg-card shadow-lg z-10">
-              <div className="p-2 border-b border-border">
-                <div className="font-medium truncate">{user.full_name}</div>
-                <div className="text-xs text-muted-foreground truncate">{user.email}</div>
+            <div className="absolute right-0 mt-2 w-56 rounded-xl border border-border/50 bg-card shadow-lg shadow-black/5 z-50 overflow-hidden">
+              {/* User info header */}
+              <div className="px-4 py-3 border-b border-border/50">
+                <p className="text-sm font-semibold text-foreground truncate">{user.full_name}</p>
+                <p className="text-xs text-muted-foreground truncate mt-0.5">{user.email}</p>
               </div>
-              <ul>
-                <li>
-                  <button 
-                    onClick={handleProfileClick} 
-                    className="w-full text-left px-3 py-2 hover:bg-accent flex items-center gap-2"
-                    disabled={isLoadingProfile}
-                  >
-                    {isLoadingProfile ? (
-                      <Loader size="sm" showText={false} />
-                    ) : (
-                      <User size={16} />
-                    )}
-                    <span>Profile</span>
-                  </button>
-                </li>
-                <li>
-                  <button 
-                    className="w-full text-left px-3 py-2 hover:bg-accent flex items-center gap-2"
-                    
-                  >
-                    {isLoadingSettings ? (
-                      <Loader size="sm" showText={false} />
-                    ) : (
-                      <Settings size={16} />
-                    )}
-                    <span>Settings</span>
-                  </button>
-                </li>
-                <li>
-                  <button 
-                    onClick={() => {
-                      router.push('/change-password');
-                      setIsUserMenuOpen(false);
-                    }}
-                    className="w-full text-left px-3 py-2 hover:bg-accent flex items-center gap-2"
-                  >
-                    <KeyRound size={16} />
-                    <span>Change Password</span>
-                  </button>
-                </li>
-                <li>
-                  <button className="w-full text-left px-3 py-2 hover:bg-accent flex items-center gap-2">
-                    <HelpCircle size={16} />
-                    <span>Help</span>
-                  </button>
-                </li>
-                <li className="border-t border-border">
-                  <button 
-                    onClick={handleLogout} 
-                    className="w-full text-left px-3 py-2 hover:bg-accent flex items-center gap-2 text-red-500 disabled:opacity-50"
-                    
-                  >
-                    {isLoggingOut ? (
-                      <Loader size="sm" showText={false} className="text-red-500" />
-                    ) : (
-                      <LogOut size={16} />
-                    )}
-                    <span>Log out</span>
-                  </button>
-                </li>
-              </ul>
+
+              {/* Menu items */}
+              <div className="py-1.5">
+                <button
+                  onClick={handleProfileClick}
+                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-accent/50 transition-colors"
+                  disabled={isLoadingProfile}
+                >
+                  {isLoadingProfile ? (
+                    <Loader size="sm" showText={false} />
+                  ) : (
+                    <User size={15} strokeWidth={1.8} className="text-muted-foreground" />
+                  )}
+                  <span>Profile</span>
+                </button>
+                <button
+                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-accent/50 transition-colors"
+                >
+                  {isLoadingSettings ? (
+                    <Loader size="sm" showText={false} />
+                  ) : (
+                    <Settings size={15} strokeWidth={1.8} className="text-muted-foreground" />
+                  )}
+                  <span>Settings</span>
+                </button>
+                <button
+                  onClick={() => {
+                    router.push('/change-password');
+                    setIsUserMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-accent/50 transition-colors"
+                >
+                  <KeyRound size={15} strokeWidth={1.8} className="text-muted-foreground" />
+                  <span>Change Password</span>
+                </button>
+                <button
+                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-accent/50 transition-colors"
+                >
+                  <HelpCircle size={15} strokeWidth={1.8} className="text-muted-foreground" />
+                  <span>Help</span>
+                </button>
+              </div>
+
+              {/* Logout */}
+              <div className="border-t border-border/50 py-1.5">
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 px-4 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
+                >
+                  {isLoggingOut ? (
+                    <Loader size="sm" showText={false} className="text-destructive" />
+                  ) : (
+                    <LogOut size={15} strokeWidth={1.8} />
+                  )}
+                  <span>Log out</span>
+                </button>
+              </div>
             </div>
           )}
         </div>
       </div>
 
-      {/* Mobile menu */}
-      {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm md:hidden">
-          <div className="fixed inset-y-0 left-0 w-3/4 max-w-xs bg-card p-6 shadow-lg">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-xl font-semibold">{title}</h2>
-              <button
-                className="p-2 rounded-md hover:bg-accent"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                ✕
-              </button>
-            </div>
-            <nav className="space-y-1">
-              <a href="/dashboard" className="block px-3 py-2 rounded-md bg-primary/10 text-primary">3 GARRISON EDUCATION CENTRE</a>
-              {/* Add mobile links for other dashboard pages */}
-            </nav>
-          </div>
-        </div>
-      )}
-    </Container>
+      {/* Mobile menu overlay */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            <motion.div
+              className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm md:hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+            <motion.div
+              className="fixed inset-y-0 left-0 z-50 w-72 bg-card border-r border-border/50 shadow-xl md:hidden"
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 250 }}
+            >
+              <div className="flex items-center justify-between p-4 border-b border-border/50">
+                <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+                <button
+                  className="flex items-center justify-center h-7 w-7 rounded-lg hover:bg-accent text-muted-foreground transition-colors"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              <nav className="p-3 space-y-1">
+                <Link
+                  href="/"
+                  className="block px-3 py-2 rounded-lg text-sm font-medium bg-primary/10 text-primary"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Dashboard
+                </Link>
+              </nav>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </header>
   );
 }

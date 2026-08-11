@@ -36,7 +36,7 @@ export async function getUnsyncedRegistrations(): Promise<
   const tx = db.transaction(STORE_NAME);
   const store = tx.objectStore(STORE_NAME);
   const index = store.index('syncedIndex');
-  const results = await index.getAll(false);
+  const results = await index.getAll(0 as any);
   return results as any; // cast to expected type
 }
 

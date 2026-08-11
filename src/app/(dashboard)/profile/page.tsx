@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/consistent-type-imports */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
+import { PageHeader } from '@/components/layout/page-header';
 import { useState, FormEvent } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import type { UpdateUserPayload } from '@/services/users';
@@ -119,9 +120,13 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-      <div className="container mx-auto px-4 py-12">
-        <div className="max-w-3xl mx-auto">
+    <div className="flex flex-1 flex-col gap-4 p-6">
+        <PageHeader
+          title="My Profile"
+          description="View and update your personal information"
+          breadcrumbs={[{ title: 'Home', href: '/' }, { title: 'Profile' }]}
+        />
+        <div className="max-w-3xl mx-auto w-full">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Your Profile</h1>
             {!isEditing ? (
@@ -309,6 +314,5 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
-    </div>
   );
 }

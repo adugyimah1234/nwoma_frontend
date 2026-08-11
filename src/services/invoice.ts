@@ -11,9 +11,9 @@ export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled' 
 
 // Invoice item interface
 export interface InvoiceItem {
-  id: number;
-  invoice_id: number;
-  fee_id: number;
+  id: string;
+  invoice_id: string;
+  fee_id: string;
   description: string;
   amount: number;
   quantity: number;
@@ -24,9 +24,9 @@ export interface InvoiceItem {
 
 // Invoice interface
 export interface Invoice {
-  id: number;
+  id: string;
   invoice_number: string;
-  student_id: number;
+  student_id: string;
   issue_date: string;
   due_date: string;
   total_amount: number;
@@ -34,9 +34,9 @@ export interface Invoice {
   balance: number;
   status: InvoiceStatus;
   notes?: string;
-  school_id?: number;
-  class_id?: number;
-  created_by?: number;
+  school_id?: string;
+  class_id?: string;
+  created_by?: string;
   created_at: string;
   updated_at: string;
 }
@@ -51,42 +51,42 @@ export interface InvoiceWithDetails extends Invoice {
   created_by_name?: string;
   items: InvoiceItem[];
   payment_history?: {
-    id: number;
+    id: string;
     amount: number;
     date: string;
     method?: string;
-    receipt_id?: number;
+    receipt_id?: string;
   }[];
 }
 
 // Interface for creating a new invoice
 export interface CreateInvoicePayload {
-  student_id: number;
+  student_id: string;
   issue_date: string;
   due_date: string;
   items: {
-    fee_id: number;
+    fee_id: string;
     description: string;
     amount: number;
     quantity: number;
   }[];
   notes?: string;
-  school_id?: number;
-  class_id?: number;
+  school_id?: string;
+  class_id?: string;
 }
 
 // Interface for updating an invoice
 export interface UpdateInvoicePayload {
-  student_id?: number;
+  student_id?: string;
   issue_date?: string;
   due_date?: string;
   status?: InvoiceStatus;
   notes?: string;
-  school_id?: number;
-  class_id?: number;
+  school_id?: string;
+  class_id?: string;
   items?: {
-    id?: number; // Existing item ID if updating
-    fee_id: number;
+    id?: string; // Existing item ID if updating
+    fee_id: string;
     description: string;
     amount: number;
     quantity: number;
@@ -95,10 +95,10 @@ export interface UpdateInvoicePayload {
 
 // Filter parameters for listing invoices
 export interface InvoiceFilterParams {
-  student_id?: number;
+  student_id?: string;
   status?: InvoiceStatus | InvoiceStatus[];
-  school_id?: number;
-  class_id?: number;
+  school_id?: string;
+  class_id?: string;
   issue_date_from?: string;
   issue_date_to?: string;
   due_date_from?: string;
@@ -147,7 +147,7 @@ export const getInvoices = async (filters?: InvoiceFilterParams): Promise<Invoic
  * @param id Invoice ID
  * @returns Invoice with full details
  */
-export const getInvoice = async (id: number): Promise<InvoiceWithDetails> => {
+export const getInvoice = async (id: string): Promise<InvoiceWithDetails> => {
   try {
     const response = await axios.get<InvoiceWithDetails>(`${API_URL}/invoices/${id}`);
     return response.data;
@@ -182,7 +182,7 @@ export const createInvoice = async (invoice: CreateInvoicePayload): Promise<Invo
  * @param invoice Updated invoice data
  * @returns Updated invoice
  */
-export const updateInvoice = async (id: number, invoice: UpdateInvoicePayload): Promise<InvoiceWithDetails> => {
+export const updateInvoice = async (id: string, invoice: UpdateInvoicePayload): Promise<InvoiceWithDetails> => {
   try {
     const response = await axios.put<InvoiceWithDetails>(`${API_URL}/invoices/${id}`, invoice);
     return response.data;
@@ -199,7 +199,7 @@ export const updateInvoice = async (id: number, invoice: UpdateInvoicePayload): 
  * @param id Invoice ID
  * @returns Success message
  */
-export const deleteInvoice = async (id: number): Promise<{ message: string }> => {
+export const deleteInvoice = async (id: string): Promise<{ message: string }> => {
   try {
     const response = await axios.delete<{ message: string }>(`${API_URL}/invoices/${id}`);
     return response.data;
@@ -216,7 +216,7 @@ export const deleteInvoice = async (id: number): Promise<{ message: string }> =>
  * @param id Invoice ID
  * @returns Updated invoice
  */
-export const markInvoiceAsSent = async (id: number): Promise<InvoiceWithDetails> => {
+export const markInvoiceAsSent = async (id: string): Promise<InvoiceWithDetails> => {
   try {
     const response = await axios.put<InvoiceWithDetails>(`${API_URL}/invoices/${id}/mark-sent`, {});
     return response.data;
@@ -235,7 +235,7 @@ export const markInvoiceAsSent = async (id: number): Promise<InvoiceWithDetails>
  * @returns Updated invoice
  */
 export const markInvoiceAsPaid = async (
-  id: number, 
+  id: string,
   paymentDetails: { 
     amount: number; 
     payment_date: string; 
@@ -263,7 +263,7 @@ export const markInvoiceAsPaid = async (
  * @param reason Reason for cancellation
  * @returns Updated invoice
  */
-export const cancelInvoice = async (id: number, reason?: string): Promise<InvoiceWithDetails> => {
+export const cancelInvoice = async (id: string, reason?: string): Promise<InvoiceWithDetails> => {
   try {
     const response = await axios.put<InvoiceWithDetails>(
       `${API_URL}/invoices/${id}/cancel`, 
@@ -285,7 +285,7 @@ export const cancelInvoice = async (id: number, reason?: string): Promise<Invoic
  * @returns Success message
  */
 export const sendInvoiceByEmail = async (
-  id: number, 
+  id: string,
   emailOptions?: { 
     to?: string[]; 
     cc?: string[]; 
@@ -311,7 +311,7 @@ export const sendInvoiceByEmail = async (
  * @param id Invoice ID
  * @returns URL to invoice PDF
  */
-export const getInvoicePdfUrl = (id: number): string => {
+export const getInvoicePdfUrl = (id: string): string => {
   return `${API_URL}/invoices/${id}/pdf`;
 };
 
@@ -319,7 +319,7 @@ export const getInvoicePdfUrl = (id: number): string => {
  * Generate and download invoice PDF
  * @param id Invoice ID
  */
-export const downloadInvoicePdf = async (id: number): Promise<void> => {
+export const downloadInvoicePdf = async (id: string): Promise<void> => {
   try {
     // Create a direct link to the PDF and trigger download
     const link = document.createElement('a');
@@ -359,7 +359,7 @@ export const generateTuitionInvoices = async (): Promise<{ message: string }> =>
  * @param schoolId Optional school ID
  * @returns Invoice summary statistics
  */
-export const getInvoicesSummary = async (schoolId?: number): Promise<{
+export const getInvoicesSummary = async (schoolId?: string): Promise<{
   total: number;
   draft: number;
   sent: number;

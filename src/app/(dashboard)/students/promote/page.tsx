@@ -1,5 +1,6 @@
 
 'use client';
+import { PageHeader } from '@/components/layout/page-header';
 import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -15,8 +16,8 @@ import { Student } from '@/types/student';
 import { Loader2 } from 'lucide-react';
 
 interface ClassMapping {
-  currentClassId: number;
-  nextClassId: number | null; // null for graduation
+  currentClassId: string | number;
+  nextClassId: string | number | null; // null for graduation
 }
 
 export default function PromoteStudentsPage() {
@@ -85,11 +86,11 @@ export default function PromoteStudentsPage() {
     setClassMappings(initialMappings);
   }, [currentAcademicYearClasses]);
 
-  const handleClassMappingChange = (currentClassId: number, nextClassId: string) => {
+  const handleClassMappingChange = (currentClassId: string | number, nextClassId: string) => {
     setClassMappings(prev =>
       prev.map(mapping =>
         mapping.currentClassId === currentClassId
-          ? { ...mapping, nextClassId: nextClassId === 'null' ? null : Number(nextClassId) }
+          ? { ...mapping, nextClassId: nextClassId === 'null' ? null : nextClassId }
           : mapping
       )
     );
@@ -116,9 +117,8 @@ export default function PromoteStudentsPage() {
       if (mapping && mapping.nextClassId !== null) {
         try {
           await studentService.updatePartial(student.id!, {
-            class_id: mapping.nextClassId,
-            academic_year_id: Number(selectedNextAcademicYearId),
-          });
+            class_id: mapping.nextClassId as string | number,
+          } as any);
           promotedCount++;
         } catch (error) {
           console.error(`Failed to promote student ${student.id}:`, error);
@@ -129,9 +129,8 @@ export default function PromoteStudentsPage() {
         // Optionally update their status to 'graduated' or similar
         try {
           await studentService.updatePartial(student.id!, {
-            academic_year_id: Number(selectedNextAcademicYearId), // Still associate with new year
             status: 'graduated', // Example status
-          });
+          } as any);
           promotedCount++; // Count as handled
         } catch (error) {
           console.error(`Failed to update graduating student ${student.id}:`, error);
@@ -166,11 +165,20 @@ export default function PromoteStudentsPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-3xl font-bold">Promote Students</h1>
-      <p className="text-muted-foreground">
-        Select the current and next academic years, then map classes for student promotion.
-      </p>
+    <div className="flex flex-1 flex-col gap-4 p-6">
+        <PageHeader
+          title="Promote Students"
+          description="Map class progressions and promote students to the next academic year"
+          breadcrumbs={[
+            { title: 'Home', href: '/' },
+            { title: 'Students', href: '/students' },
+            { title: 'Promote Students' }
+          ]}
+          tabs={[
+            { title: 'All Students', href: '/students' },
+            { title: 'Promote Students', href: '/students/promote' },
+          ]}
+        />
 
       <Card>
         <CardHeader>
@@ -253,7 +261,7 @@ export default function PromoteStudentsPage() {
                         <TableCell>
                           <Select
                             value={String(currentMapping?.nextClassId ?? 'null')}
-                            onValueChange={(value) => handleClassMappingChange(currentClass.id, value)}
+                            onValueChange={(value: string) => handleClassMappingChange(currentClass.id, value)}
                           >
                             <SelectTrigger>
                               <SelectValue placeholder="Select next class" />
@@ -323,6 +331,6 @@ export default function PromoteStudentsPage() {
           </CardContent>
         </Card>
       )}
-    </div>
+      </div>
   );
 }

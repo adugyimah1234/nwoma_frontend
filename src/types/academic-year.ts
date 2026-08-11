@@ -1,7 +1,7 @@
 export interface AcademicYear {
-  id: number;
-  name: string;
+  id: string | number;
+  name?: string;
   year: string;
-  start_date: string;
-  end_date: string;
+  start_date?: string;
+  end_date?: string;
 }

@@ -1,9 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useEffect, useState } from 'react';
-
-
 import {
   Card,
   CardContent,
@@ -13,14 +10,11 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Plus, Edit, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { createAcademicYear, getAllAcademicYear, type academicYear as AcademicYearType, } from '@/services/academic_year';
+import { DataTable, DataTableColumn } from '@/components/ui/data-table';
 import {
   Dialog,
   DialogContent,
@@ -31,10 +25,7 @@ import {
   DialogTrigger,
   DialogClose,
 } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { createAcademicYear, getAllAcademicYear, type academicYear as AcademicYearType, } from '@/services/academic_year';
+import { Label } from '@/components/ui/label';
 
 export default function AcademicYearSettings() {
   const [academicYears, setAcademicYears] = useState<AcademicYearType[]>([]);
@@ -42,175 +33,171 @@ export default function AcademicYearSettings() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // Fetch all academic years on mount
   useEffect(() => {
-    const fetchAcademicYears = async () => {
-      try {
-        const data = await getAllAcademicYear();
-        setAcademicYears(data);
-      } catch (error: any) {
-        toast.error(error.message);
-      }
-    };
     fetchAcademicYears();
   }, []);
 
+  const fetchAcademicYears = async () => {
+    try {
+      setLoading(true);
+      const data = await getAllAcademicYear();
+      setAcademicYears(data);
+    } catch (error: any) {
+      toast.error('Failed to fetch academic years');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const columns: DataTableColumn<AcademicYearType>[] = [
+    {
+      key: 'year',
+      header: 'Academic Year',
+      cell: (row) => <span className="font-semibold">{row.year}</span>
+    },
+    {
+      key: 'start_date',
+      header: 'Start Date',
+      cell: (row) => new Date(row.start_date).toLocaleDateString()
+    },
+    {
+      key: 'end_date',
+      header: 'End Date',
+      cell: (row) => new Date(row.end_date).toLocaleDateString()
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      cell: (row) => {
+        const isActive = (row as any).is_active;
+        return (
+          <Badge variant={isActive ? 'default' : 'secondary'}>
+            {isActive ? 'Active' : 'Inactive'}
+          </Badge>
+        );
+      }
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      headerClassName: 'text-right',
+      className: 'text-right',
+      cell: (row) => (
+        <div className="flex justify-end gap-1">
+          <Button variant="ghost" size="icon" className="h-8 w-8">
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      )
+    }
+  ];
+
   const handleCreate = async () => {
-  if (!year || !startDate || !endDate) {
-    toast.error('All fields are required');
-    return;
-  }
+    if (!year || !startDate || !endDate) {
+      toast.error('All fields are required');
+      return;
+    }
 
-  setIsCreating(true);
+    setIsCreating(true);
+    try {
+      const payload = {
+        year: year,
+        start_date: new Date(startDate).toISOString().split('T')[0],
+        end_date: new Date(endDate).toISOString().split('T')[0],
+        is_active: true
+      };
 
-  try {
-    const payload = {
-      year: year,
-      start_date: new Date(startDate),
-      end_date: new Date(endDate),
-    };
-
-    const created = await createAcademicYear(payload);
-    setAcademicYears((prev) => [...prev, created]);
-    toast.success('Academic year created');
-
-    // Clear form
-    setYear('');
-    setStartDate('');
-    setEndDate('');
-
-    // ✅ Close dialog manually after success
-    const closeButton = document.getElementById('close-dialog-button');
-    if (closeButton) closeButton.click();
-
-  } catch (error: any) {
-    toast.error(error.message);
-  } finally {
-    setIsCreating(false);
-  }
-};
-
+      await createAcademicYear(payload);
+      toast.success('Academic year created');
+      setYear('');
+      setStartDate('');
+      setEndDate('');
+      fetchAcademicYears();
+      document.getElementById('close-ay-dialog')?.click();
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setIsCreating(false);
+    }
+  };
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle>Academic Years</CardTitle>
-          <CardDescription>
-            Manage academic years and their schedules
-          </CardDescription>
+          <CardDescription>Manage academic cycles and terms</CardDescription>
         </div>
 
         <Dialog>
           <DialogTrigger asChild>
-            <Button>
+            <Button size="sm">
               <Plus className="h-4 w-4 mr-2" />
               Add Academic Year
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>Add Academic Year</DialogTitle>
               <DialogDescription>
-                Create a new academic year with start and end dates
+                Set the label and duration for the new academic cycle.
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-4 py-4">
-              <Input
-                placeholder="e.g. 2025"
-                type="number"
-                value={year}
-                onChange={(e) => setYear(e.target.value)}
-              />
-              <Input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-              />
-              <Input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-              />
+              <div className="space-y-2">
+                <Label>Year Label</Label>
+                <Input
+                  placeholder="e.g. 2025/2026"
+                  value={year}
+                  onChange={(e) => setYear(e.target.value)}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Start Date</Label>
+                  <Input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>End Date</Label>
+                  <Input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                  />
+                </div>
+              </div>
             </div>
 
             <DialogFooter>
               <DialogClose asChild>
-                <Button variant="outline" id='close-dialog-button'>Cancel</Button>
+                <Button variant="outline" id="close-ay-dialog">Cancel</Button>
               </DialogClose>
-<DialogClose asChild>
-  <Button onClick={handleCreate} disabled={isCreating}>
-    {isCreating ? 'Creating...' : 'Create'}
-  </Button>
-</DialogClose>
-
-
+              <Button onClick={handleCreate} disabled={isCreating}>
+                {isCreating ? 'Creating...' : 'Create Year'}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </CardHeader>
 
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Academic Year</TableHead>
-              <TableHead>Start Date</TableHead>
-              <TableHead>End Date</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {academicYears.map((year) => {
-              const status =
-                new Date(year.end_date) < new Date()
-                  ? 'completed'
-                  : new Date(year.start_date) > new Date()
-                  ? 'upcoming'
-                  : 'active';
-
-              return (
-                <TableRow key={year.id}>
-                  <TableCell className="font-medium">{year.year}</TableCell>
-                  <TableCell>
-                    {new Date(year.start_date).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    {new Date(year.end_date).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        status === 'active'
-                          ? 'default'
-                          : status === 'upcoming'
-                          ? 'secondary'
-                          : 'outline'
-                      }
-                    >
-                      {status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon">
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+        <DataTable
+          data={academicYears as any}
+          columns={columns as any}
+          loading={loading}
+          emptyMessage="No academic years defined yet."
+          rowKey="id"
+        />
       </CardContent>
     </Card>
   );

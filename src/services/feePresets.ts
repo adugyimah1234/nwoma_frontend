@@ -3,7 +3,7 @@
 import api from "@/lib/axios";
 
 export interface FeePreset {
-  id: number;
+  id: string | number;
   type: string;
   category: string | null;
   class_name: string | null;

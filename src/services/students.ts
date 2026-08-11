@@ -1,59 +1,44 @@
 import api from "@/lib/axios";
-
-export interface CreateStudentPayload {
-  id?: number;
-  first_name: string;
-  middle_name: string;
-  last_name: string;
-  dob: string;
-  gender: string;
-  category_id: number;
-  scores: number;
-  class_id: number;
-  registration_date: string;
-  admission_status: string;
-  status: string;
-  school_id?: number;
-  jersey_size?: string;
-}
+import { type CreateStudentPayload, type Student } from "@/types/student";
 
 const studentService = {
   // Partial update (PUT /students/:id)
-  updatePartial: async (id: number, data: Partial<CreateStudentPayload>) => {
+  updatePartial: async (id: string, data: Partial<CreateStudentPayload>) => {
     const res = await api.put(`/students/${id}`, data);
     return res.data;
   },
+
   create: async (data: CreateStudentPayload) => {
     const res = await api.post('/students', data);
     return res.data;
   },
 
-  getAll: async () => {
-    const res = await api.get('/students');
+  getAll: async (params?: any) => {
+    // Standardize GET request: don't pass params object if it's empty
+    const config = params && Object.keys(params).length > 0 ? { params } : {};
+    const res = await api.get('/students', config);
     return res.data;
   },
 
-  getById: async (id: number) => {
+  getById: async (id: string) => {
     const res = await api.get(`/students/${id}`);
     return res.data;
   },
 
-  
-    promote: async (id: number) => {
-      const res = await api.post(`/students/${id}/promote`);
-      return res.data;
-    },
-  
-    transfer: async (id: number, newSchoolId: number, newClassId: number) => {
-      const res = await api.post(`/students/${id}/transfer`, {
-        school_id: newSchoolId,
-        class_id: newClassId,
-      });
-      return res.data;
-    },
-  
+  promote: async (id: string, newClassId?: string) => {
+    const res = await api.post(`/students/${id}/promote`, { class_id: newClassId });
+    return res.data;
+  },
 
-  enroll: async (id: number, class_id: number, school_id: number) => {
+  transfer: async (id: string, newSchoolId: string, newClassId: string) => {
+    const res = await api.post(`/students/${id}/transfer`, {
+      school_id: newSchoolId,
+      class_id: newClassId,
+    });
+    return res.data;
+  },
+
+  enroll: async (id: string, class_id: string, school_id: string) => {
     const res = await api.post(`/students/${id}/enroll`, {
       class_id,
       school_id,
@@ -61,13 +46,11 @@ const studentService = {
     return res.data;
   },
 
-  remove: async (id: number) => {
+  remove: async (id: string) => {
     const res = await api.delete(`/students/${id}`);
     return res.data;
   },
 };
 
-// Named export for getStudents
 export const getStudents = studentService.getAll;
-
 export default studentService;

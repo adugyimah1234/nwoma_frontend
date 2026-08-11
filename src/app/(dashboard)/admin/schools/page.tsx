@@ -1,14 +1,10 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable @typescript-eslint/consistent-type-imports */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
+import { PageHeader } from '@/components/layout/page-header';
 import { useState, useEffect } from 'react';
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-// import { useToast } from "@/components/ui/use-toast";
 import {
   Card,
   CardContent,
@@ -25,7 +21,6 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -35,17 +30,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import {
-  School,
-  Building2,
-  Search,
-  Plus,
-  Edit,
-  Trash2,
-  MoreVertical
-} from 'lucide-react';
+import { Building2, Plus, Edit, Trash2 } from 'lucide-react';
 import { School as SchoolType } from '@/types/school';
-
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import {
   AlertDialog,
@@ -59,41 +45,16 @@ import {
   AlertDialogTrigger
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
-import { updateCategory, createCategory, deleteCategory, getAllCategories, Category } from '@/services/categories';
-import classService from '@/services/class';
 import schoolService from '@/services/schools';
-import { ClassData } from '@/services/class';
 
-// Update the schema definition
-// Define the Zod schema for form validation
 const schoolFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  code: z.string().min(1, "Code is required"),
-  capacity: z.number().min(0, "Capacity must be a positive number"),
   address: z.string().min(1, "Address is required"),
   phone_number: z.string().min(1, "Phone number is required"),
   email: z.string().email("Invalid email address"),
-  status: z.enum(['active', 'inactive']) // Use enum for status
-});
-
-const classFormSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  level: z.number().min(1, "Level must be at least 1"),
-  school_id: z.number().min(1, "School must be selected"),
-  capacity: z.number().optional()
-});
-
-const categoryFormSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  code: z.string().min(2, "Code must be at least 2 characters"),
-  description: z.string().min(10, "Description must be at least 10 characters"),
-  fees: z.number().min(0, "Fees cannot be negative"),
-  status: z.enum(['active', 'inactive']) // Use enum for status
 });
 
 type SchoolFormValues = z.infer<typeof schoolFormSchema>;
-type ClassFormValues = z.infer<typeof classFormSchema>;
-type CategoryFormValues = z.infer<typeof categoryFormSchema>;
 
 export default function SchoolManagement() {
   const [schools, setSchools] = useState<SchoolType[]>([]);
@@ -101,128 +62,6 @@ export default function SchoolManagement() {
   const [isAddingSchool, setIsAddingSchool] = useState(false);
   const [editingSchool, setEditingSchool] = useState<SchoolType | null>(null);
   const { toast } = useToast();
-
-  const [classes, setClasses] = useState<ClassData[]>([]); // Initialize as empty array
-  const [categories, setCategories] = useState<Category[]>([]); // Initialize as empty array
-  const [isAddingClass, setIsAddingClass] = useState(false);
-  const [isAddingCategory, setIsAddingCategory] = useState(false);
-  const [editingClass, setEditingClass] = useState<ClassData | null>(null);
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-
-  const fetchClasses = async () => {
-    try {
-      setIsLoading(true);
-      const data = await classService.getAll();
-      setClasses(Array.isArray(data) ? data : []); // Ensure we're setting an array
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to fetch classes",
-        variant: "destructive"
-      });
-      setClasses([]); // Set empty array on error
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const fetchCategories = async () => {
-    try {
-      setIsLoading(true);
-      const data = await getAllCategories();
-      setCategories(data);
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to fetch categories",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    Promise.all([
-      fetchSchools(),
-      fetchClasses(),
-      fetchCategories()
-    ]).finally(() => {
-      setIsLoading(false);
-    });
-  }, []);
-
-  // Update your form with all required fields from the schema
-  const form = useForm<SchoolFormValues>({
-    resolver: zodResolver(schoolFormSchema),
-    defaultValues: {
-      name: "",
-      code: "",
-      capacity: 0,
-      address: "",
-      phone_number: "",
-      email: "",
-      status: "active" as const
-    }
-  });
-  
-  // Update the onSubmit handler
-  const onSubmit: SubmitHandler<SchoolFormValues> = async (values) => {
-    const data = {
-  name: 'New Name',
-  address: 'Updated Address',
-};
-    try {
-      setIsLoading(true);
-      if (editingSchool) {
-        
- await schoolService.update(editingSchool.id, data);
-        toast({
-          title: "Success",
-          description: "School updated successfully"
-        });
-      } else {
-        await schoolService.create(data);
-        toast({
-          title: "Success",
-          description: "School created successfully"
-        });
-      }
-      setIsAddingSchool(false);
-      setEditingSchool(null);
-      form.reset();
-      await fetchSchools();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to save school",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const classForm = useForm<ClassFormValues>({
-    resolver: zodResolver(classFormSchema),
-    defaultValues: {
-      name: "",
-      level: 1,
-      school_id: 0,
-      capacity: undefined
-    }
-  });
-
-  const categoryForm = useForm<CategoryFormValues>({
-    resolver: zodResolver(categoryFormSchema),
-    defaultValues: {
-      name: "",
-      code: "",
-      description: "",
-      fees: 0,
-      status: "active"
-    }
-  });
 
   useEffect(() => {
     fetchSchools();
@@ -234,399 +73,214 @@ export default function SchoolManagement() {
       const data = await schoolService.getAll();
       setSchools(data);
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive"
-      });
+      toast({ title: "Error", description: "Failed to fetch schools", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
   };
 
-
-  const handleEdit = (school: SchoolType) => {
-    setEditingSchool(school);
-    form.reset({
-      name: school.name,
-      code: school.code,
-      capacity: school.capacity,
-      address: school.address,
-      phone_number: school.phone_number,
-      email: school.email,
-      status: school.status as 'active' | 'inactive'
-    });
-    setIsAddingSchool(true);
-  };
-
-  const handleDelete = async (id: number) => {
-    try {
-      await schoolService.delete(id);
-      toast({
-        title: "Success",
-        description: "School deleted successfully"
-      });
-      fetchSchools();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleClassSubmit: SubmitHandler<ClassFormValues> = async (values) => {
-    try {
-      if (editingClass) {
-        const updateData = {
-          ...editingClass,
-          ...values,
-          slots: values.capacity || editingClass.slots,
-          students_count: editingClass.students_count || 0
-        };
-        await classService.update(updateData);
-        toast({
-          title: "Success",
-          description: "Class updated successfully"
-        });
-      } else {
-        const createData = {
-          ...values,
-          slots: values.capacity || 0,
-          capacity: values.capacity || 0,
-          students_count: 0
-        };
-        await classService.create(createData);
-        toast({
-          title: "Success",
-          description: "Class created successfully"
-        });
-      }
-      setIsAddingClass(false);
-      setEditingClass(null);
-      classForm.reset();
-      fetchClasses();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-  };
-
-   const handleCategorySubmit: SubmitHandler<CategoryFormValues> = async (values) => {
-    try {
-      // Transform fees to amount for API compatibility
-      const apiData = {
-        name: values.name,
-        code: values.code,
-        description: values.description,
-        amount: values.fees, // Transform fees to amount
-        status: values.status
-      };
-
-      if (editingCategory) {
-        await updateCategory(editingCategory.id, apiData);
-        toast({
-          title: "Success",
-          description: "Category updated successfully"
-        });
-      } else {
-        await createCategory(apiData);
-        toast({
-          title: "Success",
-          description: "Category created successfully"
-        });
-      }
-      setIsAddingCategory(false);
-      setEditingCategory(null);
-      categoryForm.reset();
-      fetchCategories();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleClassDelete = async (id: number) => {
-    try {
-      await classService.delete(id);
-      toast({
-        title: "Success",
-        description: "Class deleted successfully"
-      });
-      fetchClasses();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleCategoryDelete = async (id: number) => {
-    try {
-      await deleteCategory(id);
-      toast({
-        title: "Success",
-        description: "Category deleted successfully"
-      });
-      fetchCategories();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleClassEdit = (cls: ClassData) => {
-    setEditingClass(cls);
-    classForm.reset({
-      name: cls.name,
-      level: cls.level,
-      school_id: cls.school_id,
-      capacity: cls.capacity
-    });
-    setIsAddingClass(true);
-  };
-
-  const handleCategoryEdit = (category: Category) => {
-    setEditingCategory(category);
-    categoryForm.reset({
-      name: category.name,
-      code: category.code,
-      description: category.description,
-      fees: category.amount || 0,
-      status: category.status
-    });
-    setIsAddingCategory(true);
-  };
-
-  const handleReset = () => {
-    form.reset({
+  const form = useForm<SchoolFormValues>({
+    resolver: zodResolver(schoolFormSchema),
+    defaultValues: {
       name: "",
-      code: "",
-      capacity: 0,
       address: "",
       phone_number: "",
       email: "",
-      status: "active"
-    });
+    }
+  });
+  
+  const onSubmit: SubmitHandler<SchoolFormValues> = async (values) => {
+    try {
+      setIsLoading(true);
+      if (editingSchool) {
+        await schoolService.update(editingSchool.id, values);
+        toast({ title: "Success", description: "School updated successfully" });
+      } else {
+        await schoolService.create(values);
+        toast({ title: "Success", description: "School created successfully" });
+      }
+      setIsAddingSchool(false);
+      setEditingSchool(null);
+      form.reset();
+      await fetchSchools();
+    } catch (error: any) {
+      toast({ title: "Error", description: "Failed to save school", variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: string | number) => {
+    try {
+      await schoolService.delete(String(id));
+      toast({ title: "Success", description: "School deleted successfully" });
+      fetchSchools();
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex justify-between items-center">
-          <div>
-            <CardTitle className="text-2xl">School Management</CardTitle>
-            <p className="text-muted-foreground mt-1">
-              Manage schools, classes, and categories
-            </p>
-          </div>
+    <div className="flex flex-1 flex-col gap-8 p-4 md:p-8 max-w-[1600px] mx-auto w-full pb-24">
+        <PageHeader
+          title="Institutional Setup"
+          description="Manage school branches and network campuses."
+          breadcrumbs={[
+            { title: 'Home', href: '/' },
+            { title: 'Admin', href: '/admin' },
+            { title: 'Schools' }
+          ]}
+        >
           <Dialog open={isAddingSchool} onOpenChange={setIsAddingSchool}>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="h-12 rounded-2xl font-black uppercase tracking-widest text-[10px] px-8 shadow-xl shadow-primary/20">
                 <Plus className="h-4 w-4 mr-2" />
-                Add School
+                Add Unit
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[525px]">
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)}>
-                  <DialogHeader>
-                    <DialogTitle>
-                      {editingSchool ? 'Edit School' : 'Add New School'}
-                    </DialogTitle>
+            <DialogContent className="sm:max-w-[500px] rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden">
+              <div className="bg-primary p-8 text-white relative overflow-hidden">
+                  <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12"><Building2 className="size-32" /></div>
+                  <DialogHeader className="relative z-10 space-y-2">
+                      <Badge className="w-fit bg-white/20 text-white border-none font-black text-[10px] tracking-[0.2em] px-4 py-1.5 uppercase">Network Node</Badge>
+                      <DialogTitle className="text-3xl font-black tracking-tighter uppercase">{editingSchool ? 'Edit Unit' : 'New Unit'}</DialogTitle>
                   </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <FormField
-                      control={form.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>School Name</FormLabel>
-                          <FormControl>
-                            <Input 
-                              {...field}
-                              value={field.value || ""}
-                              onChange={(e) => field.onChange(e.target.value)}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <div className="grid grid-cols-2 gap-4">
+              </div>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="p-8 space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Official Unit Name</FormLabel>
+                        <FormControl><Input placeholder="e.g. Garrison Basic School" className="h-14 rounded-2xl bg-muted/30 border-none font-bold px-6 focus:bg-background transition-all" {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="grid grid-cols-2 gap-6">
                       <FormField
                         control={form.control}
-                        name="code"
+                        name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>School Code</FormLabel>
-                            <FormControl>
-                              <Input {...field} />
-                            </FormControl>
+                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Official Email</FormLabel>
+                            <FormControl><Input {...field} type="email" placeholder="admin@node.com" className="h-14 rounded-2xl bg-muted/30 border-none font-bold px-6 focus:bg-background transition-all" /></FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
                       <FormField
                         control={form.control}
-                        name="capacity"
+                        name="phone_number"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Capacity</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                {...field}
-                                value={field.value || 0}
-                                onChange={(e) => field.onChange(Number(e.target.value))}
-                              />
-                            </FormControl>
+                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Contact Phone</FormLabel>
+                            <FormControl><Input {...field} placeholder="+233..." className="h-14 rounded-2xl bg-muted/30 border-none font-bold px-6 focus:bg-background transition-all" /></FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                    </div>
-                    <FormField
-                      control={form.control}
-                      name="address"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Address</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
                   </div>
-                  <DialogFooter>
-                    <Button type="button" variant="outline" onClick={() => {
+                  <FormField
+                    control={form.control}
+                    name="address"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Geographic Address</FormLabel>
+                        <FormControl><Input placeholder="Building No. / Location" className="h-14 rounded-2xl bg-muted/30 border-none font-bold px-6 focus:bg-background transition-all" {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <DialogFooter className="pt-6 gap-3">
+                    <Button type="button" variant="ghost" className="rounded-xl font-bold" onClick={() => {
                       setIsAddingSchool(false);
                       setEditingSchool(null);
                       form.reset();
-                    }}>
-                      Cancel
-                    </Button>
-                    <Button type="submit">
-                      {editingSchool ? 'Update' : 'Create'}
+                    }}>Abort</Button>
+                    <Button type="submit" className="rounded-xl px-8 h-12 font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20">
+                      {editingSchool ? 'Update Node' : 'Initialize Node'}
                     </Button>
                   </DialogFooter>
                 </form>
               </Form>
             </DialogContent>
           </Dialog>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <Tabs defaultValue="schools" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="schools" className="flex items-center">
-              <Building2 className="h-4 w-4 mr-2" />
-              Schools
-            </TabsTrigger>
-            <TabsTrigger value="classes">Classes</TabsTrigger>
-            <TabsTrigger value="categories">Categories</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="schools">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Search schools..."
-                    className="w-[300px]"
-                  />
-                  <Button variant="outline">Filter</Button>
-                </div>
-              </div>
+        </PageHeader>
 
+        <Card className="border-none shadow-2xl shadow-black/5 rounded-[2rem] overflow-hidden">
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
               <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead>Code</TableHead>
-                    <TableHead>Capacity</TableHead>
-                    <TableHead>Address</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                <TableHeader className="bg-muted/10">
+                  <TableRow className="hover:bg-transparent border-none">
+                    <TableHead className="pl-10 py-6 text-[10px] font-black uppercase tracking-[0.2em]">Unit Name</TableHead>
+                    <TableHead className="text-[10px] font-black uppercase tracking-[0.2em]">Communications</TableHead>
+                    <TableHead className="text-[10px] font-black uppercase tracking-[0.2em]">Station Node</TableHead>
+                    <TableHead className="text-right pr-10 text-[10px] font-black uppercase tracking-[0.2em]">Operations</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {isLoading ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center">
-                        Loading...
-                      </TableCell>
-                    </TableRow>
+                    <TableRow><TableCell colSpan={4} className="text-center py-20 italic text-muted-foreground">Syncing Unit Registry...</TableCell></TableRow>
                   ) : schools.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center">
-                        No schools found
-                      </TableCell>
-                    </TableRow>
+                    <TableRow><TableCell colSpan={4} className="text-center py-20 italic text-muted-foreground">No units established in the registry.</TableCell></TableRow>
                   ) : (
                     schools.map((school) => (
-                      <TableRow key={school.id}>
-                        <TableCell className="font-medium">{school.name}</TableCell>
-                        <TableCell>{school.code}</TableCell>
-                        <TableCell>{school.capacity}</TableCell>
-                        <TableCell>{school.address}</TableCell>
+                      <TableRow key={school.id} className="group hover:bg-muted/30 border-b border-muted-foreground/5 last:border-none transition-colors">
+                        <TableCell className="font-black text-sm tracking-tighter uppercase pl-10 py-6">
+                            {school.name}
+                        </TableCell>
                         <TableCell>
-                          <Badge variant={school.status === 'active' ? 'default' : 'secondary'}>
-                            {school.status}
+                          <div className="flex flex-col">
+                            <span className="text-[10px] font-black text-primary uppercase tracking-tighter">{school.email}</span>
+                            <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-60">{school.phone_number || (school as any).phone}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest border-none bg-muted/50 px-3 py-1">
+                            {school.address}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEdit(school)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
+                        <TableCell className="text-right pr-10">
+                          <div className="flex justify-end gap-2">
+                            <Button
                                 variant="ghost"
                                 size="icon"
-                                className="text-destructive"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete School</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to delete {school.name}? This action cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => handleDelete(school.id)}
-                                  className="bg-destructive text-destructive-foreground"
-                                >
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+                                className="h-10 w-10 rounded-xl text-primary hover:bg-primary/10 transition-all"
+                                onClick={() => {
+                                  setEditingSchool(school);
+                                  form.reset({
+                                    name: school.name,
+                                    address: school.address,
+                                    phone_number: school.phone_number || (school as any).phone,
+                                    email: school.email,
+                                  });
+                                  setIsAddingSchool(true);
+                                }}
+                            >
+                                <Edit className="size-4" />
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl text-destructive hover:bg-destructive/10 transition-all"><Trash2 className="h-4 w-4" /></Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent className="rounded-[2.5rem]">
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle className="text-2xl font-black tracking-tighter uppercase">Unit Decommissioning</AlertDialogTitle>
+                                  <AlertDialogDescription className="font-medium">
+                                    Are you certain you wish to decommission <strong className="text-foreground">{school.name}</strong>? All associated data streams will be archived. This action is audited and irreversible.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter className="pt-6">
+                                  <AlertDialogCancel className="rounded-xl font-bold">Abort</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDelete(school.id)} className="bg-destructive hover:bg-destructive/90 text-white rounded-xl px-8 font-black uppercase tracking-widest text-[10px]">Confirm Decommission</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))
@@ -634,285 +288,8 @@ export default function SchoolManagement() {
                 </TableBody>
               </Table>
             </div>
-          </TabsContent>
-          
-          <TabsContent value="classes">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Search classes..."
-                    className="w-[300px]"
-                  />
-                  <Button variant="outline">Filter</Button>
-                </div>
-                <Button onClick={() => setIsAddingClass(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Class
-                </Button>
-              </div>
-          <Dialog open={isAddingClass} onOpenChange={setIsAddingClass}>
-  <DialogContent className="sm:max-w-[525px]">
-    <Form {...classForm}>
-      <form onSubmit={classForm.handleSubmit(handleClassSubmit)}>
-        <DialogHeader>
-          <DialogTitle>{editingClass ? 'Edit Class' : 'Add Class'}</DialogTitle>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <FormField
-            control={classForm.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Class Name</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={classForm.control}
-            name="level"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Level</FormLabel>
-                <FormControl>
-                  <Input type="number" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={classForm.control}
-            name="capacity"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Capacity</FormLabel>
-                <FormControl>
-                  <Input type="number" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={classForm.control}
-            name="school_id"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>School</FormLabel>
-                <FormControl>
-                  <select
-                    value={field.value}
-                    onChange={(e) => field.onChange(Number(e.target.value))}
-                    className="w-full rounded-md border p-2"
-                  >
-                    <option value="">Select a school</option>
-                    {schools.map((school) => (
-                      <option key={school.id} value={school.id}>
-                        {school.name}
-                      </option>
-                    ))}
-                  </select>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <DialogFooter>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => {
-              setIsAddingClass(false);
-              setEditingClass(null);
-              classForm.reset();
-            }}
-          >
-            Cancel
-          </Button>
-          <Button type="submit">
-            {editingClass ? "Update" : "Create"}
-          </Button>
-        </DialogFooter>
-      </form>
-    </Form>
-  </DialogContent>
-</Dialog>
-
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Level</TableHead>
-                    <TableHead>School</TableHead>
-                    <TableHead>Capacity</TableHead>
-                    <TableHead>Students</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isLoading ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center">Loading...</TableCell>
-                    </TableRow>
-                  ) : !classes?.length ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center">No classes found</TableCell>
-                    </TableRow>
-                  ) : (
-                    classes.map((cls) => (
-                      <TableRow key={cls.id}>
-                        <TableCell className="font-medium">{cls.name}</TableCell>
-                        <TableCell>Level {cls.level}</TableCell>
-                        <TableCell>{schools.find(s => s.id === cls.school_id)?.name}</TableCell>
-                        <TableCell>{cls.capacity || 'N/A'}</TableCell>
-                        <TableCell>{cls.students_count || 0} students</TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleClassEdit(cls)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="text-destructive"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Class</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to delete {cls.name}? This action cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => handleClassDelete(cls.id)}
-                                  className="bg-destructive text-destructive-foreground"
-                                >
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="categories">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Search categories..."
-                    className="w-[300px]"
-                  />
-                  <Button variant="outline">Filter</Button>
-                </div>
-                <Button onClick={() => setIsAddingCategory(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Category
-                </Button>
-              </div>
-          
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>School</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isLoading ? (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center">Loading...</TableCell>
-                    </TableRow>
-                  ) : categories.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center">No categories found</TableCell>
-                    </TableRow>
-                  ) : (
-                    categories.map((category) => (
-                      <TableRow key={category.id}>
-                        <TableCell className="font-medium">{category.name}</TableCell>
-                        <TableCell>{category.description}</TableCell>
-                        <TableCell>{schools.find(s => s.id === category.school_id)?.name}</TableCell>
-                        <TableCell>
-                          <Badge variant={category.status === 'active' ? 'default' : 'secondary'}>
-                            {category.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleCategoryEdit(category)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="text-destructive"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Category</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to delete {category.name}? This action cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => handleCategoryDelete(category.id)}
-                                  className="bg-destructive text-destructive-foreground"
-                                >
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
+          </CardContent>
+        </Card>
+    </div>
   );
 }

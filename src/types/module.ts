@@ -45,14 +45,14 @@ export const availableModules: Module[] = [
     ]
   },
   {
-    id: 'exams',
-    name: 'Entrance Exams',
-    path: '/exams',
-    description: 'Exam management',
+    id: 'assessments',
+    name: 'Entrance Assessments',
+    path: '/assessments',
+    description: 'Assessment management',
     children: [
-      { id: 'view-results', name: 'View Results', path: '/exams/results', description: 'View exam results' },
-      { id: 'recordings', name: 'Recordings', path: '/exams/recordings', description: 'Manage exam recordings' },
-      { id: 'shortlisted', name: 'Shortlisted', path: '/exams/shortlisted', description: 'View shortlisted candidates' }
+      { id: 'view-results', name: 'View Results', path: '/assessments/results', description: 'View assessment results' },
+      { id: 'recordings', name: 'Recordings', path: '/assessments/recordings', description: 'Manage assessment recordings' },
+      { id: 'shortlisted', name: 'Shortlisted', path: '/assessments/shortlisted', description: 'View shortlisted candidates' }
     ]
   },
   {
@@ -88,6 +88,7 @@ export const availableModules: Module[] = [
       { id: 'schools', name: 'Schools', path: '/admin/schools', description: 'Manage schools' },
       { id: 'classes', name: 'Classes', path: '/admin/classes', description: 'Manage classes' },
       { id: 'categories', name: 'Categories', path: '/admin/categories', description: 'Manage categories' },
+      { id: 'assessment-config', name: 'Assessment Config', path: '/admin/assessment-config', description: 'Configure assessments' },
       { id: 'fees', name: 'Fee Configuration', path: '/admin/fees', description: 'Configure fees' },
       { id: 'system-settings', name: 'System Settings', path: '/admin/system-settings', description: 'Configure system settings' }
     ]
@@ -107,21 +108,27 @@ export const defaultModuleAccessByRole: Record<UserRole, string[]> = {
   [UserRole.ADMIN]: availableModules.flatMap(module => 
     [module.id, ...(module.children?.map(child => child.id) || [])]
   ),
+  [UserRole.SUPER_ADMIN]: availableModules.flatMap(module =>
+    [module.id, ...(module.children?.map(child => child.id) || [])]
+  ),
+  [UserRole.GARRISON_DIRECTOR]: availableModules.flatMap(module =>
+    [module.id, ...(module.children?.map(child => child.id) || [])]
+  ),
   [UserRole.TEACHER]: [
     'dashboard',
-    'exams', 'view-results', 'recordings',
+    'assessments', 'view-results', 'recordings',
     'profile'
   ],
   [UserRole.STUDENT]: [
     'dashboard',
     'profile',
-    'exams', 'view-results',
+    'assessments', 'view-results',
     'fees', 'invoices', 'payment-history'
   ],
   [UserRole.PARENT]: [
     'dashboard',
     'profile',
-    'exams', 'view-results',
+    'assessments', 'view-results',
     'fees', 'invoices', 'payment-history', 'records'
   ],
   [UserRole.STAFF]: [

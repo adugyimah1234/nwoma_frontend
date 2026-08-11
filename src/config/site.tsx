@@ -8,7 +8,7 @@ export type Navigation = {
 };
 
 export const siteConfig = {
-  title: "3 Garrison Education Centre - SMS",
+  title: "Garrison School Management System",
   description: "Is a school management system design the facilitate school admissions, registration,, enrollment and fee management",
 };
 
