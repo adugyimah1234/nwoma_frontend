@@ -9,6 +9,7 @@ import {
   RefreshCw,
   GraduationCap,
   MessageSquare,
+  Monitor,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -18,6 +19,7 @@ import { ProfileForm } from './components/ProfileForm';
 import { BrandingForm } from './components/BrandingForm';
 import { GradeGovernanceForm } from './components/GradeGovernanceForm';
 import { CommunicationForm } from './components/CommunicationForm';
+import { DisplaySettings } from './components/DisplaySettings';
 import { ApiGateways } from './components/ApiGateways';
 import { useSettings } from './hooks/useSettings';
 import {
@@ -71,24 +73,29 @@ export default function SuperAdminSettingsPage() {
           breadcrumbs={[{ title: 'Home', href: '/' }, { title: 'Super Admin' }, { title: 'Governance' }]}
         />
 
-        <Tabs defaultValue="profile" className="flex flex-col md:flex-row gap-8 space-y-0">
-          <TabsList className="flex flex-col h-auto bg-transparent border-r rounded-none w-full md:w-64 space-y-1 p-0 items-start">
-            <TabsTrigger value="profile" className="w-full justify-start gap-3 px-4 py-3 data-[state=active]:bg-primary/10 data-[state=active]:text-primary border-none rounded-r-none rounded-l-lg transition-all text-sm font-semibold">
-              <User className="size-4" /> My Profile
-            </TabsTrigger>
-            <TabsTrigger value="branding" className="w-full justify-start gap-3 px-4 py-3 data-[state=active]:bg-primary/10 data-[state=active]:text-primary border-none rounded-r-none transition-all text-sm font-semibold">
-              <Palette className="size-4" /> Branding & Media
-            </TabsTrigger>
-            <TabsTrigger value="educational" className="w-full justify-start gap-3 px-4 py-3 data-[state=active]:bg-primary/10 data-[state=active]:text-primary border-none rounded-r-none transition-all text-sm font-semibold">
-              <GraduationCap className="size-4" /> Grade Governance
-            </TabsTrigger>
-            <TabsTrigger value="communications" className="w-full justify-start gap-3 px-4 py-3 data-[state=active]:bg-primary/10 data-[state=active]:text-primary border-none rounded-r-none transition-all text-sm font-semibold">
-              <MessageSquare className="size-4" /> Email & SMS Node
-            </TabsTrigger>
-            <TabsTrigger value="gateways" className="w-full justify-start gap-3 px-4 py-3 data-[state=active]:bg-primary/10 data-[state=active]:text-primary border-none rounded-r-none transition-all text-sm font-semibold">
-              <Key className="size-4" /> API Gateways
-            </TabsTrigger>
-          </TabsList>
+        <Tabs defaultValue="profile" className="flex flex-col md:flex-row gap-8 space-y-0 relative">
+          <div className="w-full md:w-72 shrink-0">
+            <TabsList className="sticky top-24 flex flex-col h-auto bg-card/50 border rounded-2xl p-2 items-start shadow-sm w-full space-y-1">
+              <TabsTrigger value="profile" className="w-full justify-start gap-3 px-4 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground border-none rounded-xl transition-all text-sm font-semibold group">
+                <User className="size-4 group-data-[state=active]:text-white" /> My Profile
+              </TabsTrigger>
+              <TabsTrigger value="branding" className="w-full justify-start gap-3 px-4 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground border-none rounded-xl transition-all text-sm font-semibold group">
+                <Palette className="size-4 group-data-[state=active]:text-white" /> Branding & Media
+              </TabsTrigger>
+              <TabsTrigger value="educational" className="w-full justify-start gap-3 px-4 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground border-none rounded-xl transition-all text-sm font-semibold group">
+                <GraduationCap className="size-4 group-data-[state=active]:text-white" /> Grade Governance
+              </TabsTrigger>
+              <TabsTrigger value="communications" className="w-full justify-start gap-3 px-4 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground border-none rounded-xl transition-all text-sm font-semibold group">
+                <MessageSquare className="size-4 group-data-[state=active]:text-white" /> Email & SMS Node
+              </TabsTrigger>
+              <TabsTrigger value="display" className="w-full justify-start gap-3 px-4 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground border-none rounded-xl transition-all text-sm font-semibold group">
+                <Monitor className="size-4 group-data-[state=active]:text-white" /> Display & Scaling
+              </TabsTrigger>
+              <TabsTrigger value="gateways" className="w-full justify-start gap-3 px-4 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground border-none rounded-xl transition-all text-sm font-semibold group">
+                <Key className="size-4 group-data-[state=active]:text-white" /> API Gateways
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <div className="flex-1 space-y-6">
             <TabsContent value="profile" className="mt-0">
@@ -111,6 +118,10 @@ export default function SuperAdminSettingsPage() {
 
             <TabsContent value="educational" className="mt-0">
               <GradeGovernanceForm control={form.control} />
+            </TabsContent>
+
+            <TabsContent value="display" className="mt-0">
+              <DisplaySettings />
             </TabsContent>
 
             <TabsContent value="communications" className="mt-0">
