@@ -78,18 +78,27 @@ export default function SuperAdminDashboardPage() {
         totalStudents: data.summary.totalStudents,
         totalCollections: data.summary.totalCollections,
         schools: data.schoolsPerformance,
-        garrisons: data.garrisonsPerformance
+        garrisons: data.garrisonsPerformance,
+        categoryRevenue: data.summary.categoryRevenue || []
       };
     }
-    const garrison = data.garrisonsPerformance.find(g => g.garrison_id === selectedGarrisonId);
-    const schools = data.schoolsPerformance.filter(s => s.garrison_id === selectedGarrisonId);
+
+    const garrison = data.garrisonsPerformance.find(g => String(g.garrison_id) === String(selectedGarrisonId));
+    const schools = data.schoolsPerformance.filter(s => String(s.garrison_id) === String(selectedGarrisonId));
+
+    // Calculate totals defensively, prioritizing garrison-level data but falling back to school sums
+    const totalStudents = garrison?.total_students ?? schools.reduce((acc, s) => acc + (Number(s.total_students) || 0), 0);
+    const totalCollections = garrison?.total_collected ?? schools.reduce((acc, s) => acc + (Number(s.fee_collected) || 0), 0);
+    const totalSchools = garrison?.total_schools ?? schools.length;
+
     return {
       totalGarrisons: 1,
-      totalSchools: garrison?.total_schools || 0,
-      totalStudents: garrison?.total_students || 0,
-      totalCollections: garrison?.total_collected || 0,
+      totalSchools: Number(totalSchools) || 0,
+      totalStudents: Number(totalStudents) || 0,
+      totalCollections: Number(totalCollections) || 0,
       schools: schools,
-      garrisons: garrison ? [garrison] : []
+      garrisons: garrison ? [garrison] : [],
+      categoryRevenue: [] // Hide breakdown when filtered since we only have global breakdown
     };
   }, [data, selectedGarrisonId]);
 
@@ -144,22 +153,24 @@ export default function SuperAdminDashboardPage() {
         </div>
 
         {/* Strategic Revenue Breakdown (Shadcn UI Standard) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {(data?.summary.categoryRevenue || []).map((cat) => (
-                <Card key={cat.category} className="shadow-sm">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">
-                            {cat.category} Revenue
-                        </CardTitle>
-                        <Badge variant="secondary" className="text-[10px] uppercase font-bold">Audit</Badge>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{formatCurrency(cat.total)}</div>
-                        <p className="text-xs text-muted-foreground mt-1">Verified {cat.category} fee collections</p>
-                    </CardContent>
-                </Card>
-            ))}
-        </div>
+        {selectedGarrisonId === 'all' && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {(filteredMetrics?.categoryRevenue || []).map((cat: any) => (
+                    <Card key={cat.category} className="shadow-sm">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">
+                                {cat.category} Revenue
+                            </CardTitle>
+                            <Badge variant="secondary" className="text-[10px] uppercase font-bold">Audit</Badge>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{formatCurrency(cat.total)}</div>
+                            <p className="text-xs text-muted-foreground mt-1">Verified {cat.category} fee collections</p>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+        )}
 
         {/* Garrison Command Table */}
         <Card className="shadow-sm">
@@ -180,7 +191,7 @@ export default function SuperAdminDashboardPage() {
                     </TableHeader>
                     <TableBody>
                         {(data?.garrisonsPerformance || []).map((g) => (
-                            <TableRow key={g.garrison_id} className={selectedGarrisonId !== 'all' && selectedGarrisonId !== g.garrison_id ? 'opacity-30' : ''}>
+                            <TableRow key={g.garrison_id} className={selectedGarrisonId !== 'all' && String(selectedGarrisonId) !== String(g.garrison_id) ? 'opacity-30' : ''}>
                                 <TableCell className="pl-6 font-semibold">{g.garrison_name}</TableCell>
                                 <TableCell className="text-center">{g.total_schools}</TableCell>
                                 <TableCell className="text-center font-medium">{g.total_students}</TableCell>

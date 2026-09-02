@@ -106,12 +106,6 @@ const navGroups: NavGroup[] = [
         icon: Settings,
         allowedRoles: ['super_admin', 'superadmin'],
       },
-      {
-        title: 'Fee Definitions',
-        url: '/admin/categories',
-        icon: Wallet,
-        allowedRoles: ['super_admin', 'superadmin'],
-      },
     ],
   },
 
@@ -123,13 +117,13 @@ const navGroups: NavGroup[] = [
         title: 'Garrison Dashboard',
         url: '/garrison-director',
         icon: Building,
-        allowedRoles: ['garrison_director', 'admin'],
+        allowedRoles: ['garrison_director'],
       },
       {
         title: 'Entrance Assessments',
         url: '/assessments',
         icon: BookOpen,
-        allowedRoles: ['garrison_director', 'admin'],
+        allowedRoles: ['garrison_director'],
         items: [
           { title: 'Assessment Registry', url: '/admin/assessment-config' },
           { title: 'Results & Placement', url: '/assessments/results' },
@@ -147,7 +141,7 @@ const navGroups: NavGroup[] = [
         title: 'Dashboard',
         url: '/',
         icon: LayoutDashboard,
-        allowedRoles: ['frontdesk', 'accountant', 'teacher', 'school_admin'],
+        allowedRoles: ['admin', 'frontdesk', 'accountant', 'teacher', 'garrison_director', 'school_admin'],
       },
       {
         title: 'Profile',
@@ -343,12 +337,15 @@ export function AppSidebar() {
   };
 
   const checkRoleAccess = (allowedRoles: string[]) => {
-    if (!user) return true;
+    if (!user) return false; // Default to no access if user is not loaded
+
     // Normalize role string (e.g. 'super_admin' -> 'superadmin', 'garrison_director' -> 'garrisondirector')
-    const roleStr = (user.role || userRole || '').toLowerCase().replace(/_/g, '');
-    if (!roleStr) return true;
+    const roleStr = (user.role || userRole || '').toLowerCase().replace(/_/g, '').replace(/\s/g, '');
+
+    if (!roleStr) return false; // Default to no access if role is empty
+
     return allowedRoles.some((allowed) => {
-      const allowedStr = allowed.toLowerCase().replace(/_/g, '');
+      const allowedStr = allowed.toLowerCase().replace(/_/g, '').replace(/\s/g, '');
       return roleStr === allowedStr;
     });
   };

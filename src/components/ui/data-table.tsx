@@ -34,6 +34,7 @@ import {
   ChevronRight,
   Plus,
   SlidersHorizontal,
+  Search,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -155,6 +156,62 @@ export function DataTable<T extends Record<string, unknown>>({
 
   return (
     <div className="space-y-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-1 items-center space-x-2">
+          {searchKey && (
+            <div className="relative w-full max-w-sm">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder={searchPlaceholder}
+                value={search}
+                onChange={handleSearch}
+                className="pl-9 h-9"
+              />
+            </div>
+          )}
+          {filters.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-9 gap-1">
+                  <SlidersHorizontal className="h-4 w-4" />
+                  Filter
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56">
+                <DropdownMenuLabel>Filters</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {filters.map((filter) => (
+                  <React.Fragment key={filter.key}>
+                    <DropdownMenuLabel className="text-xs font-normal text-muted-foreground py-1">
+                      {filter.label}
+                    </DropdownMenuLabel>
+                    {filter.options.map((opt) => (
+                      <DropdownMenuCheckboxItem
+                        key={opt.value}
+                        checked={(activeFilters[filter.key] || []).includes(opt.value)}
+                        onCheckedChange={() => toggleFilter(filter.key, opt.value)}
+                      >
+                        {opt.label}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                    <DropdownMenuSeparator />
+                  </React.Fragment>
+                ))}
+                {Object.keys(activeFilters).length > 0 && (
+                  <DropdownMenuItem
+                    onClick={() => setActiveFilters({})}
+                    className="justify-center text-center font-medium"
+                  >
+                    Clear Filters
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
+        {toolbar && <div className="flex items-center gap-2">{toolbar}</div>}
+      </div>
+
       {/* Table */}
       <div className="rounded-md border bg-background overflow-hidden">
         <Table>
