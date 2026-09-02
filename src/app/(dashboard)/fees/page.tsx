@@ -32,6 +32,8 @@ import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/layout/page-header';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
+import { GuidedTour } from '@/components/tour/GuidedTour';
+import { Step } from 'react-joyride';
 
 import FeesOverview from './components/overview';
 import InvoicesPage from './invoices/page';
@@ -44,6 +46,27 @@ export default function FeesPage() {
   const [activeTab, setActiveTab] = useState('overview');
   const [showNewInvoiceDialog, setShowNewInvoiceDialog] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+
+  const tourSteps: Step[] = [
+    {
+      target: '#tour-financial-tabs',
+      title: 'Financial Navigation',
+      content: 'Switch between Overview, Invoices, Payments, and Records to manage different aspects of school finance.',
+      placement: 'bottom',
+    },
+    {
+      target: '#tour-export-data',
+      title: 'Reporting',
+      content: 'Export your financial data to PDF or Excel for offline reporting and audits.',
+      placement: 'bottom',
+    },
+    {
+      target: '#tour-new-receipt',
+      title: 'Quick Transaction',
+      content: 'Need to process a payment? Start right here by issuing a new receipt.',
+      placement: 'bottom',
+    },
+  ];
 
   const handleExport = async (format: ExportFormat = 'pdf') => {
     setIsExporting(true);
@@ -79,7 +102,7 @@ export default function FeesPage() {
             <div className="flex items-center gap-3">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="h-12 rounded-2xl border-2 font-black uppercase tracking-widest text-[10px] px-6" disabled={isExporting}>
+                        <Button variant="outline" id="tour-export-data" className="h-12 rounded-2xl border-2 font-black uppercase tracking-widest text-[10px] px-6" disabled={isExporting}>
                             {isExporting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
                             Export Data
                         </Button>
@@ -92,14 +115,14 @@ export default function FeesPage() {
                     </DropdownMenuContent>
                 </DropdownMenu>
 
-                <Button className="h-12 rounded-2xl font-black uppercase tracking-widest text-[10px] px-8 shadow-xl shadow-primary/20" onClick={() => setShowNewInvoiceDialog(true)}>
+                <Button className="h-12 rounded-2xl font-black uppercase tracking-widest text-[10px] px-8 shadow-xl shadow-primary/20" id="tour-new-receipt" onClick={() => setShowNewInvoiceDialog(true)}>
                     <Plus className="h-4 w-4 mr-2" /> New Receipt
                 </Button>
             </div>
         </PageHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-            <TabsList className="flex w-full h-auto p-1 bg-muted/50 rounded-2xl sm:w-fit gap-1 overflow-x-auto no-scrollbar">
+            <TabsList id="tour-financial-tabs" className="flex w-full h-auto p-1 bg-muted/50 rounded-2xl sm:w-fit gap-1 overflow-x-auto no-scrollbar">
               {tabs.map((tab) => (
                 <TabsTrigger key={tab.id} value={tab.id} className="flex-1 sm:flex-none flex items-center gap-3 px-6 py-3.5 rounded-xl font-black text-[10px] uppercase tracking-widest data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-lg transition-all whitespace-nowrap">
                   <tab.icon className="h-4 w-4" />
@@ -147,6 +170,8 @@ export default function FeesPage() {
                 </div>
             </DialogContent>
         </Dialog>
+
+        <GuidedTour steps={tourSteps} run={true} />
     </div>
   );
 }

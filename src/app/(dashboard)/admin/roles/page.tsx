@@ -40,6 +40,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
+import { GuidedTour } from "@/components/tour/GuidedTour";
+import { Step } from "react-joyride";
 
 const roleSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -53,6 +55,21 @@ export default function RolesPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
+
+  const tourSteps: Step[] = [
+    {
+      target: '#tour-roles-table',
+      title: 'Access Control',
+      content: 'This table shows all the defined roles in the system. Roles determine what actions users can perform.',
+      placement: 'top',
+    },
+    {
+      target: '#tour-add-role',
+      title: 'New Permissions',
+      content: 'Click here to create a new role if you need a specific set of permissions for a new staff member.',
+      placement: 'left',
+    },
+  ];
 
   const form = useForm<RoleFormValues>({
     resolver: zodResolver(roleSchema),
@@ -151,7 +168,7 @@ export default function RolesPage() {
   const toolbar = (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
-        <Button size="sm">
+        <Button size="sm" id="tour-add-role">
           <Plus className="h-4 w-4 mr-2" />
           Add Role
         </Button>
@@ -212,7 +229,7 @@ export default function RolesPage() {
         ]}
       />
 
-      <Card>
+      <Card id="tour-roles-table">
         <CardContent className="p-6">
           <DataTable
             data={roles as any}
@@ -226,6 +243,8 @@ export default function RolesPage() {
           />
         </CardContent>
       </Card>
+
+      <GuidedTour steps={tourSteps} run={true} />
     </div>
   );
 }

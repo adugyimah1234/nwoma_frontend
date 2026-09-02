@@ -27,6 +27,7 @@ import {
   UserCog,
   Building2,
   SlidersHorizontal,
+  HelpCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
@@ -37,6 +38,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { getAllRoles } from "@/services/roles";
 import { useLoading } from "./components/LoadingContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useSetAtom } from "jotai";
+import { tourRunAtom } from "@/components/tour/tour-atom";
 
 interface NavItem {
   name: string;
@@ -138,6 +141,7 @@ export default function SideNav() {
   const { user, logout } = useAuth();
   const { activeItem, setActiveItem } = useDashboard();
   const { startNavigation, navigationLoading } = useLoading();
+  const setTourRun = useSetAtom(tourRunAtom);
   const router = useRouter();
 
   const [filteredNavItems, setFilteredNavItems] = useState<NavItem[]>([]);
@@ -383,7 +387,18 @@ export default function SideNav() {
       </nav>
 
       {/* Logout at bottom */}
-      <div className="border-t border-border/50 px-3 py-3">
+      <div className="border-t border-border/50 px-3 py-3 space-y-1">
+        <button
+          onClick={() => setTourRun(true)}
+          className={`group flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-[13px] font-medium text-muted-foreground transition-all duration-150 hover:bg-accent hover:text-foreground ${
+            !isOpen ? "justify-center px-0" : ""
+          }`}
+          title={!isOpen ? "Guided Tour" : ""}
+        >
+          <HelpCircle size={18} strokeWidth={1.8} />
+          {isOpen && <span>Guided Tour</span>}
+        </button>
+
         <button
           onClick={(e) => handleNavClick({ name: "Logout", icon: LogOut, href: "/logout" }, e as any)}
           className={`group flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-[13px] font-medium text-muted-foreground transition-all duration-150 hover:bg-destructive/10 hover:text-destructive ${

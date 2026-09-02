@@ -16,9 +16,11 @@ import { Trash2, Save, Plus, Building2, LayoutGrid, RefreshCw } from "lucide-rea
 import schoolService from "@/services/schools";
 import classService, { ClassData } from "@/services/class";
 import { School } from "@/types/school";
-import { Toaster, toast } from 'sonner';
+import { toast } from 'sonner';
 import { cn } from "@/lib/utils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { GuidedTour } from "@/components/tour/GuidedTour";
+import { Step } from "react-joyride";
 
 interface ClassWithSlots extends ClassData {
   slots: number;
@@ -29,6 +31,33 @@ export default function ClassManagementPage() {
   const [selectedSchool, setSelectedSchool] = useState<School | null>(null);
   const [classes, setClasses] = useState<ClassWithSlots[]>([]);
   const [saving, setSaving] = useState(false);
+
+  const tourSteps: Step[] = [
+    {
+      target: '#tour-units-sidebar',
+      title: 'Switching Units',
+      content: 'Select different schools or departments here to manage their specific classes and quotas.',
+      placement: 'right',
+    },
+    {
+      target: '#tour-main-content',
+      title: 'Class Overview',
+      content: 'This area shows all educational levels and their current enrollment status.',
+      placement: 'left',
+    },
+    {
+      target: '#tour-add-class',
+      title: 'Expanding Capacity',
+      content: 'Click here to add a new level or class to the selected unit.',
+      placement: 'bottom',
+    },
+    {
+      target: '#tour-save-classes',
+      title: 'Finalize Changes',
+      content: 'Don\'t forget to save your changes after editing class names or capacities.',
+      placement: 'bottom',
+    },
+  ];
 
   useEffect(() => {
     loadSchools();
@@ -132,7 +161,6 @@ export default function ClassManagementPage() {
 
   return (
     <div className="flex flex-1 flex-col gap-8 p-4 md:p-8 max-w-[1600px] mx-auto w-full pb-24">
-        <Toaster position="top-right" richColors />
         <PageHeader
           title="Class & Unit Allocation"
           description="Manage educational levels, capacity, and student enrollment quotas across nodes."
@@ -143,27 +171,24 @@ export default function ClassManagementPage() {
           ]}
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Sidebar: Schools list */}
-            <div className="lg:col-span-3 space-y-6">
-                <Card className="border-none shadow-2xl shadow-black/5 rounded-[2rem] overflow-hidden bg-background">
-                    <CardHeader className="bg-muted/20 border-b py-6 px-8">
-                        <div className="flex items-center gap-4">
-                            <div className="size-10 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20">
-                                <Building2 className="size-5" />
-                            </div>
-                            <CardTitle className="text-sm font-black uppercase tracking-widest">Network Units</CardTitle>
-                        </div>
+            <div className="lg:col-span-3" id="tour-units-sidebar">
+                <Card className="shadow-sm">
+                    <CardHeader className="pb-4">
+                        <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                            <Building2 className="size-4" /> Units
+                        </CardTitle>
                     </CardHeader>
-                    <CardContent className="p-4 space-y-1">
+                    <CardContent className="p-2 space-y-1">
                         {schools.map((school) => (
                             <button
                                 key={school.id}
                                 onClick={() => selectSchool(school)}
                                 className={cn(
-                                    "w-full text-left px-6 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all",
+                                    "w-full text-left px-4 py-2 rounded-md text-sm font-medium transition-colors",
                                     selectedSchool?.id === school.id
-                                        ? "bg-primary text-white shadow-xl shadow-primary/20"
+                                        ? "bg-primary text-primary-foreground"
                                         : "hover:bg-muted text-muted-foreground"
                                 )}
                             >
@@ -175,57 +200,52 @@ export default function ClassManagementPage() {
             </div>
 
             {/* Main Area */}
-            <div className="lg:col-span-9">
+            <div className="lg:col-span-9" id="tour-main-content">
                 {!selectedSchool ? (
-                    <div className="h-full flex flex-col items-center justify-center py-32 border-2 border-dashed rounded-[3rem] bg-muted/5 text-center px-10">
-                        <div className="size-20 bg-muted/20 rounded-[2rem] flex items-center justify-center mb-6">
-                            <Building2 className="size-10 text-muted-foreground opacity-30" />
-                        </div>
-                        <h4 className="text-xl font-black uppercase tracking-tighter">No Unit Selected</h4>
-                        <p className="text-sm text-muted-foreground max-w-xs mt-2 font-medium">Select a tactical unit from the left panel to manage its educational classification.</p>
+                    <div className="h-[400px] flex flex-col items-center justify-center border-2 border-dashed rounded-lg bg-muted/5 text-center">
+                        <Building2 className="size-12 text-muted-foreground/20 mb-4" />
+                        <h4 className="text-lg font-medium">No Unit Selected</h4>
+                        <p className="text-sm text-muted-foreground mt-1">Select a unit from the left to manage classes.</p>
                     </div>
                 ) : (
-                    <Card className="border-none shadow-2xl shadow-black/5 rounded-[3rem] overflow-hidden bg-background">
-                        <CardHeader className="bg-muted/20 border-b py-10 px-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-                            <div className="flex items-center gap-6">
-                                <div className="size-14 rounded-3xl bg-indigo-600 text-white flex items-center justify-center shadow-xl shadow-indigo-600/20">
-                                    <LayoutGrid className="size-7" />
+                    <Card className="shadow-sm">
+                        <CardHeader className="flex flex-row items-center justify-between border-b py-4">
+                            <div className="flex items-center gap-3">
+                                <div className="size-8 rounded bg-primary/10 text-primary flex items-center justify-center">
+                                    <LayoutGrid className="size-4" />
                                 </div>
-                                <div className="space-y-1">
-                                    <CardTitle className="text-2xl font-black tracking-tighter uppercase">{selectedSchool.name}</CardTitle>
-                                    <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600/60 opacity-60">Classification & Capacity Control</CardDescription>
-                                </div>
+                                <CardTitle className="text-lg font-semibold">{selectedSchool.name}</CardTitle>
                             </div>
-                            <div className="flex items-center gap-3 w-full sm:w-auto">
-                                <Button variant="outline" className="h-12 rounded-2xl border-none bg-background shadow-sm hover:bg-primary/5 font-black uppercase tracking-widest text-[9px] px-6 flex-1 sm:flex-none" onClick={addClass}>
+                            <div className="flex items-center gap-2">
+                                <Button variant="outline" size="sm" onClick={addClass} id="tour-add-class">
                                     <Plus className="mr-2 h-4 w-4" /> Add Class
                                 </Button>
-                                <Button className="h-12 rounded-2xl font-black uppercase tracking-widest text-[10px] px-8 shadow-xl shadow-primary/20 flex-1 sm:flex-none" onClick={onSave} disabled={saving}>
+                                <Button size="sm" onClick={onSave} disabled={saving} id="tour-save-classes">
                                     {saving ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                                    Sync Registry
+                                    Save Changes
                                 </Button>
                             </div>
                         </CardHeader>
                         <CardContent className="p-0">
                             <div className="overflow-x-auto">
                                 <Table>
-                                    <TableHeader className="bg-muted/10">
-                                        <TableRow className="hover:bg-transparent border-none">
-                                            <TableHead className="pl-10 py-6 text-[10px] font-black uppercase tracking-[0.2em]">Class Identity</TableHead>
-                                            <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-center">Authorized Slots</TableHead>
-                                            <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-center">Occupancy Node</TableHead>
-                                            <TableHead className="text-right pr-10 text-[10px] font-black uppercase tracking-[0.2em]">Operations</TableHead>
+                                    <TableHeader className="bg-muted/30">
+                                        <TableRow>
+                                            <TableHead className="pl-6">Class Name</TableHead>
+                                            <TableHead className="text-center w-[120px]">Slots</TableHead>
+                                            <TableHead className="text-center w-[150px]">Occupancy</TableHead>
+                                            <TableHead className="text-right pr-6 w-[100px]">Actions</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {classes.map((cls) => (
-                                            <TableRow key={cls.id} className="group hover:bg-muted/30 border-b border-muted-foreground/5 last:border-none transition-colors">
-                                                <TableCell className="pl-10 py-6">
+                                            <TableRow key={cls.id}>
+                                                <TableCell className="pl-6">
                                                     <Input
                                                         value={cls.name}
                                                         onChange={(e) => onClassChange(cls.id, 'name', e.target.value)}
-                                                        placeholder="Class Identifier"
-                                                        className="h-12 rounded-xl bg-muted/30 border-none font-black px-6 focus:bg-background transition-all uppercase text-xs"
+                                                        placeholder="e.g. Basic 1"
+                                                        className="h-9"
                                                     />
                                                 </TableCell>
                                                 <TableCell>
@@ -234,30 +254,30 @@ export default function ClassManagementPage() {
                                                             type="number"
                                                             value={cls.slots}
                                                             onChange={(e) => onClassChange(cls.id, 'slots', e.target.value)}
-                                                            className="h-12 w-24 rounded-xl bg-muted/30 border-none font-black text-center focus:bg-background transition-all"
+                                                            className="h-9 w-20 text-center"
                                                         />
                                                     </div>
                                                 </TableCell>
                                                 <TableCell className="text-center">
                                                     <div className="flex flex-col items-center">
-                                                        <span className="text-sm font-black text-primary tracking-tighter">{cls.students_count} / {cls.slots}</span>
+                                                        <span className="text-sm font-medium">{cls.students_count} / {cls.slots}</span>
                                                         <Badge variant="outline" className={cn(
-                                                            "text-[8px] font-black uppercase border-none px-2",
-                                                            cls.students_count >= cls.slots ? "bg-rose-500/10 text-rose-600" : "bg-emerald-500/10 text-emerald-600"
+                                                            "text-[10px] uppercase border-none px-2",
+                                                            cls.students_count >= cls.slots ? "text-rose-600 bg-rose-50" : "text-emerald-600 bg-emerald-50"
                                                         )}>
-                                                            {cls.students_count >= cls.slots ? 'Full Capacity' : 'Available'}
+                                                            {cls.students_count >= cls.slots ? 'Full' : 'Available'}
                                                         </Badge>
                                                     </div>
                                                 </TableCell>
-                                                <TableCell className="text-right pr-10">
-                                                    <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl text-destructive hover:bg-destructive/10 transition-all opacity-0 group-hover:opacity-100" onClick={() => deleteClass(cls.id)}>
+                                                <TableCell className="text-right pr-6">
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteClass(cls.id)}>
                                                         <Trash2 className="h-4 w-4" />
                                                     </Button>
                                                 </TableCell>
                                             </TableRow>
                                         ))}
                                         {classes.length === 0 && (
-                                            <TableRow><TableCell colSpan={4} className="text-center py-20 text-muted-foreground italic font-medium uppercase text-[10px] tracking-widest opacity-30">No educational classifications established for this unit.</TableCell></TableRow>
+                                            <TableRow><TableCell colSpan={4} className="text-center py-10 text-muted-foreground italic">No classes found.</TableCell></TableRow>
                                         )}
                                     </TableBody>
                                 </Table>
@@ -267,6 +287,8 @@ export default function ClassManagementPage() {
                 )}
             </div>
         </div>
+
+        <GuidedTour steps={tourSteps} run={true} />
     </div>
   );
 }
