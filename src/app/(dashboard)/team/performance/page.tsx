@@ -5,21 +5,15 @@ import {
     Shield,
     Clock,
     CheckCircle2,
-    XCircle,
     RefreshCw,
-    Search,
-    Calendar,
-    Users,
     TrendingUp,
-    MapPin,
     LogIn,
     LogOut,
-    AlertCircle
+    AlertCircle,
+    Loader2
 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/layout/page-header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -34,6 +28,8 @@ import {
     TableRow
 } from '@/components/ui/table';
 import { useAuth } from '@/contexts/AuthContext';
+import { cn } from '@/lib/utils';
+import { Progress } from '@/components/ui/progress';
 
 export default function StaffPerformancePage() {
     const { user, isAdmin } = useAuth();
@@ -52,7 +48,7 @@ export default function StaffPerformancePage() {
             const data = await performanceService.getRegistry();
             setRegistry(data);
         } catch (err) {
-            toast.error("Failed to load command registry");
+            toast.error("Failed to load attendance registry");
         } finally {
             setLoading(false);
         }
@@ -66,10 +62,10 @@ export default function StaffPerformancePage() {
         setProcessing(true);
         try {
             const res = await performanceService.checkIn();
-            toast.success(`Check-in protocol verified. Status: ${res.status.toUpperCase()}`);
+            toast.success(`Check-in successful. Status: ${res.status}`);
             fetchData();
         } catch (err) {
-            toast.error("Protocol authentication failed");
+            toast.error("Check-in failed");
         } finally {
             setProcessing(false);
         }
@@ -79,10 +75,10 @@ export default function StaffPerformancePage() {
         setProcessing(true);
         try {
             await performanceService.checkOut();
-            toast.success("Check-out finalized. Duty complete.");
+            toast.success("Check-out complete.");
             fetchData();
         } catch (err) {
-            toast.error("Check-out protocol failed");
+            toast.error("Check-out failed");
         } finally {
             setProcessing(false);
         }
@@ -94,145 +90,160 @@ export default function StaffPerformancePage() {
     };
 
     return (
-        <div className="flex flex-1 flex-col gap-6 p-6 md:p-8">
+        <div className="flex flex-1 flex-col gap-6 p-4 md:p-8 pt-6">
             <PageHeader
-                title="Staff Performance & Attendance"
-                description="Digital command tracking for personnel reporting and classroom attendance."
+                title="Performance & Attendance"
+                description="Track personnel reporting and classroom attendance."
                 breadcrumbs={[{ title: 'Home', href: '/' }, { title: 'Team', href: '/team' }, { title: 'Performance' }]}
             />
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-                <TabsList className="bg-muted/20 border p-1 h-12 inline-flex items-center gap-1 rounded-xl">
-                    <TabsTrigger value="checkin" className="gap-2 h-10 px-6 rounded-lg data-[state=active]:bg-background">
-                        <Clock className="size-4" /> Reporting Protocol
+                <TabsList className="border-b bg-transparent w-full justify-start rounded-none h-auto p-0 gap-6">
+                    <TabsTrigger
+                        value="checkin"
+                        className="relative h-9 rounded-none border-b-2 border-transparent bg-transparent px-4 pb-3 pt-2 font-semibold text-muted-foreground shadow-none transition-none data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:shadow-none"
+                    >
+                        Reporting Protocol
                     </TabsTrigger>
                     {isAdmin && (
-                        <TabsTrigger value="registry" className="gap-2 h-10 px-6 rounded-lg data-[state=active]:bg-background">
-                            <Shield className="size-4" /> Command Registry
+                        <TabsTrigger
+                            value="registry"
+                            className="relative h-9 rounded-none border-b-2 border-transparent bg-transparent px-4 pb-3 pt-2 font-semibold text-muted-foreground shadow-none transition-none data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:shadow-none"
+                        >
+                            Attendance Registry
                         </TabsTrigger>
                     )}
                 </TabsList>
 
                 {/* CHECK-IN PROTOCOL */}
-                <TabsContent value="checkin" className="mt-0">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        <Card className="md:col-span-1 border-none shadow-xl shadow-slate-200/50 bg-indigo-900 text-white overflow-hidden">
-                            <div className="h-2 bg-yellow-500" />
-                            <CardHeader>
-                                <div className="size-12 rounded-full bg-white/10 flex items-center justify-center mb-2 border border-white/20">
-                                    <Shield className="size-6 text-yellow-400" />
-                                </div>
-                                <CardTitle className="text-xl font-black">Reporting Hub</CardTitle>
-                                <CardDescription className="text-indigo-200">Personnel: {user?.full_name}</CardDescription>
+                <TabsContent value="checkin" className="mt-0 space-y-6">
+                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                        <Card className="shadow-sm">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium">Reporting Status</CardTitle>
+                                <Clock className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
-                            <CardContent className="space-y-8 pb-10">
-                                <div className="space-y-4">
-                                    <div className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/10">
-                                        <div className="space-y-1">
-                                            <p className="text-[10px] font-black uppercase text-indigo-300">Reporting Window</p>
-                                            <p className="text-sm font-bold">07:00 - 08:00 AM</p>
-                                        </div>
-                                        <Badge className="bg-emerald-500 text-white border-none">ACTIVE</Badge>
+                            <CardContent className="pt-4 space-y-4">
+                                <div className="flex flex-col items-center justify-center py-6 text-center space-y-4">
+                                    <div className="p-3 rounded-full bg-primary/10">
+                                        <Shield className="h-8 w-8 text-primary" />
                                     </div>
-
-                                    <div className="flex gap-4">
-                                        <Button
-                                            onClick={handleCheckIn}
-                                            disabled={processing}
-                                            className="flex-1 h-20 rounded-3xl bg-emerald-500 hover:bg-emerald-600 text-white border-none flex-col gap-1 shadow-2xl shadow-emerald-500/20"
-                                        >
-                                            <LogIn className="size-6" />
-                                            <span className="font-black text-[10px] uppercase">Verify Check-In</span>
-                                        </Button>
-                                        <Button
-                                            onClick={handleCheckOut}
-                                            disabled={processing}
-                                            variant="outline"
-                                            className="flex-1 h-20 rounded-3xl border-white/20 bg-white/5 text-white hover:bg-white/10 flex-col gap-1"
-                                        >
-                                            <LogOut className="size-6" />
-                                            <span className="font-black text-[10px] uppercase">Finalize Duty</span>
-                                        </Button>
+                                    <div className="space-y-1">
+                                        <h3 className="font-semibold text-lg">{user?.full_name}</h3>
+                                        <p className="text-sm text-muted-foreground">Reporting Window: 07:00 - 08:00 AM</p>
                                     </div>
+                                    <Badge variant="secondary" className="px-3 py-1">
+                                        Active
+                                    </Badge>
                                 </div>
-
-                                <p className="text-[10px] text-indigo-300 italic leading-relaxed text-center px-4">
-                                    "Personnel reporting after 08:00 AM will be automatically flagged as LATE in the command registry."
+                                <div className="grid grid-cols-2 gap-4">
+                                    <Button
+                                        onClick={handleCheckIn}
+                                        disabled={processing}
+                                        className="h-14 font-semibold"
+                                    >
+                                        {processing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogIn className="mr-2 h-4 w-4" />}
+                                        Check In
+                                    </Button>
+                                    <Button
+                                        onClick={handleCheckOut}
+                                        disabled={processing}
+                                        variant="outline"
+                                        className="h-14 font-semibold"
+                                    >
+                                        {processing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogOut className="mr-2 h-4 w-4" />}
+                                        Check Out
+                                    </Button>
+                                </div>
+                            </CardContent>
+                            <CardFooter className="pt-0 pb-6 justify-center">
+                                <p className="text-[11px] text-muted-foreground text-center max-w-[200px]">
+                                    Late reporting is automatically logged in the system.
                                 </p>
-                            </CardContent>
+                            </CardFooter>
                         </Card>
 
-                        <Card className="md:col-span-2 border-none shadow-sm h-fit">
-                            <CardHeader className="border-b bg-muted/5">
-                                <CardTitle className="text-base font-bold">Performance Intel</CardTitle>
-                                <CardDescription>Your current academic cycle reporting statistics.</CardDescription>
-                            </CardHeader>
-                            <CardContent className="pt-6 grid grid-cols-2 gap-4">
-                                <div className="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border space-y-2">
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-[10px] font-black uppercase text-muted-foreground">Punctuality Rate</span>
-                                        <TrendingUp className="size-3 text-emerald-500" />
-                                    </div>
-                                    <p className="text-3xl font-black">94.2%</p>
-                                    <div className="w-full bg-slate-200 h-1 rounded-full overflow-hidden">
-                                        <div className="bg-emerald-500 h-full w-[94%]" />
-                                    </div>
-                                </div>
-                                <div className="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border space-y-2">
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-[10px] font-black uppercase text-muted-foreground">Late Occurrences</span>
-                                        <AlertCircle className="size-3 text-rose-500" />
-                                    </div>
-                                    <p className="text-3xl font-black text-rose-600">02</p>
-                                    <p className="text-[9px] font-bold text-muted-foreground uppercase">This Month</p>
-                                </div>
-                            </CardContent>
-                        </Card>
+                        <div className="md:col-span-1 lg:col-span-2 grid gap-6 sm:grid-cols-2 h-fit">
+                            <Card className="shadow-sm">
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Punctuality Rate</CardTitle>
+                                    <TrendingUp className="h-4 w-4 text-emerald-500" />
+                                </CardHeader>
+                                <CardContent className="pt-4 space-y-4">
+                                    <div className="text-3xl font-bold">94.2%</div>
+                                    <Progress value={94.2} className="h-2" />
+                                    <p className="text-xs text-muted-foreground font-medium">Exceeding average threshold</p>
+                                </CardContent>
+                            </Card>
+
+                            <Card className="shadow-sm">
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Late Occurrences</CardTitle>
+                                    <AlertCircle className="h-4 w-4 text-destructive" />
+                                </CardHeader>
+                                <CardContent className="pt-4">
+                                    <div className="text-3xl font-bold text-destructive">02</div>
+                                    <p className="text-xs text-muted-foreground font-medium mt-4 uppercase tracking-tighter">Current month total</p>
+                                </CardContent>
+                            </Card>
+                        </div>
                     </div>
                 </TabsContent>
 
                 {/* ADMIN REGISTRY */}
                 <TabsContent value="registry" className="mt-0">
-                    <Card className="border-none shadow-sm overflow-hidden">
-                        <CardHeader className="border-b bg-muted/5 flex flex-row items-center justify-between">
+                    <Card className="shadow-sm">
+                        <CardHeader className="flex flex-row items-center justify-between border-b bg-muted/20">
                             <div>
-                                <CardTitle className="text-base font-bold text-slate-800">Operational Attendance Registry</CardTitle>
-                                <CardDescription>Real-time audit of all personnel reporting across the unit.</CardDescription>
+                                <CardTitle className="text-lg font-semibold">Attendance Registry</CardTitle>
+                                <CardDescription>Real-time log of all personnel reporting.</CardDescription>
                             </div>
-                            <Button variant="ghost" size="sm" onClick={fetchData}><RefreshCw className="size-4" /></Button>
+                            <Button variant="outline" size="icon" onClick={fetchData} className="h-8 w-8">
+                                <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+                            </Button>
                         </CardHeader>
                         <CardContent className="p-0">
                             <Table>
-                                <TableHeader className="bg-muted/10">
+                                <TableHeader>
                                     <TableRow>
-                                        <TableHead className="font-bold">Personnel</TableHead>
-                                        <TableHead className="font-bold text-center">Check-In</TableHead>
-                                        <TableHead className="font-bold text-center">Check-Out</TableHead>
-                                        <TableHead className="font-bold">Status</TableHead>
-                                        <TableHead className="font-bold">Date</TableHead>
+                                        <TableHead className="font-semibold">Personnel</TableHead>
+                                        <TableHead className="font-semibold text-center">Check-In</TableHead>
+                                        <TableHead className="font-semibold text-center">Check-Out</TableHead>
+                                        <TableHead className="font-semibold">Status</TableHead>
+                                        <TableHead className="font-semibold text-right">Date</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
+                                    {registry.length === 0 && !loading && (
+                                        <TableRow>
+                                            <TableCell colSpan={5} className="h-24 text-center text-muted-foreground font-medium">
+                                                No records found for this period.
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
                                     {registry.map(r => (
-                                        <TableRow key={r.id}>
+                                        <TableRow key={r.id} className="group transition-colors hover:bg-muted/50">
                                             <TableCell>
-                                                <div>
-                                                    <p className="font-bold text-xs uppercase">{r.full_name}</p>
-                                                    <p className="text-[10px] text-muted-foreground uppercase tracking-tighter">{r.role_name}</p>
+                                                <div className="flex flex-col">
+                                                    <span className="font-semibold text-sm">{r.full_name}</span>
+                                                    <span className="text-[11px] text-muted-foreground uppercase tracking-tight">{r.role_name}</span>
                                                 </div>
                                             </TableCell>
-                                            <TableCell className="text-center font-black text-xs">{formatTime(r.check_in)}</TableCell>
-                                            <TableCell className="text-center font-medium text-xs text-muted-foreground">{formatTime(r.check_out)}</TableCell>
+                                            <TableCell className="text-center font-medium text-sm">{formatTime(r.check_in)}</TableCell>
+                                            <TableCell className="text-center text-sm text-muted-foreground">{formatTime(r.check_out)}</TableCell>
                                             <TableCell>
-                                                <Badge className={
-                                                    r.status === 'present' ? 'bg-emerald-500' :
-                                                    r.status === 'late' ? 'bg-orange-500' : 'bg-rose-500'
-                                                + " text-[9px] font-black uppercase"}>
+                                                <Badge
+                                                    variant={
+                                                        r.status === 'present' ? 'default' :
+                                                        r.status === 'late' ? 'secondary' : 'destructive'
+                                                    }
+                                                    className="text-[10px] font-bold uppercase"
+                                                >
                                                     {r.status}
                                                 </Badge>
                                             </TableCell>
-                                            <TableCell className="text-[10px] font-bold text-slate-500">
-                                                {new Date(r.check_in).toLocaleDateString()}
+                                            <TableCell className="text-right text-xs font-medium text-muted-foreground">
+                                                {new Date(r.check_in).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                                             </TableCell>
                                         </TableRow>
                                     ))}
@@ -243,9 +254,9 @@ export default function StaffPerformancePage() {
                 </TabsContent>
             </Tabs>
 
-            <div className="flex items-center gap-2 justify-center py-6 opacity-30 grayscale">
-                <Shield className="size-8" />
-                <p className="text-[10px] font-black uppercase tracking-[0.4em]">Personnel Command Integrity System</p>
+            <div className="flex items-center gap-2 justify-center py-10 opacity-20">
+                <Shield className="h-6 w-6" />
+                <p className="text-[10px] font-bold uppercase tracking-[0.3em]">Attendance Management System</p>
             </div>
         </div>
     );

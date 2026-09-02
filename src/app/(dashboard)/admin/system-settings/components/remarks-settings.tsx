@@ -38,7 +38,7 @@ export default function RemarksSettings() {
       const data = await remarksService.getAll();
       setRemarks(data);
     } catch (err) {
-      toast.error("Failed to load remarks bank");
+      toast.error("Failed to load remarks");
     }
   };
 
@@ -54,7 +54,7 @@ export default function RemarksSettings() {
     try {
       await remarksService.create(newRemark);
       setNewRemark({ remark_text: '', category: 'general' });
-      toast.success("Remark added to institutional bank");
+      toast.success("Remark added to the bank");
       fetchRemarks();
     } catch (err) {
       toast.error("Failed to create remark");
@@ -64,31 +64,31 @@ export default function RemarksSettings() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Remove this remark from the bank?")) return;
+    if (!confirm("Remove this remark?")) return;
     try {
       await remarksService.delete(id);
-      toast.success("Remark purged");
+      toast.success("Remark deleted");
       fetchRemarks();
     } catch (err) {
-      toast.error("Deletion failed");
+      toast.error("Failed to delete remark");
     }
   };
 
   return (
     <div className="space-y-6">
-      <Card className="border-none shadow-sm">
-        <CardHeader className="bg-muted/10 border-b">
-          <CardTitle className="text-base font-bold">Professional Remarks Bank</CardTitle>
-          <CardDescription>Standardized professional comments for terminal reports and assessments.</CardDescription>
+      <Card className="shadow-sm">
+        <CardHeader className="border-b py-4">
+          <CardTitle className="text-lg font-semibold">Remarks Repository</CardTitle>
+          <CardDescription>Standardized comments for student reports and assessments.</CardDescription>
         </CardHeader>
         <CardContent className="pt-6">
-          <form onSubmit={handleAdd} className="space-y-4 mb-8">
+          <form onSubmit={handleAdd} className="space-y-4 mb-8 bg-muted/20 p-6 rounded-lg border">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                 <div className="md:col-span-1 space-y-2">
-                    <Label className="text-xs font-bold uppercase">Category</Label>
+                    <Label className="text-sm">Category</Label>
                     <Select value={newRemark.category} onValueChange={v => setNewRemark({...newRemark, category: v as RemarkItem['category']})}>
-                        <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
-                        <SelectContent className="rounded-2xl border-none shadow-2xl">
+                        <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                        <SelectContent>
                             <SelectItem value="academic">Academic Performance</SelectItem>
                             <SelectItem value="conduct">Conduct & Discipline</SelectItem>
                             <SelectItem value="interest">Special Interests</SelectItem>
@@ -97,53 +97,55 @@ export default function RemarksSettings() {
                     </Select>
                 </div>
                 <div className="md:col-span-2 space-y-2">
-                    <Label className="text-xs font-bold uppercase">Remark Text</Label>
+                    <Label className="text-sm">Remark Text</Label>
                     <Input
                         placeholder="e.g. A disciplined student with high moral standards..."
                         value={newRemark.remark_text}
+                        className="h-9"
                         onChange={(e) => setNewRemark({...newRemark, remark_text: e.target.value})}
-                        className="h-11"
                     />
                 </div>
-                <Button type="submit" disabled={loading} className="h-11 gap-2 bg-indigo-600 hover:bg-indigo-700">
-                    <Plus className="size-4" /> Add to Bank
+                <Button type="submit" disabled={loading} className="gap-2 h-9">
+                    <Plus className="size-4" /> Add Remark
                 </Button>
             </div>
           </form>
 
-          <Table>
-            <TableHeader className="bg-muted/5">
-              <TableRow>
-                <TableHead className="w-[150px] font-bold">Category</TableHead>
-                <TableHead className="font-bold">Commentary</TableHead>
-                <TableHead className="text-right font-bold">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {remarks.map((r) => (
-                <TableRow key={r.id} className="group">
-                  <TableCell>
-                    <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-tighter">
-                        {r.category}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-sm font-medium text-slate-700">{r.remark_text}</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" className="text-red-400 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleDelete(r.id)}>
-                      <Trash2 className="size-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {remarks.length === 0 && (
+          <div className="rounded-md border bg-background overflow-hidden">
+            <Table>
+                <TableHeader className="bg-muted/30">
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center py-20 text-muted-foreground italic">
-                    No standardized remarks found in the registry.
-                  </TableCell>
+                    <TableHead className="w-[150px] pl-6 py-3">Category</TableHead>
+                    <TableHead className="py-3">Remark</TableHead>
+                    <TableHead className="text-right pr-6 py-3">Actions</TableHead>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                </TableHeader>
+                <TableBody>
+                {remarks.map((r) => (
+                    <TableRow key={r.id} className="group transition-colors border-b last:border-none">
+                    <TableCell className="pl-6 py-3">
+                        <Badge variant="secondary" className="capitalize text-[10px] font-semibold">
+                            {r.category}
+                        </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm font-medium py-3">{r.remark_text}</TableCell>
+                    <TableCell className="text-right pr-6 py-3">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => handleDelete(r.id)}>
+                        <Trash2 className="size-4" />
+                        </Button>
+                    </TableCell>
+                    </TableRow>
+                ))}
+                {remarks.length === 0 && (
+                    <TableRow>
+                    <TableCell colSpan={3} className="text-center py-20 text-muted-foreground italic text-sm">
+                        No remarks found.
+                    </TableCell>
+                    </TableRow>
+                )}
+                </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -13,7 +13,7 @@ export default function PrintableReceiptPage() {
 
     async function printReceipt() {
       try {
-        const html = await getPrintableReceipt(Number(id));
+        const html = await getPrintableReceipt(String(id));
         const newWindow = window.open('', '_blank');
         if (newWindow) {
           newWindow.document.write(html);

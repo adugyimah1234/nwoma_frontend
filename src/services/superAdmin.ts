@@ -51,6 +51,24 @@ export interface Garrison {
   school_count?: number;
   director_id?: string;
   director_name?: string;
+
+  // Website Settings
+  custom_domain?: string;
+  website_logo_url?: string;
+  primary_color?: string;
+  secondary_color?: string;
+  hero_title?: string;
+  hero_subtitle?: string;
+  about_text?: string;
+  contact_email?: string;
+  contact_phone?: string;
+  is_website_enabled?: boolean;
+
+  // Leadership Profile
+  leader_name?: string;
+  leader_title?: string;
+  leader_message?: string;
+  leader_image_url?: string;
 }
 
 export interface GarrisonDirectorUser {
@@ -138,4 +156,22 @@ export const createGarrisonDirector = async (data: {
 }): Promise<{ id: string; message: string }> => {
   const res = await api.post('/super-admin/garrison-directors', data);
   return res.data;
+};
+
+export const getGarrisonNews = async (garrisonId: string): Promise<any[]> => {
+  const res = await api.get(`/super-admin/garrisons/${garrisonId}/news`);
+  return res.data.data;
+};
+
+export const createGarrisonNews = async (garrisonId: string, data: any): Promise<void> => {
+  await api.post(`/super-admin/garrisons/${garrisonId}/news`, data);
+};
+
+export const deleteGarrisonNews = async (id: string): Promise<void> => {
+  await api.delete(`/super-admin/garrisons/news/${id}`);
+};
+
+export const getAuditLogs = async (): Promise<any[]> => {
+    const res = await api.get('/super-admin/audit-logs');
+    return res.data.data;
 };

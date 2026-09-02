@@ -34,9 +34,22 @@ const gradebookService = {
         return res.data;
     },
 
+    createTerm: async (data: { name: string, academic_year_id: string, start_date: string, end_date: string }): Promise<AcademicTerm> => {
+        const res = await api.post('/gradebook/terms', data);
+        return res.data;
+    },
+
+    deleteTerm: async (id: string): Promise<void> => {
+        await api.delete(`/gradebook/terms/${id}`);
+    },
+
     createSubject: async (data: { name: string, code: string }): Promise<Subject> => {
         const res = await api.post('/gradebook/subjects', data);
         return res.data;
+    },
+
+    deleteSubject: async (id: string): Promise<void> => {
+        await api.delete(`/gradebook/subjects/${id}`);
     },
 
     getClassMarks: async (classId: string, termId: string, subjectId: string): Promise<StudentMark[]> => {

@@ -10,6 +10,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,7 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Table,
@@ -30,7 +32,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Building2, Plus, Edit, Trash2 } from 'lucide-react';
+import { Building2, Plus, Edit, Trash2, RefreshCw } from 'lucide-react';
 import { School as SchoolType } from '@/types/school';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import {
@@ -44,8 +46,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger
 } from "@/components/ui/alert-dialog";
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import schoolService from '@/services/schools';
+import { cn } from '@/lib/utils';
 
 const schoolFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -61,7 +64,6 @@ export default function SchoolManagement() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAddingSchool, setIsAddingSchool] = useState(false);
   const [editingSchool, setEditingSchool] = useState<SchoolType | null>(null);
-  const { toast } = useToast();
 
   useEffect(() => {
     fetchSchools();
@@ -73,7 +75,7 @@ export default function SchoolManagement() {
       const data = await schoolService.getAll();
       setSchools(data);
     } catch (error: any) {
-      toast({ title: "Error", description: "Failed to fetch schools", variant: "destructive" });
+      toast.error("Failed to fetch schools");
     } finally {
       setIsLoading(false);
     }
@@ -94,17 +96,17 @@ export default function SchoolManagement() {
       setIsLoading(true);
       if (editingSchool) {
         await schoolService.update(editingSchool.id, values);
-        toast({ title: "Success", description: "School updated successfully" });
+        toast.success("School updated successfully");
       } else {
         await schoolService.create(values);
-        toast({ title: "Success", description: "School created successfully" });
+        toast.success("School created successfully");
       }
       setIsAddingSchool(false);
       setEditingSchool(null);
       form.reset();
       await fetchSchools();
     } catch (error: any) {
-      toast({ title: "Error", description: "Failed to save school", variant: "destructive" });
+      toast.error("Failed to save school");
     } finally {
       setIsLoading(false);
     }
@@ -113,10 +115,10 @@ export default function SchoolManagement() {
   const handleDelete = async (id: string | number) => {
     try {
       await schoolService.delete(String(id));
-      toast({ title: "Success", description: "School deleted successfully" });
+      toast.success("School deleted successfully");
       fetchSchools();
     } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast.error(error.message || "Failed to delete school");
     }
   };
 
@@ -131,125 +133,136 @@ export default function SchoolManagement() {
             { title: 'Schools' }
           ]}
         >
-          <Dialog open={isAddingSchool} onOpenChange={setIsAddingSchool}>
-            <DialogTrigger asChild>
-              <Button className="h-12 rounded-2xl font-black uppercase tracking-widest text-[10px] px-8 shadow-xl shadow-primary/20">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Unit
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px] rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden">
-              <div className="bg-primary p-8 text-white relative overflow-hidden">
-                  <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12"><Building2 className="size-32" /></div>
-                  <DialogHeader className="relative z-10 space-y-2">
-                      <Badge className="w-fit bg-white/20 text-white border-none font-black text-[10px] tracking-[0.2em] px-4 py-1.5 uppercase">Network Node</Badge>
-                      <DialogTitle className="text-3xl font-black tracking-tighter uppercase">{editingSchool ? 'Edit Unit' : 'New Unit'}</DialogTitle>
-                  </DialogHeader>
-              </div>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="p-8 space-y-6">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Official Unit Name</FormLabel>
-                        <FormControl><Input placeholder="e.g. Garrison Basic School" className="h-14 rounded-2xl bg-muted/30 border-none font-bold px-6 focus:bg-background transition-all" {...field} /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <div className="grid grid-cols-2 gap-6">
-                      <FormField
-                        control={form.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Official Email</FormLabel>
-                            <FormControl><Input {...field} type="email" placeholder="admin@node.com" className="h-14 rounded-2xl bg-muted/30 border-none font-bold px-6 focus:bg-background transition-all" /></FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="phone_number"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Contact Phone</FormLabel>
-                            <FormControl><Input {...field} placeholder="+233..." className="h-14 rounded-2xl bg-muted/30 border-none font-bold px-6 focus:bg-background transition-all" /></FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                  </div>
-                  <FormField
-                    control={form.control}
-                    name="address"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Geographic Address</FormLabel>
-                        <FormControl><Input placeholder="Building No. / Location" className="h-14 rounded-2xl bg-muted/30 border-none font-bold px-6 focus:bg-background transition-all" {...field} /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <DialogFooter className="pt-6 gap-3">
-                    <Button type="button" variant="ghost" className="rounded-xl font-bold" onClick={() => {
-                      setIsAddingSchool(false);
-                      setEditingSchool(null);
-                      form.reset();
-                    }}>Abort</Button>
-                    <Button type="submit" className="rounded-xl px-8 h-12 font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20">
-                      {editingSchool ? 'Update Node' : 'Initialize Node'}
-                    </Button>
-                  </DialogFooter>
-                </form>
-              </Form>
-            </DialogContent>
-          </Dialog>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={fetchSchools} disabled={isLoading}>
+              <RefreshCw className={cn("h-4 w-4 mr-2", isLoading && "animate-spin")} /> Refresh
+            </Button>
+            <Dialog open={isAddingSchool} onOpenChange={setIsAddingSchool}>
+              <DialogTrigger asChild>
+                <Button size="sm" className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Add Unit
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                  <DialogTitle>{editingSchool ? 'Edit School' : 'Add New School'}</DialogTitle>
+                  <DialogDescription>
+                    Enter the details of the institutional unit below.
+                  </DialogDescription>
+                </DialogHeader>
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>School Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g. Garrison Basic School" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Email Address</FormLabel>
+                              <FormControl><Input {...field} type="email" placeholder="admin@school.com" /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="phone_number"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Phone Number</FormLabel>
+                              <FormControl><Input {...field} placeholder="+233..." /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                    </div>
+                    <FormField
+                      control={form.control}
+                      name="address"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Physical Address</FormLabel>
+                          <FormControl><Input placeholder="Location / Station" {...field} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <DialogFooter className="pt-4">
+                      <Button type="button" variant="outline" onClick={() => {
+                        setIsAddingSchool(false);
+                        setEditingSchool(null);
+                        form.reset();
+                      }}>Cancel</Button>
+                      <Button type="submit" disabled={isLoading}>
+                        {isLoading && <RefreshCw className="mr-2 h-4 w-4 animate-spin" />}
+                        {editingSchool ? 'Update School' : 'Add School'}
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </Form>
+              </DialogContent>
+            </Dialog>
+          </div>
         </PageHeader>
 
-        <Card className="border-none shadow-2xl shadow-black/5 rounded-[2rem] overflow-hidden">
+        <Card className="shadow-sm overflow-hidden">
+          <CardHeader className="border-b py-4">
+            <CardTitle className="text-lg font-semibold">Institutional Units</CardTitle>
+            <CardDescription>Directory of all registered school branches.</CardDescription>
+          </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <Table>
-                <TableHeader className="bg-muted/10">
-                  <TableRow className="hover:bg-transparent border-none">
-                    <TableHead className="pl-10 py-6 text-[10px] font-black uppercase tracking-[0.2em]">Unit Name</TableHead>
-                    <TableHead className="text-[10px] font-black uppercase tracking-[0.2em]">Communications</TableHead>
-                    <TableHead className="text-[10px] font-black uppercase tracking-[0.2em]">Station Node</TableHead>
-                    <TableHead className="text-right pr-10 text-[10px] font-black uppercase tracking-[0.2em]">Operations</TableHead>
+                <TableHeader className="bg-muted/30">
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="pl-6">Unit Name</TableHead>
+                    <TableHead>Contact Info</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead className="text-right pr-6">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {isLoading ? (
-                    <TableRow><TableCell colSpan={4} className="text-center py-20 italic text-muted-foreground">Syncing Unit Registry...</TableCell></TableRow>
+                  {isLoading && schools.length === 0 ? (
+                    <TableRow><TableCell colSpan={4} className="text-center py-10 text-muted-foreground italic">Loading units...</TableCell></TableRow>
                   ) : schools.length === 0 ? (
-                    <TableRow><TableCell colSpan={4} className="text-center py-20 italic text-muted-foreground">No units established in the registry.</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={4} className="text-center py-10 text-muted-foreground italic">No units found.</TableCell></TableRow>
                   ) : (
                     schools.map((school) => (
-                      <TableRow key={school.id} className="group hover:bg-muted/30 border-b border-muted-foreground/5 last:border-none transition-colors">
-                        <TableCell className="font-black text-sm tracking-tighter uppercase pl-10 py-6">
+                      <TableRow key={school.id}>
+                        <TableCell className="font-medium pl-6">
                             {school.name}
                         </TableCell>
                         <TableCell>
-                          <div className="flex flex-col">
-                            <span className="text-[10px] font-black text-primary uppercase tracking-tighter">{school.email}</span>
-                            <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-60">{school.phone_number || (school as any).phone}</span>
+                          <div className="flex flex-col text-xs">
+                            <span className="font-medium text-primary">{school.email}</span>
+                            <span className="text-muted-foreground">{school.phone_number || (school as any).phone}</span>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest border-none bg-muted/50 px-3 py-1">
+                          <Badge variant="secondary" className="font-normal text-[10px] uppercase">
                             {school.address}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right pr-10">
-                          <div className="flex justify-end gap-2">
+                        <TableCell className="text-right pr-6">
+                          <div className="flex justify-end gap-1">
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-10 w-10 rounded-xl text-primary hover:bg-primary/10 transition-all"
+                                className="h-8 w-8 text-primary"
                                 onClick={() => {
                                   setEditingSchool(school);
                                   form.reset({
@@ -265,18 +278,18 @@ export default function SchoolManagement() {
                             </Button>
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl text-destructive hover:bg-destructive/10 transition-all"><Trash2 className="h-4 w-4" /></Button>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive"><Trash2 className="h-4 w-4" /></Button>
                               </AlertDialogTrigger>
-                              <AlertDialogContent className="rounded-[2.5rem]">
+                              <AlertDialogContent>
                                 <AlertDialogHeader>
-                                  <AlertDialogTitle className="text-2xl font-black tracking-tighter uppercase">Unit Decommissioning</AlertDialogTitle>
-                                  <AlertDialogDescription className="font-medium">
-                                    Are you certain you wish to decommission <strong className="text-foreground">{school.name}</strong>? All associated data streams will be archived. This action is audited and irreversible.
+                                  <AlertDialogTitle>Delete School?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete <strong className="text-foreground">{school.name}</strong>? This action cannot be undone.
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
-                                <AlertDialogFooter className="pt-6">
-                                  <AlertDialogCancel className="rounded-xl font-bold">Abort</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => handleDelete(school.id)} className="bg-destructive hover:bg-destructive/90 text-white rounded-xl px-8 font-black uppercase tracking-widest text-[10px]">Confirm Decommission</AlertDialogAction>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDelete(school.id)} className="bg-destructive hover:bg-destructive/90 text-white">Delete</AlertDialogAction>
                                 </AlertDialogFooter>
                               </AlertDialogContent>
                             </AlertDialog>

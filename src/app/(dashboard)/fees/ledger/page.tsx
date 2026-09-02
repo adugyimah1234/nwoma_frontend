@@ -7,22 +7,24 @@ import {
     Search,
     RefreshCw,
     ArrowUpRight,
-    ChevronRight,
     Filter,
-    AlertCircle,
-    User,
     Download,
     QrCode,
     Copy,
-    Smartphone
+    Smartphone,
+    CreditCard,
+    AlertCircle,
+    UserCircle,
+    FileSpreadsheet,
+    Banknote
 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/layout/page-header';
 import { DataTable, type DataTableColumn } from '@/components/ui/data-table';
-import { getDebtLedger, sendBulkDebtReminders } from '@/services/fee';
+import { getDebtLedger } from '@/services/fee';
 import { toast } from 'sonner';
 import { Progress } from '@/components/ui/progress';
 import {
@@ -31,8 +33,10 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
+import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
+import { StatsCard } from '@/components/ui/stats-card';
 
 interface DebtRecord {
     id: string;
@@ -87,16 +91,18 @@ export default function DebtLedgerPage() {
             key: 'student',
             header: 'Student & Unit',
             cell: (row) => (
-                <div>
-                    <div className="font-bold text-sm uppercase">{row.first_name} {row.last_name}</div>
-                    <div className="text-[10px] text-muted-foreground uppercase font-mono">{row.class_name} | {row.school_name}</div>
+                <div className="space-y-0.5">
+                    <div className="font-semibold text-sm uppercase tracking-tight">{row.first_name} {row.last_name}</div>
+                    <div className="text-[10px] text-muted-foreground uppercase font-medium">{row.class_name} • {row.school_name}</div>
                 </div>
             )
         },
         {
             key: 'guardian',
             header: 'Guardian Contact',
-            cell: (row) => (row.guardian_phone_number)
+            cell: (row) => (
+                <div className="text-xs font-medium">{row.guardian_phone_number}</div>
+            )
         },
         {
             key: 'financials',
@@ -104,12 +110,12 @@ export default function DebtLedgerPage() {
             cell: (row) => {
                 const percent = (row.total_paid / row.total_fees) * 100;
                 return (
-                    <div className="w-48 space-y-1">
-                        <div className="flex justify-between text-[10px] font-bold">
-                            <span>{formatCurrency(row.total_paid)} paid</span>
-                            <span>{percent.toFixed(0)}%</span>
+                    <div className="w-48 space-y-1.5">
+                        <div className="flex justify-between items-center text-[10px] font-semibold uppercase tracking-wider">
+                            <span className="text-muted-foreground">{formatCurrency(row.total_paid)} Paid</span>
+                            <span className={cn(percent >= 100 ? "text-emerald-600" : "text-primary")}>{percent.toFixed(0)}%</span>
                         </div>
-                        <Progress value={percent} className="h-1" />
+                        <Progress value={percent} className="h-1 bg-muted" />
                     </div>
                 );
             }
@@ -119,28 +125,28 @@ export default function DebtLedgerPage() {
             header: 'Outstanding',
             className: 'text-right',
             cell: (row) => (
-                <div className="text-right">
-                    <div className="font-black text-rose-600">{formatCurrency(row.balance)}</div>
-                    <div className="text-[9px] text-muted-foreground uppercase font-bold">Total: {formatCurrency(row.total_fees)}</div>
+                <div className="text-right space-y-0.5">
+                    <div className="font-bold text-sm text-destructive">{formatCurrency(row.balance)}</div>
+                    <div className="text-[10px] text-muted-foreground uppercase font-medium">Of {formatCurrency(row.total_fees)}</div>
                 </div>
             )
         },
         {
             key: 'actions',
             header: '',
-            className: 'text-right',
+            className: 'text-right pr-4',
             cell: (row) => (
-                <div className="flex justify-end gap-2">
+                <div className="flex justify-end gap-1">
                     <Button
                         variant="outline"
                         size="sm"
-                        className="h-8 gap-2 text-indigo-600 border-indigo-100 bg-indigo-50/50 hover:bg-indigo-100"
+                        className="h-8 text-[11px] font-semibold uppercase tracking-wider border-border/60 hover:bg-muted"
                         onClick={() => {
                             setSelectedStudent(row);
                             setIsProtocolOpen(true);
                         }}
                     >
-                        <QrCode className="size-3" /> Pay-Link
+                        <QrCode className="size-3 mr-2 opacity-60" /> Pay-Link
                     </Button>
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
                         <ArrowUpRight className="size-4" />
@@ -150,41 +156,45 @@ export default function DebtLedgerPage() {
         }
     ];
 
-    const totalDebt = data.reduce((sum, d) => sum + d.balance, 0);
+    const totalOutstanding = data.reduce((sum, d) => sum + d.balance, 0);
+    const totalRevenue = data.reduce((sum, d) => sum + d.total_paid, 0);
 
     return (
-        <div className="flex flex-1 flex-col gap-6 p-6 md:p-8">
+        <div className="flex flex-1 flex-col gap-6 p-4 md:p-8 pt-6">
             <PageHeader
                 title="Debt Ledger & Arrears"
-                description="Monitor outstanding fees and manage 'Pay-Small-Small' installment tracking."
+                description="Monitor outstanding fees and manage installment tracking."
                 breadcrumbs={[{ title: 'Home', href: '/' }, { title: 'Finance', href: '/fees' }, { title: 'Debt Ledger' }]}
             >
                 <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={fetchData} className="h-10">
-                        <RefreshCw className="mr-2 size-4" /> Sync
+                    <Button variant="outline" size="sm" onClick={fetchData} className="h-9">
+                        <RefreshCw className={cn("mr-2 size-4", loading && "animate-spin")} /> Sync
                     </Button>
                     <Button
-                        onClick={() => {}} // Handle broadcast
+                        size="sm"
+                        onClick={() => {}}
                         disabled={sending || data.length === 0}
-                        className="h-10 bg-rose-600 hover:bg-rose-700 shadow-lg shadow-rose-200 gap-2"
+                        className="h-9 gap-2 font-semibold"
                     >
-                        {sending ? <RefreshCw className="size-4 animate-spin" /> : <MessageSquare className="size-4" />}
-                        Broadcast Reminders
+                        <MessageSquare className="size-4" /> Broadcast Reminders
                     </Button>
                 </div>
             </PageHeader>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* ... stat cards ... */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <StatsCard title="Total Debt" value={formatCurrency(totalOutstanding)} icon={Banknote} />
+                <StatsCard title="Collected" value={formatCurrency(totalRevenue)} icon={Wallet} />
+                <StatsCard title="Total Billing" value={formatCurrency(totalOutstanding + totalRevenue)} icon={FileSpreadsheet} />
+                <StatsCard title="Active Debts" value={data.filter(d => d.balance > 0).length} icon={AlertCircle} />
             </div>
 
-            <Card className="border-none shadow-sm">
-                <CardHeader className="border-b bg-muted/5 flex flex-row items-center justify-between">
-                    <div>
-                        <CardTitle className="text-base font-bold text-slate-800">Arrears Ledger</CardTitle>
+            <Card className="shadow-none border border-border/60">
+                <CardHeader className="border-b bg-muted/10 py-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="space-y-1">
+                        <CardTitle className="text-base font-semibold uppercase tracking-tight">Arrears Ledger</CardTitle>
                         <CardDescription>Real-time calculation of student debt across all assigned units.</CardDescription>
                     </div>
-                    <Button variant="outline" size="sm" className="h-8 gap-2">
+                    <Button variant="outline" size="sm" className="h-8 gap-2 font-semibold text-xs uppercase tracking-wider">
                         <Download className="size-3" /> Export CSV
                     </Button>
                 </CardHeader>
@@ -192,7 +202,7 @@ export default function DebtLedgerPage() {
                     <DataTable
                         data={data as any[]}
                         columns={columns as any}
-                        searchPlaceholder="Filter by student or unit..."
+                        searchPlaceholder="Filter by name or unit..."
                         searchKey="first_name"
                         loading={loading}
                         rowKey="id"
@@ -202,60 +212,60 @@ export default function DebtLedgerPage() {
 
             {/* PAY-LINK DIALOG */}
             <Dialog open={isProtocolOpen} onOpenChange={setIsProtocolOpen}>
-                <DialogContent className="sm:max-w-[400px] border-none shadow-2xl p-0 overflow-hidden rounded-2xl">
-                    <div className="bg-indigo-900 p-8 text-white text-center space-y-4">
-                        <div className="size-16 rounded-full bg-white/10 flex items-center justify-center mx-auto border border-white/20">
-                            <Smartphone className="size-8" />
+                <DialogContent className="sm:max-w-[420px] p-0 overflow-hidden shadow-none border border-border">
+                    <div className="p-8 text-center space-y-6">
+                        <div className="size-16 rounded-full bg-muted border flex items-center justify-center mx-auto">
+                            <Smartphone className="size-8 text-primary" />
                         </div>
-                        <div>
-                            <h3 className="text-lg font-black uppercase tracking-tight">Mobile Money Protocol</h3>
-                            <p className="text-xs text-indigo-300">Official Payment Link for {selectedStudent?.first_name}</p>
+                        <div className="space-y-1">
+                            <h3 className="text-lg font-bold uppercase tracking-tight">Payment Protocol</h3>
+                            <p className="text-xs text-muted-foreground">Official Mobile Money Link for {selectedStudent?.first_name}</p>
                         </div>
-                    </div>
-                    <div className="p-8 space-y-6">
-                        <div className="space-y-4">
-                            <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-3">
+
+                        <div className="grid gap-4">
+                            <div className="p-4 rounded-xl border bg-muted/20 space-y-3">
                                 <div className="flex justify-between items-center">
-                                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Target Reference</span>
-                                    <Badge className="bg-indigo-600 font-mono">{selectedStudent?.id.substring(0,8).toUpperCase()}</Badge>
+                                    <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Target Reference</span>
+                                    <Badge variant="outline" className="font-mono text-primary border-primary/20 bg-background">{selectedStudent?.id.substring(0,8).toUpperCase()}</Badge>
                                 </div>
+                                <Separator className="opacity-40" />
                                 <div className="flex justify-between items-center">
-                                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Amount Due</span>
-                                    <span className="text-sm font-black text-rose-600">{formatCurrency(selectedStudent?.balance || 0)}</span>
+                                    <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Amount Outstanding</span>
+                                    <span className="text-base font-bold text-destructive">{formatCurrency(selectedStudent?.balance || 0)}</span>
                                 </div>
                             </div>
 
-                            <div className="space-y-3">
-                                <h4 className="text-xs font-black uppercase text-slate-800">USSD Command Instructions</h4>
-                                <div className="space-y-2">
+                            <div className="text-left space-y-3">
+                                <h4 className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Execution Steps</h4>
+                                <div className="space-y-2.5">
                                     {[
                                         "Dial *170# (MTN) or *110# (Telecel)",
-                                        "Navigate to 'Pay Merchant'",
+                                        "Select 'Pay Merchant' option",
                                         `Use Reference: ${selectedStudent?.id.substring(0,8).toUpperCase()}`,
-                                        "Confirm payment and save SMS receipt"
+                                        "Confirm payment and retain receipt"
                                     ].map((step, i) => (
-                                        <div key={i} className="flex gap-3 items-start text-xs text-slate-600">
-                                            <span className="size-5 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold shrink-0 text-[10px]">{i+1}</span>
-                                            <p className="leading-tight">{step}</p>
+                                        <div key={i} className="flex gap-3 items-center text-xs font-medium text-foreground">
+                                            <span className="size-5 rounded-full bg-muted border flex items-center justify-center text-muted-foreground font-bold shrink-0 text-[10px]">{i+1}</span>
+                                            <p className="leading-none">{step}</p>
                                         </div>
                                     ))}
                                 </div>
                             </div>
                         </div>
 
-                        <div className="pt-4 border-t flex flex-col gap-3">
-                            <Button className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 gap-2 font-bold" onClick={() => selectedStudent && handleCopyProtocol(selectedStudent)}>
-                                <Copy className="size-4" /> COPY PROTOCOL TO SHARE
+                        <div className="pt-2 flex flex-col gap-3">
+                            <Button className="w-full h-12 font-bold uppercase text-xs tracking-widest gap-2" onClick={() => selectedStudent && handleCopyProtocol(selectedStudent)}>
+                                <Copy className="size-4" /> Copy Instructions
                             </Button>
-                            <p className="text-[9px] text-center text-muted-foreground uppercase font-medium tracking-tighter">Copy this protocol and send it to the parent via WhatsApp or SMS.</p>
+                            <p className="text-[10px] text-muted-foreground font-medium italic">Share this protocol with the parent via messaging terminal.</p>
                         </div>
                     </div>
                 </DialogContent>
             </Dialog>
 
-            <div className="flex items-center gap-2 justify-center py-6 opacity-20 grayscale">
-                <Wallet className="size-8" />
-                <p className="text-[10px] font-black uppercase tracking-[0.3em]">Financial Command Security</p>
+            <div className="flex items-center gap-2 justify-center py-6 opacity-20">
+                <Wallet className="size-6" />
+                <p className="text-[10px] font-bold uppercase tracking-[0.3em]">Financial Command Security</p>
             </div>
         </div>
     );

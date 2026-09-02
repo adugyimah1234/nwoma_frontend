@@ -82,8 +82,8 @@ export default function CommandDashboard() {
         <div className="flex-1 space-y-4">
             <div className="flex items-center justify-between space-y-2">
                 <div>
-                    <h2 className="text-2xl font-bold tracking-tight">Command Hub</h2>
-                    <p className="text-sm text-muted-foreground">Strategic oversight and institutional intelligence.</p>
+                    <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
+                    <p className="text-sm text-muted-foreground">Institutional metrics and performance intelligence.</p>
                 </div>
                 <div className="flex items-center space-x-2">
                     <Button onClick={fetchDashboard} variant="outline" size="sm">

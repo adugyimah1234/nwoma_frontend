@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { createAcademicYear, getAllAcademicYear, type academicYear as AcademicYearType, } from '@/services/academic_year';
+import { createAcademicYear, deleteAcademicYear, getAllAcademicYear, type academicYear as AcademicYearType, } from '@/services/academic_year';
 import { DataTable, DataTableColumn } from '@/components/ui/data-table';
 import {
   Dialog,
@@ -23,9 +23,19 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogClose,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function AcademicYearSettings() {
   const [academicYears, setAcademicYears] = useState<AcademicYearType[]>([]);
@@ -34,6 +44,7 @@ export default function AcademicYearSettings() {
   const [endDate, setEndDate] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchAcademicYears();
@@ -48,6 +59,16 @@ export default function AcademicYearSettings() {
       toast.error('Failed to fetch academic years');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteAcademicYear(id);
+      toast.success('Academic year deleted');
+      fetchAcademicYears();
+    } catch (error: any) {
+      toast.error(error.message);
     }
   };
 
@@ -86,12 +107,34 @@ export default function AcademicYearSettings() {
       className: 'text-right',
       cell: (row) => (
         <div className="flex justify-end gap-1">
-          <Button variant="ghost" size="icon" className="h-8 w-8">
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toast.info('Edit feature coming soon')}>
             <Edit className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
-            <Trash2 className="h-4 w-4" />
-          </Button>
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Academic Year</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to delete {row.year}? This action cannot be undone and may affect associated records.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => handleDelete(row.id)}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       )
     }
@@ -118,7 +161,7 @@ export default function AcademicYearSettings() {
       setStartDate('');
       setEndDate('');
       fetchAcademicYears();
-      document.getElementById('close-ay-dialog')?.click();
+      setIsDialogOpen(false);
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -134,7 +177,7 @@ export default function AcademicYearSettings() {
           <CardDescription>Manage academic cycles and terms</CardDescription>
         </div>
 
-        <Dialog>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button size="sm">
               <Plus className="h-4 w-4 mr-2" />
@@ -179,9 +222,7 @@ export default function AcademicYearSettings() {
             </div>
 
             <DialogFooter>
-              <DialogClose asChild>
-                <Button variant="outline" id="close-ay-dialog">Cancel</Button>
-              </DialogClose>
+              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
               <Button onClick={handleCreate} disabled={isCreating}>
                 {isCreating ? 'Creating...' : 'Create Year'}
               </Button>
@@ -190,7 +231,7 @@ export default function AcademicYearSettings() {
         </Dialog>
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="p-0">
         <DataTable
           data={academicYears as any}
           columns={columns as any}

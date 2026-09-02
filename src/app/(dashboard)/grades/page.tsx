@@ -8,7 +8,8 @@ import {
     FileText,
     GraduationCap,
     Wand2,
-    MessageSquare
+    MessageSquare,
+    BookOpen
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,6 +28,7 @@ import { toast } from 'sonner';
 import gradebookService, { Subject, AcademicTerm, StudentMark } from '@/services/gradebook';
 import remarksService, { RemarkItem } from '@/services/remarks';
 import classService, { ClassData } from '@/services/class';
+import { getAllAcademicYear, academicYear } from '@/services/academic_year';
 import {
     Table,
     TableBody,
@@ -43,18 +45,24 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
+import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function GradebookPage() {
     const [loading, setLoading] = useState(false);
     const [fetching, setFetching] = useState(false);
 
-    // Selection State
+    // Data State
     const [subjects, setSubjects] = useState<Subject[]>([]);
     const [classes, setClasses] = useState<ClassData[]>([]);
+    const [academicYears, setAcademicYears] = useState<academicYear[]>([]);
     const [terms, setTerms] = useState<AcademicTerm[]>([]);
     const [remarksBank, setRemarksBank] = useState<RemarkItem[]>([]);
 
+    // Selection State
     const [selection, setSelection] = useState({
+        academicYearId: '',
         classId: '',
         subjectId: '',
         termId: ''
@@ -65,15 +73,15 @@ export default function GradebookPage() {
 
     const loadInitialData = useCallback(async () => {
         try {
-            const [subRes, classRes, termRes, remarkRes] = await Promise.all([
+            const [subRes, classRes, yearsRes, remarkRes] = await Promise.all([
                 gradebookService.getSubjects(),
                 classService.getAll(),
-                gradebookService.getTerms(),
+                getAllAcademicYear(),
                 remarksService.getAll()
             ]);
             setSubjects(subRes);
             setClasses(classRes);
-            setTerms(termRes);
+            setAcademicYears(yearsRes);
             setRemarksBank(remarkRes);
         } catch (err) {
             toast.error("Failed to load academic configuration");
@@ -84,16 +92,37 @@ export default function GradebookPage() {
         loadInitialData();
     }, [loadInitialData]);
 
+    // Update terms when academic year changes
+    useEffect(() => {
+        const fetchTerms = async () => {
+            if (!selection.academicYearId) {
+                setTerms([]);
+                return;
+            }
+            try {
+                const termRes = await gradebookService.getTerms(selection.academicYearId);
+                setTerms(termRes);
+            } catch (err) {
+                toast.error("Failed to load terms for selected year");
+            }
+        };
+        fetchTerms();
+    }, [selection.academicYearId]);
+
     const fetchMarks = async () => {
         if (!selection.classId || !selection.subjectId || !selection.termId) {
-            toast.error("Please select Class, Subject, and Term");
+            toast.error("Please complete all selection criteria");
             return;
         }
 
         setFetching(true);
+        setMarks([]);
         try {
             const data = await gradebookService.getClassMarks(selection.classId, selection.termId, selection.subjectId);
             setMarks(data);
+            if (data.length === 0) {
+                toast.info("No active students found in this class");
+            }
         } catch (err) {
             toast.error("Failed to fetch student list");
         } finally {
@@ -106,21 +135,21 @@ export default function GradebookPage() {
         if (field === 'teacher_remarks') {
             newMarks[index] = { ...newMarks[index], teacher_remarks: value };
         } else {
-            const numValue = parseFloat(value) || 0;
+            const numValue = Math.min(field === 'ca_score' ? 40 : 60, Math.max(0, parseFloat(value) || 0));
             newMarks[index] = {
                 ...newMarks[index],
                 [field]: numValue,
-                total_score: (field === 'ca_score' ? numValue : newMarks[index].ca_score) +
-                             (field === 'exam_score' ? numValue : newMarks[index].exam_score)
+                total_score: (field === 'ca_score' ? numValue : (newMarks[index].ca_score || 0)) +
+                             (field === 'exam_score' ? numValue : (newMarks[index].exam_score || 0))
             };
 
-            // Basic grading logic for UI feedback
             const total = newMarks[index].total_score;
             let grade = 'F';
             if (total >= 80) grade = 'A';
             else if (total >= 70) grade = 'B';
             else if (total >= 60) grade = 'C';
             else if (total >= 50) grade = 'D';
+            else if (total >= 40) grade = 'E';
 
             newMarks[index].grade = grade;
         }
@@ -131,14 +160,8 @@ export default function GradebookPage() {
         const mark = marks[index];
         const total = mark.total_score || 0;
 
-        let targetCategory: string = 'general';
-        if (total >= 80) targetCategory = 'academic';
-        else if (total < 50) targetCategory = 'academic';
-        else targetCategory = 'general';
-
-        // Filter bank for appropriate suggestions
         const suggestions = remarksBank.filter(r => {
-            if (total >= 80) return r.category === 'academic' && (r.remark_text.toLowerCase().includes('brilliant') || r.remark_text.toLowerCase().includes('standard'));
+            if (total >= 80) return r.category === 'academic' && (r.remark_text.toLowerCase().includes('brilliant') || r.remark_text.toLowerCase().includes('standard') || r.remark_text.toLowerCase().includes('excellent'));
             if (total < 50) return r.category === 'academic' && (r.remark_text.toLowerCase().includes('effort') || r.remark_text.toLowerCase().includes('improve'));
             return r.category === 'general' || r.category === 'conduct';
         });
@@ -146,9 +169,8 @@ export default function GradebookPage() {
         if (suggestions.length > 0) {
             const random = suggestions[Math.floor(Math.random() * suggestions.length)];
             handleMarkChange(index, 'teacher_remarks', random.remark_text);
-            toast.success(`Suggested remark applied for ${mark.first_name}`);
+            toast.success(`Suggestion applied for ${mark.first_name}`);
         } else {
-            // Fallback to any academic remark if specific ones not found
             const academic = remarksBank.filter(r => r.category === 'academic');
             if (academic.length > 0) {
                 const random = academic[Math.floor(Math.random() * academic.length)];
@@ -172,7 +194,7 @@ export default function GradebookPage() {
                     teacher_remarks: m.teacher_remarks
                 }))
             });
-            toast.success("Academic Registry Synchronized");
+            toast.success("Marks synchronized successfully");
         } catch (err) {
             toast.error("Failed to sync marks");
         } finally {
@@ -181,20 +203,49 @@ export default function GradebookPage() {
     };
 
     return (
-        <div className="flex flex-1 flex-col gap-6 p-6 md:p-8">
+        <div className="flex flex-1 flex-col gap-8 p-4 md:p-8 max-w-[1600px] mx-auto w-full pb-24">
             <PageHeader
-                title="Academic Command & Grading"
-                description="Manage Continuous Assessment and Examinations for the current term."
+                title="Gradebook & Assessment"
+                description="Manage continuous assessment and examinations for student performance."
                 breadcrumbs={[{ title: 'Home', href: '/' }, { title: 'Gradebook' }]}
             />
 
-            <Card className="border-none shadow-sm bg-muted/20">
-                <CardContent className="pt-6">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <Card className="shadow-sm">
+                <CardHeader className="pb-4">
+                    <CardTitle className="text-sm font-semibold">Select Parameters</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
                         <div className="space-y-2">
-                            <Label className="text-xs font-bold uppercase tracking-wider">Classification</Label>
+                            <Label className="text-sm">Academic Year</Label>
+                            <Select onValueChange={(val) => setSelection(prev => ({...prev, academicYearId: val, termId: ''}))}>
+                                <SelectTrigger><SelectValue placeholder="Select Year" /></SelectTrigger>
+                                <SelectContent>
+                                    {academicYears.map(y => <SelectItem key={y.id} value={y.id}>{y.year}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label className="text-sm">Term</Label>
+                            <Select
+                                value={selection.termId}
+                                disabled={!selection.academicYearId}
+                                onValueChange={(val) => setSelection(prev => ({...prev, termId: val}))}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder={selection.academicYearId ? "Select Term" : "Select Year First"} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {terms.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label className="text-sm">Class</Label>
                             <Select onValueChange={(val) => setSelection(prev => ({...prev, classId: val}))}>
-                                <SelectTrigger className="bg-background"><SelectValue placeholder="Select Class" /></SelectTrigger>
+                                <SelectTrigger><SelectValue placeholder="Select Class" /></SelectTrigger>
                                 <SelectContent>
                                     {classes.map(c => <SelectItem key={c.id} value={c.id!}>{c.name}</SelectItem>)}
                                 </SelectContent>
@@ -202,155 +253,176 @@ export default function GradebookPage() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label className="text-xs font-bold uppercase tracking-wider">Subject</Label>
+                            <Label className="text-sm">Subject</Label>
                             <Select onValueChange={(val) => setSelection(prev => ({...prev, subjectId: val}))}>
-                                <SelectTrigger className="bg-background"><SelectValue placeholder="Select Subject" /></SelectTrigger>
+                                <SelectTrigger><SelectValue placeholder="Select Subject" /></SelectTrigger>
                                 <SelectContent>
                                     {subjects.map(s => <SelectItem key={s.id} value={s.id}>{s.name} ({s.code})</SelectItem>)}
+                                    {subjects.length === 0 && (
+                                        <div className="p-2 text-xs text-center text-muted-foreground italic">No subjects found</div>
+                                    )}
                                 </SelectContent>
                             </Select>
                         </div>
 
-                        <div className="space-y-2">
-                            <Label className="text-xs font-bold uppercase tracking-wider">Academic Term</Label>
-                            <Select onValueChange={(val) => setSelection(prev => ({...prev, termId: val}))}>
-                                <SelectTrigger className="bg-background"><SelectValue placeholder="Select Term" /></SelectTrigger>
-                                <SelectContent>
-                                    {terms.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <Button onClick={fetchMarks} disabled={fetching} className="gap-2 h-10">
+                        <Button onClick={fetchMarks} disabled={fetching} className="gap-2">
                             {fetching ? <RefreshCw className="size-4 animate-spin" /> : <Search className="size-4" />}
-                            Load Registry
+                            Fetch Students
                         </Button>
                     </div>
                 </CardContent>
             </Card>
 
-            {marks.length > 0 ? (
-                <div className="space-y-6">
-                    <Card className="border-none shadow-md">
-                        <CardHeader className="border-b bg-muted/5">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <CardTitle className="text-base font-bold">Student Score Entry</CardTitle>
-                                    <CardDescription>Input marks for CA (40%) and Exams (60%).</CardDescription>
+            {fetching ? (
+                <div className="space-y-4">
+                    {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-16 w-full" />)}
+                </div>
+            ) : marks.length > 0 ? (
+                <div className="space-y-6 animate-in fade-in duration-500">
+                    <Card className="shadow-sm overflow-hidden">
+                        <CardHeader className="flex flex-row items-center justify-between border-b py-4 px-6">
+                            <div className="flex items-center gap-3">
+                                <div className="size-8 rounded bg-primary/10 text-primary flex items-center justify-center">
+                                    <BookOpen className="size-4" />
                                 </div>
-                                <Badge variant="outline" className="font-mono text-[10px] uppercase">Class Size: {marks.length}</Badge>
+                                <div>
+                                    <CardTitle className="text-lg font-semibold">Student Assessment List</CardTitle>
+                                    <CardDescription className="text-xs">Input student marks for the selected term.</CardDescription>
+                                </div>
                             </div>
+                            <Badge variant="secondary">
+                                {marks.length} Students
+                            </Badge>
                         </CardHeader>
                         <CardContent className="p-0">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow className="hover:bg-transparent">
-                                        <TableHead className="w-[80px] font-bold">No.</TableHead>
-                                        <TableHead className="font-bold">Student Name</TableHead>
-                                        <TableHead className="w-[120px] font-bold text-center">CA (40)</TableHead>
-                                        <TableHead className="w-[120px] font-bold text-center">Exam (60)</TableHead>
-                                        <TableHead className="w-[80px] font-bold text-center">Total</TableHead>
-                                        <TableHead className="w-[60px] font-bold text-center">Grade</TableHead>
-                                        <TableHead className="font-bold">Teacher Remarks</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {marks.map((mark, idx) => (
-                                        <TableRow key={mark.student_id}>
-                                            <TableCell className="font-mono text-xs text-muted-foreground">{idx + 1}</TableCell>
-                                            <TableCell className="font-semibold uppercase text-[10px] tracking-tight">
-                                                {mark.first_name} {mark.last_name}
-                                            </TableCell>
-                                            <TableCell>
-                                                <Input
-                                                    type="number"
-                                                    className="text-center font-bold h-8"
-                                                    value={mark.ca_score || ''}
-                                                    onChange={(e) => handleMarkChange(idx, 'ca_score', e.target.value)}
-                                                />
-                                            </TableCell>
-                                            <TableCell>
-                                                <Input
-                                                    type="number"
-                                                    className="text-center font-bold h-8"
-                                                    value={mark.exam_score || ''}
-                                                    onChange={(e) => handleMarkChange(idx, 'exam_score', e.target.value)}
-                                                />
-                                            </TableCell>
-                                            <TableCell className="text-center font-black text-primary text-sm">
-                                                {mark.total_score || 0}
-                                            </TableCell>
-                                            <TableCell className="text-center">
-                                                <Badge className={mark.grade === 'F' ? 'bg-red-500' : 'bg-emerald-600'} style={{fontSize: '9px'}}>
-                                                    {mark.grade}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell>
-                                                <div className="flex gap-2 items-center">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-amber-500 hover:text-amber-600 hover:bg-amber-50 shrink-0"
-                                                        onClick={() => handleAutoSuggest(idx)}
-                                                        title="Magic Suggestion"
-                                                    >
-                                                        <Wand2 className="size-4" />
-                                                    </Button>
-                                                    <Input
-                                                        className="h-8 text-xs italic"
-                                                        placeholder="Enter remarks..."
-                                                        value={mark.teacher_remarks || ''}
-                                                        onChange={(e) => handleMarkChange(idx, 'teacher_remarks', e.target.value)}
-                                                    />
-                                                    <DropdownMenu>
-                                                        <DropdownMenuTrigger asChild>
-                                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-indigo-600 hover:text-indigo-700">
-                                                                <MessageSquare className="size-4" />
-                                                            </Button>
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end" className="w-[300px]">
-                                                            <DropdownMenuLabel className="text-[10px] uppercase">Pick from Remarks Bank</DropdownMenuLabel>
-                                                            <DropdownMenuSeparator />
-                                                            {remarksBank.map(r => (
-                                                                <DropdownMenuItem
-                                                                    key={r.id}
-                                                                    className="text-xs py-2 cursor-pointer"
-                                                                    onClick={() => handleMarkChange(idx, 'teacher_remarks', r.remark_text)}
-                                                                >
-                                                                    <div className="flex flex-col gap-1">
-                                                                        <span className="font-bold text-[8px] uppercase text-indigo-500">{r.category}</span>
-                                                                        <span className="line-clamp-2">{r.remark_text}</span>
-                                                                    </div>
-                                                                </DropdownMenuItem>
-                                                            ))}
-                                                            {remarksBank.length === 0 && (
-                                                                <div className="p-4 text-center text-xs text-muted-foreground italic">Remarks bank is empty</div>
-                                                            )}
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
-                                                </div>
-                                            </TableCell>
+                            <div className="overflow-x-auto">
+                                <Table>
+                                    <TableHeader className="bg-muted/30">
+                                        <TableRow className="hover:bg-transparent">
+                                            <TableHead className="w-[60px] pl-6">No.</TableHead>
+                                            <TableHead>Student Name</TableHead>
+                                            <TableHead className="w-[120px] text-center">CA (40%)</TableHead>
+                                            <TableHead className="w-[120px] text-center">Exam (60%)</TableHead>
+                                            <TableHead className="w-[100px] text-center">Total</TableHead>
+                                            <TableHead className="w-[80px] text-center">Grade</TableHead>
+                                            <TableHead className="pr-6">Teacher Remarks</TableHead>
                                         </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {marks.map((mark, idx) => (
+                                            <TableRow key={mark.student_id} className="group transition-colors border-b last:border-none">
+                                                <TableCell className="pl-6 py-3 text-sm text-muted-foreground">{idx + 1}</TableCell>
+                                                <TableCell>
+                                                    <span className="font-medium text-sm">
+                                                        {mark.first_name} {mark.last_name}
+                                                    </span>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="flex justify-center">
+                                                        <Input
+                                                            type="number"
+                                                            max={40}
+                                                            className="w-20 text-center h-9"
+                                                            value={mark.ca_score || ''}
+                                                            onChange={(e) => handleMarkChange(idx, 'ca_score', e.target.value)}
+                                                        />
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="flex justify-center">
+                                                        <Input
+                                                            type="number"
+                                                            max={60}
+                                                            className="w-20 text-center h-9"
+                                                            value={mark.exam_score || ''}
+                                                            onChange={(e) => handleMarkChange(idx, 'exam_score', e.target.value)}
+                                                        />
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="text-center">
+                                                    <span className="text-sm font-semibold text-primary">
+                                                        {mark.total_score || 0}
+                                                    </span>
+                                                </TableCell>
+                                                <TableCell className="text-center">
+                                                    <Badge variant={mark.grade === 'F' ? 'destructive' : 'default'} className="w-8 justify-center">
+                                                        {mark.grade || '-'}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell className="pr-6">
+                                                    <div className="flex gap-2 items-center">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="size-8 text-amber-500 hover:text-amber-600 hover:bg-amber-50 shrink-0"
+                                                            onClick={() => handleAutoSuggest(idx)}
+                                                            title="Suggest Remark"
+                                                        >
+                                                            <Wand2 className="size-4" />
+                                                        </Button>
+                                                        <Input
+                                                            className="h-9 text-xs"
+                                                            placeholder="Enter remarks..."
+                                                            value={mark.teacher_remarks || ''}
+                                                            onChange={(e) => handleMarkChange(idx, 'teacher_remarks', e.target.value)}
+                                                        />
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger asChild>
+                                                                <Button variant="ghost" size="icon" className="size-8 text-primary">
+                                                                    <MessageSquare className="size-4" />
+                                                                </Button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent align="end" className="w-[320px]">
+                                                                <DropdownMenuLabel className="text-xs font-semibold uppercase text-muted-foreground">Remarks Bank</DropdownMenuLabel>
+                                                                <DropdownMenuSeparator />
+                                                                <ScrollArea className="h-[250px]">
+                                                                    {remarksBank.map(r => (
+                                                                        <DropdownMenuItem
+                                                                            key={r.id}
+                                                                            className="p-3 cursor-pointer"
+                                                                            onClick={() => handleMarkChange(idx, 'teacher_remarks', r.remark_text)}
+                                                                        >
+                                                                            <div className="flex flex-col gap-1">
+                                                                                <Badge variant="secondary" className="w-fit text-[10px] uppercase">
+                                                                                    {r.category}
+                                                                                </Badge>
+                                                                                <span className="text-xs leading-relaxed">{r.remark_text}</span>
+                                                                            </div>
+                                                                        </DropdownMenuItem>
+                                                                    ))}
+                                                                </ScrollArea>
+                                                                {remarksBank.length === 0 && (
+                                                                    <div className="p-8 text-center text-xs text-muted-foreground italic">Remarks bank is empty</div>
+                                                                )}
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
                         </CardContent>
                     </Card>
 
-                    <div className="flex justify-end gap-3">
+                    <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6">
                         <Button variant="outline" className="gap-2">
                             <FileText className="size-4" /> Export Draft
                         </Button>
-                        <Button onClick={handleSave} disabled={loading} className="gap-2 px-8 bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200">
+                        <Button onClick={handleSave} disabled={loading} className="gap-2 px-10">
                             {loading ? <RefreshCw className="size-4 animate-spin" /> : <Save className="size-4" />}
-                            Sync to Headquarters
+                            Save Changes
                         </Button>
                     </div>
                 </div>
-            ) : (
-                <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed rounded-xl bg-muted/5">
-                    <GraduationCap className="size-12 text-muted-foreground/20 mb-4" />
-                    <p className="text-sm font-medium text-muted-foreground">Select criteria above to begin assessment entry.</p>
+            ) : !fetching && (
+                <div className="flex flex-col items-center justify-center py-32 border-2 border-dashed rounded-lg bg-muted/5 text-center px-10">
+                    <div className="size-20 bg-muted rounded-full flex items-center justify-center mb-6">
+                        <GraduationCap className="size-10 text-muted-foreground/20" />
+                    </div>
+                    <h4 className="text-lg font-medium">No Student Data Loaded</h4>
+                    <p className="text-sm text-muted-foreground max-w-sm mt-1">Complete the selection criteria above to load the student registry and initiate assessment entry.</p>
                 </div>
             )}
         </div>

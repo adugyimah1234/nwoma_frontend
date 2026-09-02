@@ -62,36 +62,38 @@ export function PageHeader({ title, description, breadcrumbs, tabs, children }: 
 
       {/* Tab nav */}
       {tabs && tabs.length > 0 && (
-        <div className="mt-2 flex gap-0 border-b border-border overflow-x-auto no-scrollbar">
-          {tabs.map((tab) => {
-            // Find if there's a more specific match in the tabs list
-            const hasMoreSpecificMatch = tabs.some(
-              (other) =>
-                other.href !== tab.href &&
-                other.href.startsWith(tab.href + '/') &&
-                pathname.startsWith(other.href)
-            );
+        <div className="mt-4 flex overflow-x-auto no-scrollbar pb-1">
+          <div className="inline-flex h-9 items-center justify-center rounded-lg bg-muted/50 p-1 text-muted-foreground border border-border/40">
+            {tabs.map((tab) => {
+              // Find if there's a more specific match in the tabs list
+              const hasMoreSpecificMatch = tabs.some(
+                (other) =>
+                  other.href !== tab.href &&
+                  other.href.startsWith(tab.href + '/') &&
+                  pathname.startsWith(other.href)
+              );
 
-            const active = !hasMoreSpecificMatch && (
-              tab.href === '/'
-                ? pathname === tab.href
-                : pathname === tab.href || pathname.startsWith(tab.href + '/')
-            );
-            return (
-              <Link
-                key={tab.href}
-                href={tab.href}
-                className={cn(
-                  'relative px-4 py-2 text-sm font-medium transition-colors',
-                  active
-                    ? 'text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary'
-                    : 'text-muted-foreground hover:text-foreground'
-                )}
-              >
-                {tab.title}
-              </Link>
-            );
-          })}
+              const active = !hasMoreSpecificMatch && (
+                tab.href === '/'
+                  ? pathname === tab.href
+                  : pathname === tab.href || pathname.startsWith(tab.href + '/')
+              );
+              return (
+                <Link
+                  key={tab.href}
+                  href={tab.href}
+                  className={cn(
+                    'inline-flex items-center justify-center whitespace-nowrap rounded-md px-4 py-1 text-xs md:text-sm font-semibold ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+                    active
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground/80 hover:text-foreground hover:bg-background/30'
+                  )}
+                >
+                  {tab.title}
+                </Link>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>

@@ -7,14 +7,17 @@ import {
   Calendar,
   Lock,
   Wrench,
-  MessageSquare
+  MessageSquare,
+  Building2
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AcademicYearSettings from './components/academic-year-settings';
+import TermSettings from './components/term-settings';
 import GeneralSettings from './components/general-settings';
 import SecuritySettings from './components/security-settings';
 import SubjectSettings from './components/subject-settings';
 import RemarksSettings from './components/remarks-settings';
+import SchoolSettings from './components/school-settings';
 
 export default function SystemSettings() {
   const [activeTab, setActiveTab] = useState('general');
@@ -22,8 +25,8 @@ export default function SystemSettings() {
   return (
     <div className="flex flex-1 flex-col gap-8 p-4 md:p-8 max-w-[1600px] mx-auto w-full pb-24">
         <PageHeader
-          title="System Governance & Node Configuration"
-          description="Configure global application parameters, academic cycles, and security protocols for the garrison network."
+          title="System Settings"
+          description="Manage institutional profile, academic cycles, and global application configurations."
           breadcrumbs={[
             { title: 'Home', href: '/' },
             { title: 'Admin', href: '/admin' },
@@ -34,20 +37,26 @@ export default function SystemSettings() {
         <div className="space-y-8">
           <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="flex flex-col md:flex-row gap-8">
             <TabsList className="flex flex-col h-auto bg-transparent border-r rounded-none w-full md:w-64 space-y-1 p-0 items-start">
-              <TabsTrigger value="general" className="w-full justify-start gap-3 px-4 py-3 data-[state=active]:bg-primary/10 data-[state=active]:text-primary border-none rounded-r-none rounded-l-lg transition-all text-sm font-semibold uppercase tracking-widest text-[10px]">
-                <Wrench className="size-4" /> General Node
+              <TabsTrigger value="general" className="w-full justify-start gap-3 px-4 py-3 data-[state=active]:bg-muted data-[state=active]:text-primary border-none rounded-r-none transition-all text-sm font-medium">
+                <Wrench className="size-4" /> General Settings
               </TabsTrigger>
-              <TabsTrigger value="academic-years" className="w-full justify-start gap-3 px-4 py-3 data-[state=active]:bg-primary/10 data-[state=active]:text-primary border-none rounded-r-none transition-all text-sm font-semibold uppercase tracking-widest text-[10px]">
-                <Calendar className="size-4" /> Academic Cycles
+              <TabsTrigger value="institution" className="w-full justify-start gap-3 px-4 py-3 data-[state=active]:bg-muted data-[state=active]:text-primary border-none rounded-r-none transition-all text-sm font-medium">
+                <Building2 className="size-4" /> Institutional Setup
               </TabsTrigger>
-              <TabsTrigger value="curriculum" className="w-full justify-start gap-3 px-4 py-3 data-[state=active]:bg-primary/10 data-[state=active]:text-primary border-none rounded-r-none transition-all text-sm font-semibold uppercase tracking-widest text-[10px]">
+              <TabsTrigger value="academic-years" className="w-full justify-start gap-3 px-4 py-3 data-[state=active]:bg-muted data-[state=active]:text-primary border-none rounded-r-none transition-all text-sm font-medium">
+                <Calendar className="size-4" /> Academic Years
+              </TabsTrigger>
+              <TabsTrigger value="academic-terms" className="w-full justify-start gap-3 px-4 py-3 data-[state=active]:bg-muted data-[state=active]:text-primary border-none rounded-r-none transition-all text-sm font-medium">
+                <Calendar className="size-4" /> Academic Terms
+              </TabsTrigger>
+              <TabsTrigger value="curriculum" className="w-full justify-start gap-3 px-4 py-3 data-[state=active]:bg-muted data-[state=active]:text-primary border-none rounded-r-none transition-all text-sm font-medium">
                 <Settings className="size-4" /> Curriculum Standard
               </TabsTrigger>
-              <TabsTrigger value="remarks" className="w-full justify-start gap-3 px-4 py-3 data-[state=active]:bg-primary/10 data-[state=active]:text-primary border-none rounded-r-none transition-all text-sm font-semibold uppercase tracking-widest text-[10px]">
+              <TabsTrigger value="remarks" className="w-full justify-start gap-3 px-4 py-3 data-[state=active]:bg-muted data-[state=active]:text-primary border-none rounded-r-none transition-all text-sm font-medium">
                 <MessageSquare className="size-4" /> Remarks Repository
               </TabsTrigger>
-              <TabsTrigger value="security" className="w-full justify-start gap-3 px-4 py-3 data-[state=active]:bg-primary/10 data-[state=active]:text-primary border-none rounded-r-none transition-all text-sm font-semibold uppercase tracking-widest text-[10px]">
-                <Lock className="size-4" /> Security Node
+              <TabsTrigger value="security" className="w-full justify-start gap-3 px-4 py-3 data-[state=active]:bg-muted data-[state=active]:text-primary border-none rounded-r-none transition-all text-sm font-medium">
+                <Lock className="size-4" /> Security Settings
               </TabsTrigger>
             </TabsList>
 
@@ -56,8 +65,16 @@ export default function SystemSettings() {
                 <GeneralSettings />
               </TabsContent>
 
+              <TabsContent value="institution" className="mt-0 focus-visible:outline-none animate-in fade-in slide-in-from-bottom-2">
+                <SchoolSettings />
+              </TabsContent>
+
               <TabsContent value="academic-years" className="mt-0 focus-visible:outline-none animate-in fade-in slide-in-from-bottom-2">
                 <AcademicYearSettings />
+              </TabsContent>
+
+              <TabsContent value="academic-terms" className="mt-0 focus-visible:outline-none animate-in fade-in slide-in-from-bottom-2">
+                <TermSettings />
               </TabsContent>
 
               <TabsContent value="curriculum" className="mt-0 focus-visible:outline-none animate-in fade-in slide-in-from-bottom-2">

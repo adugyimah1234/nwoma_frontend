@@ -42,13 +42,23 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { DataTable, type DataTableColumn } from '@/components/ui/data-table';
 import { useAuth } from "@/contexts/AuthContext";
 import registrationService, { type RegistrationData } from '@/services/registrations';
 import { bulkAdmit } from '@/services/admissions';
+import classService, { type ClassData } from '@/services/class';
+import { Category, getAllCategories } from '@/services/categories';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { getReceipts } from '@/services/receipt';
+import { PageHeader }from '@/components/layout/page-header';
 import { cn } from '@/lib/utils';
 import { printRegistrationsTable } from './printUtils';
 
@@ -56,6 +66,8 @@ export default function ApplicantManagement() {
     const router = useRouter();
     const { isAdmin } = useAuth();
     const [registrations, setRegistrations] = useState<RegistrationData[]>([]);
+    const [classes, setClasses] = useState<ClassData[]>([]);
+    const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(false);
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [isMigrating, setIsMigrating] = useState(false);
@@ -63,11 +75,22 @@ export default function ApplicantManagement() {
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [selectedRegistration, setSelectedRegistration] = useState<RegistrationData | null>(null);
 
+    // Filter states
+    const [searchQuery, setSearchQuery] = useState('');
+    const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'unpaid'>('all');
+    const [classFilter, setClassFilter] = useState<string>('all');
+
     const fetchInitialData = useCallback(async () => {
         setLoading(true);
         try {
-            const regData = await registrationService.getAll();
+            const [regData, classData, catData] = await Promise.all([
+                registrationService.getAll(),
+                classService.getAll(),
+                getAllCategories()
+            ]);
             setRegistrations(regData.filter(r => (r.status || '').toLowerCase() === 'pending'));
+            setClasses(classData);
+            setCategories(catData);
         } catch (error) {
             toast.error("Failed to load applicants");
         } finally {
@@ -133,6 +156,16 @@ export default function ApplicantManagement() {
         }
     };
 
+    const filteredRegistrations = registrations.filter(reg => {
+        const matchesSearch = `${reg.first_name} ${reg.last_name}`.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesStatus = statusFilter === 'all' ||
+            (statusFilter === 'paid' && (reg.payment_status?.toLowerCase() === 'paid' || reg.payment_status?.toLowerCase() === 'partial')) ||
+            (statusFilter === 'unpaid' && (!reg.payment_status || reg.payment_status?.toLowerCase() === 'unpaid'));
+        const matchesClass = classFilter === 'all' || reg.class_applying_for === classFilter;
+
+        return matchesSearch && matchesStatus && matchesClass;
+    });
+
     const columns: DataTableColumn<RegistrationData>[] = [
         {
             key: 'selection',
@@ -163,14 +196,14 @@ export default function ApplicantManagement() {
             key: 'class_applying_for',
             header: 'Class',
             cell: (row) => (
-                <Badge variant="secondary" className="font-normal">
-                    {row.class_applying_for}
+                <Badge variant={row.class_applying_for ? "secondary" : "destructive"} className="font-normal">
+                    {row.class_applying_for || 'Unassigned'}
                 </Badge>
             )
         },
         {
             key: 'registration_date',
-            header: 'Inducted',
+            header: 'Registered',
             cell: (row) => (
                 <span className="text-sm text-muted-foreground">
                     {row.registration_date ? new Date(row.registration_date).toLocaleDateString() : 'N/A'}
@@ -180,11 +213,15 @@ export default function ApplicantManagement() {
         {
             key: 'payment_status',
             header: 'Status',
-            cell: (row) => (
-                <Badge variant={row.payment_status === 'paid' ? 'default' : 'destructive'} className="capitalize">
-                    {row.payment_status}
-                </Badge>
-            )
+            cell: (row) => {
+                const pStatus = (row.payment_status || '').toLowerCase();
+                const isPaid = pStatus === 'paid' || pStatus === 'partial';
+                return (
+                    <Badge variant={isPaid ? 'default' : 'destructive'} className="capitalize">
+                        {row.payment_status || 'unpaid'}
+                    </Badge>
+                );
+            }
         },
         {
             key: 'actions',
@@ -235,37 +272,84 @@ export default function ApplicantManagement() {
     ];
 
     return (
-        <div className="flex flex-1 flex-col gap-6 p-8 max-w-[1600px] mx-auto w-full pb-24">
-            <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                    <h2 className="text-2xl font-bold tracking-tight">User List</h2>
-                    <p className="text-sm text-muted-foreground">Manage your applicants and their roles here.</p>
-                </div>
+        <div className="flex flex-1 flex-col gap-8 p-4 md:p-8 max-w-[1600px] mx-auto w-full pb-24">
+            <PageHeader
+                title="Manage Registrations"
+                description="Review and process student registration applications for the upcoming term."
+                breadcrumbs={[
+                    { title: 'Home', href: '/' },
+                    { title: 'Registration', href: '/registration' },
+                    { title: 'Manage' }
+                ]}
+            >
                 <div className="flex items-center gap-2">
-                    <Button variant="outline" onClick={fetchInitialData}>
+                    <Button variant="outline" size="sm" onClick={fetchInitialData}>
                         <RefreshCw className={cn("h-4 w-4 mr-2", loading && "animate-spin")} /> Refresh
                     </Button>
                     {isAdmin && (
-                        <Button onClick={() => router.push('/registration/new')}>
-                            <Plus className="h-4 w-4 mr-2" /> Add User
+                        <Button size="sm" onClick={() => router.push('/registration/new')}>
+                            <Plus className="h-4 w-4 mr-2" /> New Registration
                         </Button>
                     )}
                 </div>
-            </div>
+            </PageHeader>
 
-            <div className="flex items-center justify-between py-4">
-                <div className="flex flex-1 items-center space-x-2">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="flex flex-1 items-center space-x-2 w-full">
                     <Input
-                        placeholder="Filter users..."
-                        className="h-10 w-[250px] lg:w-[450px]"
-                        onChange={() => {}}
+                        placeholder="Search by name..."
+                        className="h-9 w-full md:w-[300px] lg:w-[400px]"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
                     />
-                    <Button variant="outline" size="sm" className="h-10 border-dashed">
-                        <Filter className="mr-2 h-4 w-4" /> Status
-                    </Button>
+
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm" className="h-9 border-dashed">
+                                <Filter className="mr-2 h-3.5 w-3.5" />
+                                {statusFilter === 'all' ? 'Status' : statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="w-[150px]">
+                            <DropdownMenuItem onClick={() => setStatusFilter('all')}>All Statuses</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setStatusFilter('paid')}>Paid/Partial</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setStatusFilter('unpaid')}>Unpaid</DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm" className="h-9 border-dashed">
+                                <ChevronRight className="mr-2 h-3.5 w-3.5" />
+                                {classFilter === 'all' ? 'Class' : classFilter}
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="w-[200px] max-h-[300px] overflow-y-auto">
+                            <DropdownMenuItem onClick={() => setClassFilter('all')}>All Classes</DropdownMenuItem>
+                            {Array.from(new Set(classes.map(c => c.name))).map(clsName => (
+                                <DropdownMenuItem key={clsName} onClick={() => setClassFilter(clsName)}>
+                                    {clsName}
+                                </DropdownMenuItem>
+                            ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    {(searchQuery || statusFilter !== 'all' || classFilter !== 'all') && (
+                        <Button
+                            variant="ghost"
+                            onClick={() => {
+                                setSearchQuery('');
+                                setStatusFilter('all');
+                                setClassFilter('all');
+                            }}
+                            className="h-9 px-2"
+                        >
+                            Reset
+                        </Button>
+                    )}
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={() => printRegistrationsTable(registrations, 0)}>
+                    <Button variant="outline" size="sm" onClick={() => printRegistrationsTable(filteredRegistrations, 0)}>
                         <Printer className="size-4 mr-2" /> Print
                     </Button>
                     {isAdmin && selectedIds.size > 0 && (
@@ -282,11 +366,10 @@ export default function ApplicantManagement() {
                 </div>
             </div>
 
-            <div className="rounded-md border bg-background">
+            <div className="rounded-md border bg-background overflow-hidden">
                 <DataTable
-                    data={registrations as any[]}
+                    data={filteredRegistrations as any[]}
                     columns={columns as any}
-                    searchKey="first_name"
                     loading={loading}
                     rowKey="id"
                 />
@@ -302,40 +385,70 @@ export default function ApplicantManagement() {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-white">Delete</AlertDialogAction>
+                        <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-white hover:bg-destructive/90 transition-colors">Delete</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
 
             <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
                 <DialogContent className="sm:max-w-[425px]">
-                    <div className="bg-background">
-                        <DialogHeader>
-                            <DialogTitle>Edit Profile</DialogTitle>
-                            <DialogDescription>Make changes to applicant details here.</DialogDescription>
-                        </DialogHeader>
-                        <form onSubmit={handleSubmitEdit} className="grid gap-4 py-4">
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <label className="text-right text-sm font-medium">First Name</label>
-                                <Input
-                                    className="col-span-3"
-                                    value={selectedRegistration?.first_name || ''}
-                                    onChange={(e) => setSelectedRegistration(prev => ({ ...prev!, first_name: e.target.value }))}
-                                />
+                    <DialogHeader>
+                        <DialogTitle>Edit Registration Details</DialogTitle>
+                        <DialogDescription>Update applicant profile information.</DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleSubmitEdit} className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <label className="text-right text-sm font-medium">First Name</label>
+                            <Input
+                                className="col-span-3 h-9"
+                                value={selectedRegistration?.first_name || ''}
+                                onChange={(e) => setSelectedRegistration(prev => ({ ...prev!, first_name: e.target.value }))}
+                            />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <label className="text-right text-sm font-medium">Last Name</label>
+                            <Input
+                                className="col-span-3 h-9"
+                                value={selectedRegistration?.last_name || ''}
+                                onChange={(e) => setSelectedRegistration(prev => ({ ...prev!, last_name: e.target.value }))}
+                            />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <label className="text-right text-sm font-medium">Target Class</label>
+                            <div className="col-span-3">
+                                <Select
+                                    value={selectedRegistration?.class_applying_for || ''}
+                                    onValueChange={(val) => setSelectedRegistration(prev => ({ ...prev!, class_applying_for: val }))}
+                                >
+                                    <SelectTrigger className="h-9"><SelectValue placeholder="Select Class" /></SelectTrigger>
+                                    <SelectContent>
+                                        {Array.from(new Set(classes.map(c => c.name))).map(clsName => (
+                                            <SelectItem key={clsName} value={clsName}>{clsName}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <label className="text-right text-sm font-medium">Last Name</label>
-                                <Input
-                                    className="col-span-3"
-                                    value={selectedRegistration?.last_name || ''}
-                                    onChange={(e) => setSelectedRegistration(prev => ({ ...prev!, last_name: e.target.value }))}
-                                />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <label className="text-right text-sm font-medium">Category</label>
+                            <div className="col-span-3">
+                                <Select
+                                    value={selectedRegistration?.category || ''}
+                                    onValueChange={(val) => setSelectedRegistration(prev => ({ ...prev!, category: val }))}
+                                >
+                                    <SelectTrigger className="h-9"><SelectValue placeholder="Select Category" /></SelectTrigger>
+                                    <SelectContent>
+                                        {categories.map(cat => (
+                                            <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
-                            <div className="flex justify-end pt-4">
-                                <Button type="submit">Save changes</Button>
-                            </div>
-                        </form>
-                    </div>
+                        </div>
+                        <div className="flex justify-end pt-4">
+                            <Button type="submit" size="sm">Save Changes</Button>
+                        </div>
+                    </form>
                 </DialogContent>
             </Dialog>
         </div>

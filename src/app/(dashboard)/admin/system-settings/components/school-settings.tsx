@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -62,30 +62,29 @@ export default function SchoolSettings() {
     }
   };
 
-const onSubmit = async (data: z.infer<typeof schoolFormSchema>) => {
-  try {
-    if (editing) {
-      await schoolService.update(editing, data);
-      toast.success("School updated successfully");
-    } else {
-      await schoolService.create(data);
-      toast.success("School created successfully");
+  const onSubmit = async (data: z.infer<typeof schoolFormSchema>) => {
+    try {
+      if (editing) {
+        await schoolService.update(editing, data);
+        toast.success("School updated successfully");
+      } else {
+        await schoolService.create(data);
+        toast.success("School created successfully");
+      }
+      form.reset();
+      setEditing(null);
+      fetchSchools();
+    } catch (error) {
+      toast.error(editing ? "Failed to update school" : "Failed to create school");
     }
-    form.reset();
-    setEditing(null);
-    fetchSchools();
-  } catch (error) {
-    toast.error(editing ? "Failed to update school" : "Failed to create school");
-  }
-};
-
+  };
 
   const handleEdit = (school: School) => {
     setEditing(school.id);
     form.reset({
       name: school.name,
       address: school.address || '',
-      phone: school.phone || school.phone_number || '',
+      phone: school.phone || (school as any).phone_number || '',
       email: school.email || '',
       website: school.website || '',
     });
@@ -244,21 +243,23 @@ const onSubmit = async (data: z.infer<typeof schoolFormSchema>) => {
                       <TableCell>{school.phone}</TableCell>
                       <TableCell>{school.address}</TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEdit(school)}
-                        >
-                          <PencilIcon className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-destructive"
-                          onClick={() => handleDelete(school.id)}
-                        >
-                          <Trash2Icon className="h-4 w-4" />
-                        </Button>
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEdit(school)}
+                          >
+                            <PencilIcon className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-destructive"
+                            onClick={() => handleDelete(school.id)}
+                          >
+                            <Trash2Icon className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))

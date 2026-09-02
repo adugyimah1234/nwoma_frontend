@@ -36,16 +36,16 @@ export default function StudentsDirectory() {
     return (
         <div className="flex flex-1 flex-col gap-8 p-4 md:p-8 max-w-[1600px] mx-auto w-full pb-24">
             <PageHeader
-                title="Institutional Census"
-                description="Comprehensive directory of all students currently enrolled in the Garrison network."
+                title="Student Directory"
+                description="Comprehensive directory of all students currently enrolled in the network."
                 breadcrumbs={[{ title: 'Home', href: '/' }, { title: 'Students' }]}
             >
-                <div className="flex items-center gap-3">
-                    <Button variant="outline" className="h-12 rounded-2xl border-2 font-black uppercase tracking-widest text-[10px] px-6 hidden sm:flex" onClick={refresh}>
-                        <RefreshCw className={loading ? "mr-2 h-4 w-4 animate-spin" : "mr-2 h-4 w-4"} /> Refresh Registry
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" className="h-9 px-4 hidden sm:flex font-semibold text-xs" onClick={refresh}>
+                        <RefreshCw className={loading ? "mr-2 h-4 w-4 animate-spin" : "mr-2 h-4 w-4"} /> Refresh
                     </Button>
-                    <Button className="h-12 rounded-2xl font-black uppercase tracking-widest text-[10px] px-8 shadow-xl shadow-primary/20" onClick={() => router.push('/registration/new')}>
-                        <UserPlus className="mr-2 h-4 w-4" /> Induction
+                    <Button size="sm" className="h-9 px-6 font-semibold text-xs shadow-sm" onClick={() => router.push('/registration/new')}>
+                        <UserPlus className="mr-2 h-4 w-4" /> New Student
                     </Button>
                 </div>
             </PageHeader>
@@ -53,24 +53,24 @@ export default function StudentsDirectory() {
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
+                className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
             >
                 {metrics.map((m, idx) => (
-                    <StatsCard key={idx} {...m} className="shadow-xl shadow-black/5 border-none rounded-3xl p-8" />
+                    <StatsCard key={idx} {...m} className="shadow-sm border" />
                 ))}
             </motion.div>
 
-            <Card className="border-none shadow-2xl shadow-black/5 rounded-[2rem] overflow-hidden">
-                <CardHeader className="bg-muted/20 border-b py-8 px-6 sm:px-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+            <Card className="border-none shadow-sm overflow-hidden">
+                <CardHeader className="bg-white dark:bg-slate-900 border-b py-6 px-6 sm:px-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
                     <div className="space-y-1">
-                        <CardTitle className="text-xl font-black tracking-tight uppercase tracking-wider">Student Registry</CardTitle>
-                        <CardDescription className="text-[10px] font-black uppercase tracking-widest text-primary/60 opacity-60">Database of all registered garrison students</CardDescription>
+                        <CardTitle className="text-lg font-bold">Student Registry</CardTitle>
+                        <CardDescription className="text-xs">Manage and view all registered students</CardDescription>
                     </div>
-                    <div className="flex items-center gap-3 w-full sm:w-auto">
-                        <Button variant="outline" size="icon" className="h-12 w-12 rounded-2xl border-none bg-muted/50 hover:bg-primary/5">
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <Button variant="outline" size="icon" className="h-9 w-9">
                             <Download className="size-4" />
                         </Button>
-                        <Button variant="outline" size="icon" className="h-12 w-12 rounded-2xl border-none bg-muted/50 hover:bg-primary/5">
+                        <Button variant="outline" size="icon" className="h-9 w-9">
                             <Filter className="size-4" />
                         </Button>
                     </div>
@@ -79,7 +79,7 @@ export default function StudentsDirectory() {
                     <DataTable
                         data={students as any[]}
                         columns={columns as any}
-                        searchPlaceholder="Identify by name, rank or serial number..."
+                        searchPlaceholder="Search by name, ID or rank..."
                         searchKey="first_name"
                         loading={loading}
                         rowKey="id"

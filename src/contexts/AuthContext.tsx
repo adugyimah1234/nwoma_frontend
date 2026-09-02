@@ -100,16 +100,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return () => api.interceptors.response.eject(responseInterceptor);
   }, [logout]);
 
-  const validateToken = useCallback(async (tokenToValidate: string): Promise<boolean> => {
+  const validateToken = useCallback(async (tokenToValidate: string): Promise<User | null> => {
     try {
       // Note: axios.ts interceptor unwraps the success envelope
-      await api.get('/auth/validate', {
+      const response = await api.get('/auth/validate', {
         headers: { Authorization: `Bearer ${tokenToValidate}` },
         _noAuthRedirect: true // Prevent validation error from triggering global logout prematurely
       } as any);
-      return true;
+      return response.data;
     } catch (error: any) {
-      return false;
+      return null;
     }
   }, []);
 
@@ -125,12 +125,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         try {
           const parsedUser = JSON.parse(storedUser);
 
-          // Background validation
-          const isValid = await validateToken(storedToken);
+          // Background validation and refresh
+          const freshUser = await validateToken(storedToken);
 
-          if (isValid) {
+          if (freshUser) {
             setToken(storedToken);
-            setUser(parsedUser);
+            setUser(freshUser);
+            localStorage.setItem('user', JSON.stringify(freshUser));
             api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
           } else {
             localStorage.removeItem('authToken');

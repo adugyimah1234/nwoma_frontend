@@ -28,16 +28,34 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { type FeeWithDetails, type CreateFeePayload } from '@/types/fee';
+import { type FeeWithDetails } from '@/types/fee';
 import { toast } from 'sonner';
-import { createFee, deleteFee, getAllFees } from '@/services/fee';
-import AddFeeDialog from '@/components/AddFeeDialog';
+import { deleteFee, getAllFees } from '@/services/fee';
+import AddFeeDialog from '@/components/fees/AddFeeDialog';
+import EditFeeDialog from '@/components/fees/EditFeeDialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Loader2 } from 'lucide-react';
 
 export default function FeeManagement() {
   const [fees, setFees] = useState<FeeWithDetails[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Edit states
+  const [selectedFee, setSelectedFee] = useState<FeeWithDetails | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchFees();
@@ -45,14 +63,18 @@ export default function FeeManagement() {
 
   async function fetchFees() {
     try {
+      setIsLoading(true);
       const data = await getAllFees();
       setFees(data);
     } catch (error) {
       console.error('Error fetching fees:', error);
+      toast.error("Failed to load fees");
+    } finally {
+      setIsLoading(false);
     }
   }
 
-  async function handleDelete(id: string | number) {
+  async function handleDelete(id: string) {
     try {
       await deleteFee(id);
       toast.success("Fee deleted successfully");
@@ -63,27 +85,15 @@ export default function FeeManagement() {
     }
   }
 
-  async function handleCreate() {
-    const payload: CreateFeePayload = {
-      category_id: 1,
-      class_id: 1,
-      fee_type: 'tuition',
-      amount: 100,
-      academic_year_id: 1, // Assuming you have a way to get the current academic year ID
-      description: 'Initial tuition fee'
-    };
-    try {
-      await createFee(payload);
-      toast.success("Fee created successfully");
-      fetchFees();
-    } catch (error) {
-      toast.error("Failed to create fee");
-      console.error(error);
-    }
-  }
+  const handleEdit = (fee: FeeWithDetails) => {
+    setSelectedFee(fee);
+    setIsEditDialogOpen(true);
+  };
 
   const filteredFees = fees.filter(fee =>
-    fee.category_name?.toLowerCase().includes(searchTerm.toLowerCase())
+    fee.category_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    fee.fee_type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    fee.class_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -96,6 +106,7 @@ export default function FeeManagement() {
         Manage fee categories and payment settings
       </p>
     </div>
+    <AddFeeDialog onSuccess={fetchFees} />
   </div>
 </CardHeader>
       <CardContent>
@@ -122,33 +133,74 @@ export default function FeeManagement() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Category Name</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Target Class</TableHead>
                     <TableHead>Amount</TableHead>
                     <TableHead>Description</TableHead>
-                    <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {(() => {
-                    const startIdx = (page - 1) * pageSize;
-                    const paginatedFees = filteredFees.slice(startIdx, startIdx + pageSize);
-                    return paginatedFees.map(fee => (
-                      <TableRow key={fee.id}>
-                        <TableCell>{fee.category_name}</TableCell>
-                        <TableCell>{fee.amount}</TableCell>
-                        <TableCell>{fee.description}</TableCell>
-                        <TableCell>{fee.status}</TableCell>
-                        <TableCell className="space-x-2">
-                          <Button size="sm" variant="outline" onClick={() => toast.info("Edit modal to be implemented")}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" variant="destructive" onClick={() => handleDelete(fee.id)}>
-                            <Trash className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ));
-                  })()}
+                  {isLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="h-24 text-center">
+                        <div className="flex justify-center items-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Loading fees...
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : filteredFees.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="h-24 text-center">
+                        No fees found.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    (() => {
+                      const startIdx = (page - 1) * pageSize;
+                      const paginatedFees = filteredFees.slice(startIdx, startIdx + pageSize);
+                      return paginatedFees.map(fee => (
+                        <TableRow key={fee.id}>
+                          <TableCell className="font-medium">{fee.category_name}</TableCell>
+                          <TableCell>{fee.fee_type}</TableCell>
+                          <TableCell>{fee.class_name || '-'}</TableCell>
+                          <TableCell>{Number(fee.amount).toLocaleString('en-GH', { style: 'currency', currency: 'GHS' })}</TableCell>
+                          <TableCell className="max-w-[200px] truncate">{fee.description || '-'}</TableCell>
+                          <TableCell className="space-x-2">
+                            <Button size="sm" variant="outline" onClick={() => handleEdit(fee)}>
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button size="sm" variant="destructive">
+                                  <Trash className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This will permanently delete the fee for {fee.category_name}. This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleDelete(fee.id)}
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </TableCell>
+                        </TableRow>
+                      ));
+                    })()
+                  )}
                 </TableBody>
               </Table>
 
@@ -225,6 +277,18 @@ export default function FeeManagement() {
           </TabsContent>
         </Tabs>
       </CardContent>
+
+      {selectedFee && (
+        <EditFeeDialog
+          fee={selectedFee}
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          onSuccess={() => {
+            fetchFees();
+            toast.success("Fee updated successfully");
+          }}
+        />
+      )}
     </Card>
   );
 }

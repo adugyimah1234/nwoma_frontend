@@ -6,12 +6,14 @@ import {
     TrendingUp,
     Package,
     RefreshCw,
+    ShoppingBag,
+    Download,
+    Calendar,
     PieChart,
     ArrowUpRight,
-    ShoppingBag,
     Wallet,
-    Download,
-    Calendar
+    Layers,
+    Activity
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,6 +33,7 @@ import {
     LineChart,
     Line
 } from 'recharts';
+import { StatsCard } from '@/components/ui/stats-card';
 
 export default function InventoryReportPage() {
     const [report, setReport] = useState<any>(null);
@@ -56,73 +59,81 @@ export default function InventoryReportPage() {
         return new Intl.NumberFormat('en-GH', { style: 'currency', currency: 'GHS' }).format(val);
     };
 
-    if (loading) return <div className="p-20 text-center italic text-muted-foreground animate-pulse">Analyzing Inventory Logistics...</div>;
+    if (loading) return (
+        <div className="flex flex-1 items-center justify-center h-[500px]">
+            <div className="flex flex-col items-center gap-2">
+                <RefreshCw className="size-8 animate-spin text-muted-foreground/50" />
+                <p className="text-sm font-medium text-muted-foreground animate-pulse uppercase tracking-widest">Analyzing Logistics...</p>
+            </div>
+        </div>
+    );
 
-    const COLORS = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+    const COLORS = ['#64748b', '#94a3b8', '#cbd5e1', '#e2e8f0', '#f1f5f9'];
 
     return (
-        <div className="flex flex-1 flex-col gap-6 p-6 md:p-8">
+        <div className="flex flex-1 flex-col gap-6 p-4 md:p-8 pt-6 bg-slate-50/30 dark:bg-slate-950/30">
             <PageHeader
                 title="Inventory Strategic Report"
                 description="Analysis of provision sales, stock valuation, and category performance."
                 breadcrumbs={[{ title: 'Home', href: '/' }, { title: 'Finance', href: '/fees' }, { title: 'Store', href: '/fees/store' }, { title: 'Report' }]}
             >
                 <div className="flex gap-2">
-                    <Button variant="outline" className="gap-2" onClick={fetchData}><RefreshCw className="size-4" /> Refresh Intelligence</Button>
-                    <Button className="gap-2"><Download className="size-4" /> Export Logistics</Button>
+                    <Button variant="outline" size="sm" className="gap-2" onClick={fetchData}><RefreshCw className="size-3.5" /> Refresh Intelligence</Button>
+                    <Button size="sm" className="gap-2"><Download className="size-3.5" /> Export Data</Button>
                 </div>
             </PageHeader>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="border-none shadow-sm bg-indigo-900 text-white">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-[10px] font-black uppercase tracking-widest text-indigo-300">Total Sales Revenue</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-3xl font-black">{formatCurrency(report?.total_revenue || 0)}</p>
-                        <p className="text-[10px] uppercase font-bold text-indigo-200 mt-1 flex items-center gap-1"><TrendingUp className="size-3" /> Life-to-date collections</p>
-                    </CardContent>
-                </Card>
-
-                <Card className="border-none shadow-sm bg-emerald-600 text-white">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-[10px] font-black uppercase tracking-widest text-emerald-100">Stock Valuation</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-3xl font-black">{formatCurrency(report?.potential_revenue || 0)}</p>
-                        <p className="text-[10px] uppercase font-bold text-emerald-100 mt-1 flex items-center gap-1"><Package className="size-3" /> Potential store revenue</p>
-                    </CardContent>
-                </Card>
-
-                <Card className="border-none shadow-sm bg-slate-100">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Transactions Logged</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-3xl font-black text-slate-800">{report?.category_breakdown.reduce((sum: any, c: any) => sum + c.count, 0)}</p>
-                        <p className="text-[10px] uppercase font-bold text-muted-foreground mt-1">Confirmed provision sales</p>
-                    </CardContent>
-                </Card>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <StatsCard
+                    title="Total Revenue"
+                    value={formatCurrency(report?.total_revenue || 0)}
+                    icon={Wallet}
+                    description="Life-to-date collections"
+                />
+                <StatsCard
+                    title="Stock Valuation"
+                    value={formatCurrency(report?.potential_revenue || 0)}
+                    icon={Package}
+                    description="Potential store revenue"
+                />
+                <StatsCard
+                    title="Items Processed"
+                    value={report?.category_breakdown.reduce((sum: any, c: any) => sum + c.count, 0)}
+                    icon={Layers}
+                    description="Confirmed provision sales"
+                />
+                <StatsCard
+                    title="Activity Index"
+                    value={`${report?.timeline?.length || 0}d`}
+                    icon={Activity}
+                    description="Active sales reporting"
+                />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Category Performance */}
-                <Card className="border-none shadow-sm">
-                    <CardHeader>
-                        <CardTitle className="text-base font-bold">Category Distribution</CardTitle>
-                        <CardDescription>Revenue contribution by provision type.</CardDescription>
+                <Card className="shadow-none border border-border/60">
+                    <CardHeader className="bg-muted/10 border-b py-5">
+                        <div className="flex items-center gap-2">
+                            <PieChart className="size-4 text-primary" />
+                            <CardTitle className="text-base font-semibold uppercase tracking-tight">Category Distribution</CardTitle>
+                        </div>
+                        <CardDescription className="text-xs">Revenue contribution by provision type.</CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="pt-8">
                         <div className="h-[300px]">
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={report?.category_breakdown}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
-                                    <XAxis dataKey="category" tick={{fontSize: 10, fontWeight: 700}} axisLine={false} tickLine={false} />
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.1} />
+                                    <XAxis dataKey="category" tick={{fontSize: 10, fontWeight: 600}} axisLine={false} tickLine={false} />
                                     <YAxis tick={{fontSize: 10}} axisLine={false} tickLine={false} />
-                                    <Tooltip />
-                                    <Bar dataKey="amount" radius={[4, 4, 0, 0]} barSize={40}>
+                                    <Tooltip
+                                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: 'none', borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0' }}
+                                        cursor={{ fill: 'currentColor', opacity: 0.05 }}
+                                    />
+                                    <Bar dataKey="amount" radius={[2, 2, 0, 0]} barSize={32}>
                                         {report?.category_breakdown.map((entry: any, index: number) => (
-                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                            <Cell key={`cell-${index}`} fill="currentColor" className="text-muted-foreground/40" />
                                         ))}
                                     </Bar>
                                 </BarChart>
@@ -132,20 +143,33 @@ export default function InventoryReportPage() {
                 </Card>
 
                 {/* Sales Timeline */}
-                <Card className="border-none shadow-sm">
-                    <CardHeader>
-                        <CardTitle className="text-base font-bold">Sales Trajectory</CardTitle>
-                        <CardDescription>Logistics outflow over the last 30 days.</CardDescription>
+                <Card className="shadow-none border border-border/60">
+                    <CardHeader className="bg-muted/10 border-b py-5">
+                        <div className="flex items-center gap-2">
+                            <TrendingUp className="size-4 text-primary" />
+                            <CardTitle className="text-base font-semibold uppercase tracking-tight">Sales Trajectory</CardTitle>
+                        </div>
+                        <CardDescription className="text-xs">Logistics outflow over the last active cycle.</CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="pt-8">
                         <div className="h-[300px]">
                             <ResponsiveContainer width="100%" height="100%">
                                 <LineChart data={report?.timeline}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
-                                    <XAxis dataKey="date" tick={{fontSize: 10, fontWeight: 700}} axisLine={false} tickLine={false} />
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.1} />
+                                    <XAxis dataKey="date" tick={{fontSize: 10, fontWeight: 600}} axisLine={false} tickLine={false} />
                                     <YAxis tick={{fontSize: 10}} axisLine={false} tickLine={false} />
-                                    <Tooltip />
-                                    <Line type="monotone" dataKey="amount" stroke="#4f46e5" strokeWidth={3} dot={{ r: 4, fill: '#4f46e5' }} />
+                                    <Tooltip
+                                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: 'none' }}
+                                    />
+                                    <Line
+                                        type="monotone"
+                                        dataKey="amount"
+                                        stroke="currentColor"
+                                        className="text-primary"
+                                        strokeWidth={2}
+                                        dot={{ r: 4, fill: 'currentColor', strokeWidth: 0 }}
+                                        activeDot={{ r: 6, strokeWidth: 0 }}
+                                    />
                                 </LineChart>
                             </ResponsiveContainer>
                         </div>
@@ -153,9 +177,9 @@ export default function InventoryReportPage() {
                 </Card>
             </div>
 
-            <div className="flex items-center gap-2 justify-center py-10 opacity-20 grayscale">
-                <BarChart3 className="size-8" />
-                <p className="text-[10px] font-black uppercase tracking-[0.4em]">Logistics Intelligence & Command Oversight</p>
+            <div className="flex items-center gap-2 justify-center py-10 opacity-20">
+                <BarChart3 className="size-6" />
+                <p className="text-[10px] font-bold uppercase tracking-[0.4em]">Logistics Intelligence & Strategic Oversight</p>
             </div>
         </div>
     );

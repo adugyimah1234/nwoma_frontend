@@ -168,7 +168,7 @@ export default function GeneralSettings() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Key</TableHead>
+                <TableHead>Key Identifier</TableHead>
                 <TableHead>Display Label</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>

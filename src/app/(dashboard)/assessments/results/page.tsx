@@ -3,6 +3,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable no-console */
 'use client';
+
 import { PageHeader } from '@/components/layout/page-header';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
@@ -15,6 +16,17 @@ import {
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import registrationService, { type RegistrationData } from '@/services/registrations';
 import studentService from '@/services/students';
 import { type Student, type CreateStudentPayload } from '@/types/student';
@@ -24,10 +36,24 @@ import { useAuth } from '@/contexts/AuthContext';
 import schoolService from '@/services/schools';
 import { type School } from '@/types/school';
 import { format } from 'date-fns';
-import { Toaster, toast } from 'sonner';
+import { toast } from 'sonner';
 import { getAllRoles } from '@/services/roles';
 import { getAllCategories } from '@/services/categories';
 import { getAllAcademicYear } from '@/services/academic_year';
+import {
+  Search,
+  Upload,
+  UserPlus,
+  Save,
+  Filter,
+  GraduationCap,
+  Building2,
+  CheckCircle2,
+  XCircle,
+  AlertCircle
+} from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 
 export default function ResultsPage() {
   const [applicants, setApplicants] = useState<RegistrationData[]>([]);
@@ -38,30 +64,28 @@ export default function ResultsPage() {
   const [passMark, setPassMark] = useState<number>(50);
   const [classSlots, setClassSlots] = useState<Record<string | number, number>>({});
   const { token, user } = useAuth();
-  const [categories, setCategories] = useState<{ id: string | number; name: string }[]>([]);
-  const [selectedAppliedClass, setSelectedAppliedClass] = useState<string>('');
-  // Loading state for promote button
+  const [categories, setCategories] = useState<{ id: string | number; name: string; code: string }[]>([]);
+  const [selectedAppliedClass, setSelectedAppliedClass] = useState<string>('all');
   const [promotingId, setPromotingId] = useState<string | number | null>(null);
-  // Search bar state
   const [searchName, setSearchName] = useState('');
 
-  // Check if user is admin based on role name from roles table
   const isAdmin = userRole.toLowerCase() === 'admin' || userRole.toLowerCase() === 'administrator';
 
   useEffect(() => {
     const fetchInitial = async () => {
-      if (!token) return; // wait until token is ready
+      if (!token) return;
 
       try {
-        const [applicantData, schoolData, roleData] = await Promise.all([
+        const [applicantData, schoolData, roleData, categoryData] = await Promise.all([
           registrationService.getAll(),
           schoolService.getAll(),
           getAllRoles(),
+          getAllCategories()
         ]);
         setApplicants(applicantData);
         setSchools(schoolData);
+        setCategories(categoryData as any);
 
-        // Get user role name based on role_id
         if (user?.role_id && roleData.length > 0) {
           const userRoleData = roleData.find(role => String(role.id) === user.role_id);
           setUserRole(userRoleData?.name || '');
@@ -74,86 +98,55 @@ export default function ResultsPage() {
   }, [token, user?.role_id]);
 
   useEffect(() => {
-  const fetchCategories = async () => {
-    try {
-      const categoryData = await getAllCategories();
-      setCategories(categoryData);
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-    }
-  };
-  fetchCategories();
-}, []);
-
-useEffect(() => {
-  const fetchAllStudents = async () => {
-    try {
-      const students = await studentService.getAll();
-      setAllStudents(students);
-    } catch (error) {
-      console.error('Error fetching all students:', error);
-    }
-  };
-  fetchAllStudents();
-}, []);
-
-  useEffect(() => {
-    const fetchYear = async () => {
+    const fetchAllStudents = async () => {
       try {
-        await getAllAcademicYear();
+        const students = await studentService.getAll();
+        setAllStudents(students);
       } catch (error) {
-        console.error('Error fetching academic years:', error);
+        console.error('Error fetching all students:', error);
       }
     };
-    fetchYear();
+    fetchAllStudents();
   }, []);
 
-const handleSchoolChange = async (index: number, schoolId: string) => {
-  if (schoolId) {
-    const filtered = await classService.getBySchool(schoolId);
-
-    // Use allStudents to count students per class
-    const slotMap: Record<string | number, number> = {};
-    for (const cls of filtered) {
-      slotMap[cls.id] = allStudents.filter(s => String(s.class_id) === String(cls.id)).length;
+  const handleSchoolChange = async (index: number, schoolId: string) => {
+    if (schoolId) {
+      const filtered = await classService.getBySchool(schoolId);
+      const slotMap: Record<string | number, number> = {};
+      for (const cls of filtered) {
+        slotMap[cls.id] = allStudents.filter(s => String(s.class_id) === String(cls.id)).length;
+      }
+      setClasses(filtered);
+      setClassSlots(slotMap);
+    } else {
+      setClasses([]);
+      setClassSlots({});
     }
 
-    setClasses(filtered);
-    setClassSlots(slotMap);
-  } else {
-    setClasses([]);
-    setClassSlots({});
-  }
+    const updated = [...applicants];
+    updated[index].school_id = schoolId;
+    updated[index].class_id = undefined;
+    setApplicants(updated);
+  };
 
-  const updated = [...applicants];
-  updated[index].school_id = schoolId;
-  updated[index].class_id = undefined; // Reset class selection
-  setApplicants(updated);
-};
+  const handleClassSelect = async (index: number, classId: string) => {
+    const cls = classes.find((c) => String(c.id) === classId);
+    const currentStudentCount = allStudents.filter(s => String(s.class_id) === classId).length;
 
-const handleClassSelect = async (index: number, classId: string) => {
-  const cls = classes.find((c) => String(c.id) === classId);
+    if (cls && cls.slots !== undefined && currentStudentCount >= cls.slots) {
+      toast.warning(`Class "${cls.name}" is full (${currentStudentCount}/${cls.slots} slots).`);
+      return;
+    }
 
-  // Get current count from students table
-  const currentStudentCount = allStudents.filter(s => String(s.class_id) === classId).length;
+    const updated = [...applicants];
+    updated[index].class_id = classId;
+    setApplicants(updated);
 
-  if (cls && cls.slots !== undefined && currentStudentCount >= cls.slots) {
-    toast.warning(`Class "${cls.name}" is full (${currentStudentCount}/${cls.slots} slots).`);
-    return;
-  }
-
-  const updated = [...applicants];
-
-  // Update the applicant's class
-  updated[index].class_id = classId;
-  setApplicants(updated);
-
-  // Update the slot count display
-  setClassSlots(prev => ({
-    ...prev,
-    [classId]: currentStudentCount,
-  }));
-};
+    setClassSlots(prev => ({
+      ...prev,
+      [classId]: currentStudentCount,
+    }));
+  };
 
   const handleExcelUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -170,7 +163,6 @@ const handleClassSelect = async (index: number, classId: string) => {
         const updated = [...applicants];
         let updatedCount = 0;
 
-        // Update scores and sync with backend
         for (let i = 0; i < updated.length; i++) {
           const applicant = updated[i];
           const fullName = `${applicant.first_name} ${applicant.last_name}`.toLowerCase();
@@ -180,7 +172,6 @@ const handleClassSelect = async (index: number, classId: string) => {
             applicant.scores = match.Score;
             updatedCount++;
 
-            // Update backend for each matched applicant
             try {
               if (applicant.id) {
                 await registrationService.update(String(applicant.id), {
@@ -204,33 +195,50 @@ const handleClassSelect = async (index: number, classId: string) => {
     reader.readAsArrayBuffer(file);
   };
 
-const handlePromote = async () => {
-  const updatedApplicants = [...applicants];
-  let createdCount = 0;
-  const duplicates: string[] = [];
-  const errors: string[] = [];
+  const handlePromote = async () => {
+    const updatedApplicants = [...applicants];
+    let createdCount = 0;
 
-for (const applicant of updatedApplicants) {
-  // Prevent promotion if score is default (0, empty, or not changed)
-  if (applicant.scores === undefined || applicant.scores === null || isNaN(applicant.scores) || applicant.scores === 0) {
-    toast.warning(`Cannot promote ${applicant.first_name}: Score not entered or is default.`);
-    continue;
-  }
+    // Filtering logic simplified for bulk promotion
+    const toPromote = updatedApplicants.filter(a => {
+        const passed = (a.scores ?? 0) >= passMark;
+        return a.status === 'pending' && passed && a.school_id && a.class_id;
+    });
 
-  const hasPassed = (applicant.scores ?? 0) >= passMark;
-  const dob = applicant.date_of_birth
-    ? format(new Date(applicant.date_of_birth), 'yyyy-MM-dd')
-    : '';
+    if (toPromote.length === 0) {
+        toast.info("No candidates ready for promotion. Ensure schools and classes are assigned.");
+        return;
+    }
 
-  if (hasPassed) {
-    if (applicant.class_id && applicant.school_id) {
-      const selectedClass = classes.find(c => String(c.id) === String(applicant.class_id));
-      const currentSlotCount = classSlots[String(applicant.class_id)] || 0;
+    toast.promise(
+        Promise.all(toPromote.map(a => handleSinglePromote(a, true))),
+        {
+            loading: `Promoting ${toPromote.length} candidates...`,
+            success: "Promotion batch completed.",
+            error: "Batch promotion encountered errors."
+        }
+    );
+  };
 
-      if (selectedClass && selectedClass.slots !== undefined && currentSlotCount >= selectedClass.slots) {
-        toast.warning(`Class "${selectedClass.name}" is full. Skipping ${applicant.first_name}.`);
-        continue; // Skip if class is full
+  const handleSinglePromote = async (applicant: RegistrationData, isBatch = false) => {
+    if (!isBatch) setPromotingId(applicant.id ?? null);
+
+    try {
+      const hasPassed = (applicant.scores ?? 0) >= passMark;
+
+      if (!hasPassed) {
+        if (!isBatch) toast.error(`${applicant.first_name} did not meet the pass mark.`);
+        return;
       }
+
+      if (!applicant.school_id || !applicant.class_id) {
+          if (!isBatch) toast.warning(`Please assign a school and class for ${applicant.first_name}.`);
+          return;
+      }
+
+      const dob = applicant.date_of_birth
+        ? format(new Date(applicant.date_of_birth), 'yyyy-MM-dd')
+        : '';
 
       const studentPayload: CreateStudentPayload = {
         first_name: applicant.first_name,
@@ -248,398 +256,318 @@ for (const applicant of updatedApplicants) {
         middle_name: applicant.middle_name ?? ''
       };
 
-      setClassSlots(prev => ({
-        ...prev,
-        [String(applicant.class_id!)]: (prev[String(applicant.class_id!)] || 0) + 1,
-      }));
-      try {
-        await Promise.all ([
-          studentService.create(studentPayload),
-          registrationService.updatePartial(String(applicant.id), { status: "approved" })
-        ]);
-        createdCount++;
-      } catch (err: any) {
-        if (err.response?.status === 400) {
-          duplicates.push(`${applicant.first_name} ${applicant.last_name}`);
-        } else {
-          errors.push(`${applicant.first_name} ${applicant.last_name}`);
+      await Promise.all([
+        studentService.create(studentPayload),
+        registrationService.updatePartial(String(applicant.id), { status: "approved" })
+      ]);
+
+      if (!isBatch) {
+          toast.success(`${applicant.first_name} promoted successfully.`);
+          const refreshed = await registrationService.getAll();
+          setApplicants(refreshed);
+      }
+    } catch (err: any) {
+      console.error(`Promotion error:`, err);
+      if (!isBatch) toast.error(`Failed to promote ${applicant.first_name}`);
+    } finally {
+      if (!isBatch) setPromotingId(null);
+    }
+  };
+
+  const categoryOrder = ['SVC', 'MOD', 'CIV'];
+
+  const pendingApplicants = useMemo(() => {
+    return applicants
+      .filter((a) => {
+        const matchesStatus = (a.status || '').toLowerCase() === 'pending';
+        const pStatus = (a.payment_status || '').toLowerCase();
+        const isPaymentValid = pStatus === 'paid' || pStatus === 'partial';
+        const matchesAppliedClass = selectedAppliedClass === 'all' || a.class_applying_for === selectedAppliedClass;
+
+        const category = categories.find(c =>
+            String(c.id) === String(a.category) ||
+            c.code === a.category ||
+            c.name === a.category
+        );
+        const matchesCategory = !category || categoryOrder.includes((category.code || '').toUpperCase());
+
+        const fullName = `${a.first_name} ${a.middle_name ?? ''} ${a.last_name}`.toLowerCase();
+        const searchTerm = searchName.trim().toLowerCase();
+        const matchesSearch = !searchTerm || fullName.includes(searchTerm);
+
+        return matchesStatus && isPaymentValid && matchesAppliedClass && matchesCategory && matchesSearch;
+      })
+      .sort((a, b) => {
+        const aCat = categories.find(c => String(c.id) === String(a.category) || c.code === a.category);
+        const bCat = categories.find(c => String(c.id) === String(b.category) || c.code === b.category);
+
+        const aIndex = (aCat && aCat.code) ? categoryOrder.indexOf(aCat.code.toUpperCase()) : -1;
+        const bIndex = (bCat && bCat.code) ? categoryOrder.indexOf(bCat.code.toUpperCase()) : -1;
+
+        return (aIndex === -1 ? 99 : aIndex) - (bIndex === -1 ? 99 : bIndex);
+      });
+  }, [applicants, selectedAppliedClass, categories, searchName]);
+
+  const uniqueAppliedClasses = Array.from(
+    new Set(applicants.map((a) => a.class_applying_for).filter(Boolean))
+  );
+
+  const handleSaveScores = async () => {
+    let updatedCount = 0;
+    for (const applicant of applicants) {
+      if (applicant.id && applicant.scores !== undefined) {
+        try {
+          await registrationService.update(String(applicant.id), {
+            ...applicant,
+            scores: applicant.scores,
+          });
+          updatedCount++;
+        } catch (error) {
+          console.error(`Error saving score:`, error);
         }
       }
-    } else {
-      // skip if missing class/school
-      console.warn(`Skipping ${applicant.first_name} due to missing class/school`);
     }
-  } else {
-    try {
-      await registrationService.updatePartial(String(applicant.id), { status: "rejected" });
-    } catch (err) {
-      console.error(`Failed to reject ${applicant.first_name} ${applicant.last_name}`, err);
-    }
-  }
-}
-
-  // Show messages
-  if (createdCount > 0) toast.success(`${createdCount} student(s) promoted successfully.`);
-  if (duplicates.length > 0) toast.warning(`Duplicates: ${duplicates.join(', ')}`);
-  if (errors.length > 0) toast.error(`Errors: ${errors.join(', ')}`);
-
-  // Refresh to reflect changes
-  try {
-    const refreshedApplicants = await registrationService.getAll();
-    setApplicants(refreshedApplicants);
-  } catch (error) {
-    console.error('Error refreshing applicants:', error);
-  }
-};
-
-const handleSinglePromote = async (applicant: RegistrationData) => {
-
-  setPromotingId(applicant.id ?? null);
-  // Validate all required fields before promoting
-  const missingFields: string[] = [];
-  if (!applicant.first_name) missingFields.push('First Name');
-  if (!applicant.last_name) missingFields.push('Last Name');
-  if (!applicant.school_id) missingFields.push('School');
-  if (!applicant.class_id) missingFields.push('Class');
-  if (!applicant.category) missingFields.push('Category');
-  if (!applicant.gender) missingFields.push('Gender');
-  if (!applicant.date_of_birth) missingFields.push('Date of Birth');
-  if (!applicant.registration_date) missingFields.push('Registration Date');
-  if (applicant.scores === undefined || applicant.scores === null || isNaN(applicant.scores)) missingFields.push('Scores');
-
-  // Prevent promotion if score is default (0, empty, or not changed)
-  if (applicant.scores === 0) {
-    toast.warning(`Cannot promote ${applicant.first_name}: Score not entered or is default.`);
-    setPromotingId(null);
-    return;
-  }
-
-  if (missingFields.length > 0) {
-    toast.warning(`Please fill in all required fields for ${applicant.first_name}: ${missingFields.join(', ')}`);
-    setPromotingId(null);
-    return;
-  }
-
-  const hasPassed = (applicant.scores ?? 0) >= passMark;
-
-  // ❌ If failed, reject and stop here (no need to check class or school)
-  if (!hasPassed) {
-    await registrationService.updatePartial(String(applicant.id), { status: "rejected" });
-    toast.warning(`${applicant.first_name} did not meet the pass mark and has been rejected.`);
-    const refreshedApplicants = await registrationService.getAll();
-    setApplicants(refreshedApplicants);
-    setPromotingId(null);
-    return;
-  }
-
-  // Validate class slots
-  const selectedClass = classes.find((cls) => String(cls.id) === String(applicant.class_id));
-  const currentCount = applicants.filter(
-    (a) => String(a.class_id) === String(applicant.class_id) && a.status === 'approved'
-  ).length;
-
-  if (selectedClass && selectedClass.slots !== undefined && currentCount >= selectedClass.slots) {
-    toast.error(`Class "${selectedClass.name}" is full (${selectedClass.slots} slots). Cannot promote ${applicant.first_name}.`);
-    setPromotingId(null);
-    return;
-  }
-
-  try {
-    const dob = applicant.date_of_birth
-      ? format(new Date(applicant.date_of_birth), 'yyyy-MM-dd')
-      : '';
-
-    const studentPayload: CreateStudentPayload = {
-      first_name: applicant.first_name,
-      last_name: applicant.last_name,
-      school_id: applicant.school_id as string,
-      admission_status: 'admitted',
-      academic_year_id: (applicant.academic_year_id ?? '3').toString(),// Use current year if not set
-      dob: dob,
-      gender: applicant.gender,
-      scores: applicant.scores ?? 0,
-      registration_date: format(new Date(applicant.registration_date ?? ''), 'yyyy-MM-dd'),
-      category_id: applicant.category,
-      class_id: (applicant.class_id as string),
-      status: 'inactive',
-      middle_name: applicant.middle_name ?? ''
-    };
-
-    await Promise.all([
-      studentService.create(studentPayload),
-      registrationService.updatePartial(String(applicant.id), { status: "approved" })
-    ]);
-
-    toast.success(`${applicant.first_name} promoted successfully.`);
-
-    const refreshedApplicants = await registrationService.getAll();
-    setApplicants(refreshedApplicants);
-  } catch (err: any) {
-    if (err.response?.status === 400) {
-      toast.warning(`Duplicate entry: ${applicant.first_name} ${applicant.last_name}`);
-    } else {
-      toast.error(`Failed to promote ${applicant.first_name}`);
-      console.error(`Promotion error for ${applicant.first_name}:`, err);
-    }
-  }
-  setPromotingId(null);
-};
-
-
-  // Filter applicants based on index, not a separate variable
-const categoryOrder = ['SVC', 'MOD', 'CIV'];
-
-const pendingApplicants = useMemo(() => {
-  return applicants
-    .filter((a) => {
-      const matchesStatus = a.status === 'pending';
-      const isPaymentValid = a.payment_status !== 'unpaid';
-      const matchesAppliedClass = selectedAppliedClass === '' || a.class_applying_for === selectedAppliedClass;
-
-      const categoryName = categories.find(c => String(c.id) === String(a.category))?.name;
-      const matchesCategory = categoryName && categoryOrder.includes(categoryName);
-
-      // Search by name
-      const fullName = `${a.first_name} ${a.middle_name ?? ''} ${a.last_name}`.toLowerCase();
-      const searchTerm = searchName.trim().toLowerCase();
-      const matchesSearch = !searchTerm || fullName.includes(searchTerm);
-
-      return matchesStatus && isPaymentValid && matchesAppliedClass && matchesCategory && matchesSearch;
-    })
-    .sort((a, b) => {
-      const aName = categories.find(c => String(c.id) === String(a.category))?.name || '';
-      const bName = categories.find(c => String(c.id) === String(b.category))?.name || '';
-      return categoryOrder.indexOf(aName) - categoryOrder.indexOf(bName);
-    });
-}, [applicants, selectedAppliedClass, categories, searchName]);
-
-
-const uniqueAppliedClasses = Array.from(
-  new Set(applicants.map((a) => a.class_applying_for).filter(Boolean))
-);
-
-const handleSaveScores = async () => {
-  let updatedCount = 0;
-  const failed: string[] = [];
-
-  for (const applicant of applicants) {
-        if (applicant.id && applicant.scores !== undefined && applicant.scores !== null) {
-          try {
-            const formattedDOB = applicant.date_of_birth
-              ? format(new Date(applicant.date_of_birth), 'yyyy-MM-dd')
-              : null;
-
-            await registrationService.update(String(applicant.id), {
-              ...applicant,
-              scores: applicant.scores,
-              date_of_birth: formattedDOB,
-            });
-
-            updatedCount++;
-          } catch (error) {
-        console.error(`Error saving score for ${applicant.first_name}:`, error);
-        failed.push(`${applicant.first_name} ${applicant.last_name}`);
-      }
-    }
-  }
-
-  if (updatedCount > 0) {
-    toast.success(`${updatedCount} scores saved successfully.`);
-
-    // ✅ Refresh applicant list from backend
-    try {
+    if (updatedCount > 0) {
+      toast.success(`${updatedCount} scores saved.`);
       const refreshed = await registrationService.getAll();
       setApplicants(refreshed);
-    } catch (err) {
-      console.error('Failed to refresh applicants after saving:', err);
-      toast.error('Could not refresh updated scores from server.');
     }
-  }
+  };
 
-  if (failed.length > 0) {
-    toast.error(`Failed to save scores for: ${failed.join(', ')}`);
-  }
-};
+  const getCategoryDisplay = (applicant: RegistrationData) => {
+    const category = categories.find(c =>
+        String(c.id) === String(applicant.category) ||
+        c.code === applicant.category ||
+        c.name === applicant.category
+    );
 
+    if (!category) return <Badge variant="outline" className="text-[10px] opacity-60">Unknown</Badge>;
+
+    const colors: Record<string, string> = {
+        'SVC': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+        'MOD': 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+        'CIV': 'bg-slate-100 text-slate-700 dark:bg-slate-900/30 dark:text-slate-400',
+    };
+
+    return (
+        <Badge variant="outline" className={cn("text-[10px] font-bold px-2 py-0 border-none", colors[category.code] || "bg-muted text-muted-foreground")}>
+            {category.name}
+        </Badge>
+    );
+  };
 
   return (
-    <div className="flex flex-1 flex-col gap-4 p-6">
-        <PageHeader
-          title="Entrance Assessment Results"
-          description="Review applicant scores and process placement decisions"
-          breadcrumbs={[{ title: 'Home', href: '/' }, { title: 'Assessments', href: '/assessments' }, { title: 'Results' }]}
-          tabs={[
-            { title: 'Overview', href: '/assessments' },
-            { title: 'Results & Placement', href: '/assessments/results' },
-            { title: 'Admitted Students', href: '/assessments/shortlisted' },
-          ]}
-        />
-      <Toaster richColors />
+    <div className="flex flex-1 flex-col gap-6 p-4 md:p-8 bg-slate-50/50 dark:bg-slate-950/50 min-h-screen">
+      <PageHeader
+        title="Entrance Assessment Results"
+        description="Review applicant scores and process placement decisions for the current academic cycle."
+        breadcrumbs={[{ title: 'Home', href: '/' }, { title: 'Assessments', href: '/assessments' }, { title: 'Results' }]}
+        tabs={[
+          { title: 'Overview', href: '/assessments' },
+          { title: 'Results & Placement', href: '/assessments/results' },
+          { title: 'Admitted Students', href: '/assessments/shortlisted' },
+        ]}
+      />
 
-      <div className="flex items-center gap-4">
-        {/* Search bar for name */}
-        <Input
-          type="text"
-          placeholder="Search by name..."
-          value={searchName}
-          onChange={e => setSearchName(e.target.value)}
-          className="w-64"
-        />
-        {/* Only show pass mark input to admins */}
-        {isAdmin && (
-          <>
-            <label>Pass Mark:</label>
-            <Input
-              type="number"
-              value={passMark}
-              onChange={(e) => setPassMark(parseInt(e.target.value) || 0)}
-              className="w-24"
-            />
-          </>
-        )}
+      <div className="space-y-6">
+        {/* Controls Card */}
+        <Card className="border-none shadow-sm">
+          <CardHeader className="bg-white dark:bg-slate-900/50 border-b pb-6">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+              <div className="space-y-1">
+                <CardTitle className="text-xl font-bold flex items-center gap-2">
+                    <CheckCircle2 className="size-5 text-primary" />
+                    Pending Placements
+                </CardTitle>
+                <CardDescription className="text-xs font-medium">Manage scoring and unit allocation for {pendingApplicants.length} active applicants.</CardDescription>
+              </div>
 
-        <Input
-          type="file"
-          accept=".xlsx,.xls"
-          onChange={handleExcelUpload}
-          className="w-80"
-        />
-
-        {isAdmin && (
-          <Button onClick={handlePromote} className="bg-blue-600 text-white">
-            Promote Passed
-          </Button>
-        )}
-      </div>
-
-      <div className="flex items-center gap-4">
-        <label htmlFor="appliedClassFilter">Filter by Applied Class:</label>
-        <select
-          id="appliedClassFilter"
-          className="border p-1 rounded"
-          value={selectedAppliedClass}
-          onChange={(e) => setSelectedAppliedClass(e.target.value)}
-        >
-          <option value="">All</option>
-          {uniqueAppliedClasses.map((clsName) => (
-            <option key={clsName} value={clsName}>
-              {clsName}
-            </option>
-          ))}
-        </select>
-      </div>
-
-  <div className="flex justify-end my-4">
-    <Button onClick={handleSaveScores} className="bg-emerald-600 text-white">
-      Save Scores
-    </Button>
-  </div>
-
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>#</TableHead>
-            <TableHead>Category</TableHead>
-            <TableHead>Name</TableHead>
-            <TableHead>Class Applied For</TableHead>
-            <TableHead>Score</TableHead>
-            {isAdmin && <TableHead>School</TableHead>}
-            {isAdmin && <TableHead>Class</TableHead>}
-            {isAdmin && <TableHead>Status</TableHead>}
-            {isAdmin && <TableHead>Action</TableHead>}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {pendingApplicants.map((applicant, idx) => {
-            // Use the original applicant index for state updates
-            const originalIndex = applicants.findIndex(a => a.id === applicant.id);
-            const passed = (applicant.scores ?? 0) >= passMark;
-
-            return (
-              <TableRow key={applicant.id}>
-                <TableCell>{idx + 1}</TableCell>
-                <TableCell>
-                  {categories.find(c => String(c.id) === String(applicant.category))?.name || 'Unknown'}
-                </TableCell>
-                <TableCell>{applicant.first_name} {applicant.middle_name} {applicant.last_name}</TableCell>
-                <TableCell>
-                  {applicant.class_applying_for || 'N/A'}
-                </TableCell>
-                <TableCell>
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                   <Input
-                    type="number"
-                    value={applicant.scores === undefined || applicant.scores === null ? '' : applicant.scores}
-                    onChange={(e) => {
-                      const updated = [...applicants];
-                      updated[originalIndex].scores = parseFloat(e.target.value);
-                      setApplicants(updated); // update UI instantly
-                    }}
-                    className="w-20"
-                    placeholder="0"
+                    placeholder="Search by candidate name..."
+                    value={searchName}
+                    onChange={e => setSearchName(e.target.value)}
+                    className="w-full sm:w-64 h-10 pl-9 bg-muted/20 border-none"
                   />
-                </TableCell>
-                {isAdmin && (
-                  <TableCell>
-                    <select
-                      title="Select School"
-                      aria-label="Select School"
-                      className="border p-1 rounded"
-                      value={applicant.school_id ?? ''}
-                      onChange={(e) => handleSchoolChange(originalIndex, e.target.value)}
-                    >
-                      <option value="">--Select--</option>
-                      {schools.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                    </select>
-                  </TableCell>
-                )}
-                {isAdmin && (
-                  <TableCell>
-                    <select
-                      title="Select Class"
-                      aria-label="Select Class"
-                      value={applicant.class_id ?? ''}
-                      onChange={(e) => handleClassSelect(originalIndex, e.target.value)}
-                      className="border p-1 rounded w-full"
-                    >
-                      <option value="">Select Class</option>
-                      {classes.map((cls) => (
-                        <option key={cls.id} value={cls.id}>
-                          {cls.name} ({classSlots[String(cls.id)] ?? 0}/{cls.slots})
-                        </option>
-                      ))}
-                    </select>
-                  </TableCell>
-                )}
-                {isAdmin && (
-                  <TableCell>
-                    {passed ? (
-                      <span className="text-green-600 font-bold">Passed</span>
-                    ) : (
-                      <span className="text-red-600">Failed</span>
+                </div>
+
+                <div className="flex items-center gap-2 bg-muted/30 px-3 py-1.5 rounded-lg border border-border/50">
+                   <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">Pass Mark</span>
+                   <Separator orientation="vertical" className="h-4 mx-1" />
+                   <Input
+                     type="number"
+                     value={passMark}
+                     onChange={(e) => setPassMark(parseInt(e.target.value) || 0)}
+                     className="w-12 h-6 border-none bg-transparent p-0 text-center font-bold text-sm focus-visible:ring-0 shadow-none"
+                   />
+                </div>
+
+                <Select value={selectedAppliedClass} onValueChange={setSelectedAppliedClass}>
+                    <SelectTrigger className="w-[160px] h-10 bg-muted/20 border-none">
+                        <Filter className="size-3.5 mr-2 opacity-50" />
+                        <SelectValue placeholder="All Classes" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Applied Classes</SelectItem>
+                        {uniqueAppliedClasses.map((clsName) => (
+                            <SelectItem key={clsName} value={clsName}>{clsName}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+               <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <div className="flex-1 sm:w-72">
+                        <div className="relative flex items-center">
+                            <label className="flex flex-1 items-center justify-center gap-2 px-4 h-10 rounded-lg border border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 cursor-pointer transition-all">
+                                <Upload className="size-4 text-primary" />
+                                <span className="text-xs font-semibold text-primary">Import Scores (Excel)</span>
+                                <input type="file" accept=".xlsx,.xls" onChange={handleExcelUpload} className="hidden" />
+                            </label>
+                        </div>
+                    </div>
+               </div>
+
+               <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <Button variant="outline" size="sm" onClick={handleSaveScores} className="h-10 px-4 font-bold text-xs border-emerald-200 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/20">
+                        <Save className="size-4 mr-2" />
+                        Save All Scores
+                    </Button>
+                    {isAdmin && (
+                        <Button size="sm" onClick={handlePromote} className="h-10 px-6 font-bold text-xs bg-primary">
+                            <UserPlus className="size-4 mr-2" />
+                            Promote Passed
+                        </Button>
                     )}
-                  </TableCell>
+               </div>
+            </div>
+
+            <div className="rounded-xl border border-border/50 bg-white dark:bg-slate-900/50 overflow-hidden">
+                <Table>
+                <TableHeader className="bg-muted/30">
+                    <TableRow className="hover:bg-transparent border-none">
+                    <TableHead className="w-12 text-center text-[10px] font-bold uppercase tracking-widest">#</TableHead>
+                    <TableHead className="text-[10px] font-bold uppercase tracking-widest">Category</TableHead>
+                    <TableHead className="text-[10px] font-bold uppercase tracking-widest">Full Name</TableHead>
+                    <TableHead className="text-[10px] font-bold uppercase tracking-widest text-center">Applied For</TableHead>
+                    <TableHead className="w-28 text-[10px] font-bold uppercase tracking-widest text-center">Score %</TableHead>
+                    {isAdmin && <TableHead className="text-[10px] font-bold uppercase tracking-widest">Institutional Unit</TableHead>}
+                    {isAdmin && <TableHead className="text-[10px] font-bold uppercase tracking-widest">Target Class</TableHead>}
+                    <TableHead className="w-24 text-[10px] font-bold uppercase tracking-widest text-center">Verdict</TableHead>
+                    {isAdmin && <TableHead className="text-right text-[10px] font-bold uppercase tracking-widest pr-6">Action</TableHead>}
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {pendingApplicants.map((applicant, idx) => {
+                    const originalIndex = applicants.findIndex(a => a.id === applicant.id);
+                    const passed = (applicant.scores ?? 0) >= passMark;
+
+                    return (
+                        <TableRow key={applicant.id} className="group hover:bg-muted/10 transition-colors border-border/40">
+                        <TableCell className="text-muted-foreground font-mono text-[10px] text-center">{idx + 1}</TableCell>
+                        <TableCell>{getCategoryDisplay(applicant)}</TableCell>
+                        <TableCell className="py-4">
+                            <div className="flex flex-col">
+                                <span className="font-bold text-sm text-foreground uppercase tracking-tight">{applicant.first_name} {applicant.last_name}</span>
+                                <span className="text-[10px] text-muted-foreground font-mono">REG-{String(applicant.id).substring(0,6).toUpperCase()}</span>
+                            </div>
+                        </TableCell>
+                        <TableCell className="text-center font-medium text-xs text-muted-foreground">{applicant.class_applying_for || 'N/A'}</TableCell>
+                        <TableCell>
+                            <div className="flex justify-center">
+                                <Input
+                                    type="number"
+                                    value={applicant.scores === undefined || applicant.scores === null ? '' : applicant.scores}
+                                    onChange={(e) => {
+                                        const updated = [...applicants];
+                                        updated[originalIndex].scores = parseFloat(e.target.value);
+                                        setApplicants(updated);
+                                    }}
+                                    className="h-9 w-20 text-center text-xs font-bold bg-muted/10 border-none focus-visible:ring-1 focus-visible:ring-primary/30"
+                                    placeholder="0"
+                                />
+                            </div>
+                        </TableCell>
+                        {isAdmin && (
+                            <TableCell>
+                            <select
+                                title="Select School"
+                                className="h-9 rounded-lg border-none bg-muted/20 px-2 py-1 text-xs w-full max-w-[150px] text-foreground font-semibold cursor-pointer outline-none focus:ring-1 focus:ring-primary/20"
+                                value={applicant.school_id ?? ''}
+                                onChange={(e) => handleSchoolChange(originalIndex, e.target.value)}
+                            >
+                                <option value="">Select Unit</option>
+                                {schools.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                            </select>
+                            </TableCell>
+                        )}
+                        {isAdmin && (
+                            <TableCell>
+                            <select
+                                title="Select Class"
+                                value={applicant.class_id ?? ''}
+                                onChange={(e) => handleClassSelect(originalIndex, e.target.value)}
+                                className="h-9 rounded-lg border-none bg-muted/20 px-2 py-1 text-xs w-full max-w-[150px] text-foreground font-semibold cursor-pointer outline-none focus:ring-1 focus:ring-primary/20"
+                            >
+                                <option value="">Select Class</option>
+                                {classes.map((cls) => (
+                                <option key={cls.id} value={cls.id}>
+                                    {cls.name} ({classSlots[String(cls.id)] ?? 0}/{cls.slots})
+                                </option>
+                                ))}
+                            </select>
+                            </TableCell>
+                        )}
+                        <TableCell className="text-center">
+                            {passed ? (
+                                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                                    <CheckCircle2 className="size-3" />
+                                    <span className="text-[10px] font-bold uppercase tracking-wider">Passed</span>
+                                </div>
+                            ) : (
+                                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400">
+                                    <AlertCircle className="size-3" />
+                                    <span className="text-[10px] font-bold uppercase tracking-wider">Failed</span>
+                                </div>
+                            )}
+                        </TableCell>
+                        {isAdmin && (
+                            <TableCell className="text-right pr-6">
+                            {applicant.status === 'pending' && (
+                                <Button
+                                    onClick={() => handleSinglePromote(applicant)}
+                                    size="sm"
+                                    disabled={promotingId === applicant.id || !applicant.school_id || !applicant.class_id || !passed}
+                                    className="h-8 rounded-lg px-4 font-bold text-[10px] uppercase tracking-wider transition-all disabled:opacity-30"
+                                >
+                                    {promotingId === applicant.id ? '...' : 'Promote'}
+                                </Button>
+                            )}
+                            </TableCell>
+                        )}
+                        </TableRow>
+                    );
+                    })}
+                </TableBody>
+                </Table>
+                {pendingApplicants.length === 0 && (
+                    <div className="p-20 text-center flex flex-col items-center gap-3">
+                        <XCircle className="size-12 text-muted-foreground opacity-20" />
+                        <div className="space-y-1">
+                            <p className="text-sm font-bold text-foreground">No active applicants found</p>
+                            <p className="text-xs text-muted-foreground">Adjust your filters or synchronization settings</p>
+                        </div>
+                    </div>
                 )}
-                {isAdmin && (
-                  <TableCell>
-                    {applicant.status === 'pending' && (
-                      <Button
-                        onClick={async () => {
-                          await handleSinglePromote(applicant);
-                        }}
-                        size="sm"
-                        className="bg-green-600 text-white"
-                        disabled={promotingId === applicant.id}
-                      >
-                        {promotingId === applicant.id ? 'Promoting...' : 'Promote'}
-                      </Button>
-                    )}
-                  </TableCell>
-                )}
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
+            </div>
+          </CardContent>
+        </Card>
       </div>
+    </div>
   );
 }
