@@ -217,7 +217,7 @@ export default function StaffDutyRosterPage() {
                 <div className="lg:col-span-1 space-y-6">
                     <Card className="border-none shadow-sm bg-indigo-900 text-white">
                         <CardHeader>
-                            <CardTitle className="text-sm font-black uppercase tracking-widest text-indigo-300">Active M.O.D</CardTitle>
+                            <CardTitle className="text-sm font-bold uppercase tracking-tight text-indigo-300">Active M.O.D</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="flex items-center gap-4">
@@ -225,7 +225,7 @@ export default function StaffDutyRosterPage() {
                                     <ShieldCheck className="size-6" />
                                 </div>
                                 <div>
-                                    <p className="text-xl font-black">
+                                    <p className="text-xl font-bold">
                                         {roster.find(r => isCurrentWeek(r.start_date, r.end_date))?.staff_name || 'NONE ASSIGNED'}
                                     </p>
                                     <p className="text-[10px] uppercase font-bold text-indigo-200">Current Week Command</p>
@@ -235,7 +235,7 @@ export default function StaffDutyRosterPage() {
                     </Card>
 
                     <Card className="border-none shadow-sm bg-muted/20">
-                        <CardHeader><CardTitle className="text-xs font-black uppercase tracking-tighter">Duty Overview</CardTitle></CardHeader>
+                        <CardHeader><CardTitle className="text-xs font-bold uppercase tracking-tight">Duty Overview</CardTitle></CardHeader>
                         <CardContent className="space-y-4">
                             <div className="flex justify-between items-center">
                                 <span className="text-xs text-muted-foreground">Total Assignments</span>
@@ -279,7 +279,7 @@ export default function StaffDutyRosterPage() {
                                             <TableRow key={r.id} className={current ? 'bg-indigo-50/30' : ''}>
                                                 <TableCell>
                                                     <div className="flex items-center gap-3">
-                                                        <div className="size-8 rounded bg-primary/10 flex items-center justify-center text-primary font-black text-[10px]">
+                                                        <div className="size-8 rounded bg-primary/10 flex items-center justify-center text-primary font-bold text-[10px]">
                                                             {r.staff_name.split(' ').map(n => n[0]).join('')}
                                                         </div>
                                                         <span className="font-bold text-xs uppercase tracking-tight">{r.staff_name}</span>
@@ -295,11 +295,11 @@ export default function StaffDutyRosterPage() {
                                                 </TableCell>
                                                 <TableCell>
                                                     {current ? (
-                                                        <Badge className="bg-indigo-600 text-[9px] font-black uppercase">Active</Badge>
+                                                        <Badge className="bg-indigo-600 text-[9px] font-bold uppercase">Active</Badge>
                                                     ) : expired ? (
-                                                        <Badge variant="secondary" className="text-[9px] font-black uppercase">Expired</Badge>
+                                                        <Badge variant="secondary" className="text-[9px] font-bold uppercase">Expired</Badge>
                                                     ) : (
-                                                        <Badge variant="outline" className="text-[9px] font-black uppercase text-emerald-600 border-emerald-200">Scheduled</Badge>
+                                                        <Badge variant="outline" className="text-[9px] font-bold uppercase text-emerald-600 border-emerald-200">Scheduled</Badge>
                                                     )}
                                                 </TableCell>
                                                 <TableCell className="text-right">
@@ -326,8 +326,9 @@ export default function StaffDutyRosterPage() {
 
             <div className="flex items-center gap-2 justify-center py-6 opacity-30">
                 <ClipboardList className="size-8" />
-                <p className="text-[10px] font-black uppercase tracking-[0.4em]">Institutional Command Integrity</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.4em]">Institutional Command Integrity</p>
             </div>
         </div>
     );
 }
+

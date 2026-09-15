@@ -97,13 +97,13 @@ export default function ShortlistedPage() {
     const code = category?.code || 'CIV';
 
     const colors: Record<string, string> = {
-      'SVC': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800',
-      'MOD': 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 border-purple-200 dark:border-purple-800',
-      'CIV': 'bg-slate-100 text-slate-700 dark:bg-slate-900/30 dark:text-slate-400 border-slate-200 dark:border-slate-800',
+      'SVC': 'bg-blue-50 text-blue-700 border-blue-100',
+      'MOD': 'bg-purple-50 text-purple-700 border-purple-100',
+      'CIV': 'bg-slate-50 text-slate-700 border-slate-100',
     };
 
     return (
-      <Badge variant="outline" className={cn("px-2 py-0.5 font-semibold text-[10px] uppercase tracking-wider", colors[code] || colors['CIV'])}>
+      <Badge variant="secondary" className={cn("px-2 py-0 h-5 font-bold text-[10px] uppercase tracking-tight", colors[code] || colors['CIV'])}>
         {name}
       </Badge>
     );
@@ -361,8 +361,8 @@ export default function ShortlistedPage() {
       header: 'Assigned Class',
       className: 'w-[150px]',
       cell: (row: any) => (
-        <Badge variant="outline" className="text-[10px] font-medium bg-muted/30 border-muted-foreground/20 px-2 py-0.5">
-          <GraduationCap className="size-3 mr-1 opacity-50" />
+        <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-tight bg-muted/30 border-muted-foreground/10 px-2 h-5">
+          <GraduationCap className="size-3 mr-1 text-muted-foreground" />
           {row.class_id ? getClassName(row.class_id) : (row.class_applying_for || 'Pending')}
         </Badge>
       )
@@ -425,7 +425,7 @@ export default function ShortlistedPage() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Student Management</DropdownMenuLabel>
+              <DropdownMenuLabel className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">Student Management</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => handleViewProfile(row)} className="cursor-pointer">
                 <User className="mr-2 size-4 text-primary" />
@@ -448,43 +448,41 @@ export default function ShortlistedPage() {
   ];
 
   return (
-    <div className="flex flex-1 flex-col gap-6 p-4 md:p-8 max-w-[1600px] mx-auto w-full pb-24">
+    <div className="flex flex-1 flex-col gap-8 p-4 md:p-8 max-w-[1600px] mx-auto w-full pb-24">
       <PageHeader
-        title="Admitted Applicants"
-        description="Review and process candidates who have cleared the entrance evaluation phase."
-        breadcrumbs={[{ title: 'Home', href: '/' }, { title: 'Assessments', href: '/assessments' }, { title: 'Admitted' }]}
+        title="Admission Candidates"
+        description="Review and process applicants who have cleared the entrance evaluation phase."
+        breadcrumbs={[{ title: 'Home', href: '/' }, { title: 'Assessments', href: '/assessments' }, { title: 'Shortlisted' }]}
         tabs={[
-          { title: 'Overview', href: '/assessments' },
-          { title: 'Results & Placement', href: '/assessments/results' },
-          { title: 'Admitted Students', href: '/assessments/shortlisted' },
+          { title: 'Intelligence Node', href: '/assessments' },
+          { title: 'Results Registry', href: '/assessments/results' },
+          { title: 'Qualified Registry', href: '/assessments/shortlisted' },
         ]}
       />
 
       <div className="flex flex-col gap-6">
-          <Card className="border shadow-none">
-            <CardHeader className="bg-white dark:bg-slate-900 border-b flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 py-6 px-6">
+          <Card className="border-slate-100 shadow-sm">
+            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 py-6 px-6">
                 <div className="space-y-1">
                     <CardTitle className="text-xl font-bold flex items-center gap-2">
                         <GraduationCap className="size-5 text-primary" />
-                        Shortlisted Candidates
+                        Qualified Applicants
                     </CardTitle>
-                    <CardDescription className="text-xs font-medium">Final filtering and induction oversight for admitted students</CardDescription>
+                    <CardDescription className="text-xs font-medium uppercase tracking-wider">Final filtering and induction oversight</CardDescription>
                 </div>
                 <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
                     <div className="relative flex-1 sm:w-72">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60">
-                            <Search className="h-4 w-4" />
-                        </span>
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                         <Input
-                            placeholder="Search by candidate name..."
-                            className="h-10 pl-9 bg-muted/30 border-none shadow-none focus-visible:ring-1 focus-visible:ring-primary/20 transition-all"
+                            placeholder="Search qualified roster..."
+                            className="h-10 pl-9 rounded-xl border-slate-200"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
 
-                    <div className="flex items-center gap-2 bg-muted/40 px-3 py-1.5 rounded-lg border border-border/50">
-                        <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">Pass %</span>
+                    <div className="flex items-center gap-2 bg-muted/20 px-3 py-1.5 rounded-xl border border-border/50 shadow-sm">
+                        <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">Cutoff %</span>
                         <Separator orientation="vertical" className="h-4 mx-1" />
                         <Input
                             type="number"
@@ -498,7 +496,7 @@ export default function ShortlistedPage() {
                 </div>
             </CardHeader>
             <CardContent className="p-0">
-                <div className="bg-muted/10 px-6 py-1 border-b">
+                <div className="bg-muted/10 px-6 py-1 border-y">
                     <Tabs
                         value={activeSchoolId}
                         onValueChange={(val) => {
@@ -506,12 +504,12 @@ export default function ShortlistedPage() {
                         }}
                         className="w-full"
                     >
-                        <TabsList className="h-12 p-0 bg-transparent gap-6 overflow-x-auto no-scrollbar flex justify-start border-none">
+                        <TabsList className="h-12 p-0 bg-transparent gap-8 overflow-x-auto no-scrollbar flex justify-start border-none">
                             {schools.map((school) => (
                                 <TabsTrigger
                                     key={school.id}
                                     value={school.id.toString()}
-                                    className="px-0 py-3 rounded-none border-b-2 border-transparent font-bold text-[11px] uppercase tracking-widest text-muted-foreground data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-transparent transition-all whitespace-nowrap"
+                                    className="px-0 py-3 rounded-none border-b-2 border-transparent font-bold text-[11px] uppercase tracking-wider text-muted-foreground data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-transparent transition-all whitespace-nowrap"
                                 >
                                     {school.name}
                                 </TabsTrigger>
@@ -627,7 +625,7 @@ export default function ShortlistedPage() {
                     </div>
                     <div>
                         <DialogTitle className="text-2xl font-bold">{selectedStudent?.first_name} {selectedStudent?.last_name}</DialogTitle>
-                        <DialogDescription className="text-xs font-mono uppercase tracking-widest">Student Intelligence Profile</DialogDescription>
+                        <DialogDescription className="text-xs font-mono uppercase tracking-tight">Student Intelligence Profile</DialogDescription>
                     </div>
                 </div>
               </DialogHeader>
@@ -688,9 +686,10 @@ function ProfileItem({ icon: Icon, label, value, highlight = false }: { icon: an
                 <Icon className="size-4 text-muted-foreground group-hover:text-primary transition-colors" />
             </div>
             <div className="space-y-1">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{label}</p>
+                <p className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground">{label}</p>
                 <p className={cn("text-sm font-semibold", highlight ? "text-primary" : "text-foreground")}>{value || '—'}</p>
             </div>
         </div>
     );
 }
+

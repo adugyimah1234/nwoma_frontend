@@ -225,18 +225,18 @@ export default function DebtLedgerPage() {
                         <div className="grid gap-4">
                             <div className="p-4 rounded-xl border bg-muted/20 space-y-3">
                                 <div className="flex justify-between items-center">
-                                    <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Target Reference</span>
+                                    <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">Target Reference</span>
                                     <Badge variant="outline" className="font-mono text-primary border-primary/20 bg-background">{selectedStudent?.id.substring(0,8).toUpperCase()}</Badge>
                                 </div>
                                 <Separator className="opacity-40" />
                                 <div className="flex justify-between items-center">
-                                    <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Amount Outstanding</span>
+                                    <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">Amount Outstanding</span>
                                     <span className="text-base font-bold text-destructive">{formatCurrency(selectedStudent?.balance || 0)}</span>
                                 </div>
                             </div>
 
                             <div className="text-left space-y-3">
-                                <h4 className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Execution Steps</h4>
+                                <h4 className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">Execution Steps</h4>
                                 <div className="space-y-2.5">
                                     {[
                                         "Dial *170# (MTN) or *110# (Telecel)",
@@ -254,7 +254,7 @@ export default function DebtLedgerPage() {
                         </div>
 
                         <div className="pt-2 flex flex-col gap-3">
-                            <Button className="w-full h-12 font-bold uppercase text-xs tracking-widest gap-2" onClick={() => selectedStudent && handleCopyProtocol(selectedStudent)}>
+                            <Button className="w-full h-12 font-bold uppercase text-xs tracking-tight gap-2" onClick={() => selectedStudent && handleCopyProtocol(selectedStudent)}>
                                 <Copy className="size-4" /> Copy Instructions
                             </Button>
                             <p className="text-[10px] text-muted-foreground font-medium italic">Share this protocol with the parent via messaging terminal.</p>
@@ -265,8 +265,9 @@ export default function DebtLedgerPage() {
 
             <div className="flex items-center gap-2 justify-center py-6 opacity-20">
                 <Wallet className="size-6" />
-                <p className="text-[10px] font-bold uppercase tracking-[0.3em]">Financial Command Security</p>
+                <p className="text-[10px] font-bold uppercase tracking-tight">Financial Command Security</p>
             </div>
         </div>
     );
 }
+

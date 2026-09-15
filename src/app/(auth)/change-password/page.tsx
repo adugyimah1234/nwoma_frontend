@@ -4,16 +4,15 @@ import { useState } from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { Loader2, ChevronLeft, KeyRound } from 'lucide-react';
 import { toast } from "sonner";
 import { useAuth } from '@/contexts/AuthContext';
 import { changePassword } from '@/services/auth';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import Image from "next/image";
 
 const passwordFormSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -50,8 +49,6 @@ export default function ChangePasswordPage() {
       });
       toast.success("Password changed successfully");
       form.reset();
-      // Redirect to login page after successful password change for non-authenticated users
-      // or to dashboard for authenticated users
       if (user) {
         router.push('/');
       } else {
@@ -66,48 +63,47 @@ export default function ChangePasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-            Change Password
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            {user 
-              ? "Update your password to keep your account secure" 
-              : "Enter your username and current password to set a new password"
-            }
-          </p>
-        </div>
+    <div className="h-screen w-full flex items-center justify-center bg-[#F1F5F9] dark:bg-[#F1F5F9] font-sans overflow-hidden p-4">
+      {/* Main Container Card */}
+      <div className="w-full max-w-[1200px] h-full max-h-[720px] flex bg-white dark:bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-200">
         
-        <Card>
-          <CardHeader>
-            <CardTitle>Change Your Password</CardTitle>
-            <CardDescription>
-              {user 
-                ? "Enter your current password and choose a new one" 
-                : "Forgot your password? Enter your username and current password, then set a new one"
-              }
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+        {/* Left Side: Form Section */}
+        <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col bg-white dark:bg-white overflow-y-auto">
+          <div>
+            <Link
+              href={user ? "/" : "/login"}
+              className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-900 transition-colors border border-slate-200 dark:border-slate-200 rounded-md hover:bg-slate-50 dark:hover:bg-slate-50 group"
+            >
+              <ChevronLeft className="size-4" />
+              Back
+            </Link>
+          </div>
+
+          <div className="flex-1 flex flex-col justify-center max-w-[420px] mx-auto w-full py-8">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-900 mb-2 tracking-tight">Change Password</h1>
+              <p className="text-sm text-slate-500 dark:text-slate-500 font-medium">Update your credentials to maintain institutional security.</p>
+            </div>
+
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
                   control={form.control}
                   name="username"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Username</FormLabel>
+                    <FormItem className="space-y-1.5">
+                      <FormLabel className="text-sm font-semibold text-slate-700 dark:text-slate-700">
+                        Username <span className="text-rose-500">*</span>
+                      </FormLabel>
                       <FormControl>
-                        <Input 
-                          type="text" 
-                          placeholder="Enter your username" 
-                          {...field} 
-                          disabled={!!user?.username} // Disable if user is authenticated
+                        <input
+                          placeholder="Enter your username"
+                          {...field}
+                          disabled={!!user?.username}
+                          className="w-full h-11 px-4 bg-white dark:bg-white border border-slate-200 dark:border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm font-medium text-slate-900 dark:text-slate-900 placeholder:text-slate-400 dark:placeholder:text-slate-400 disabled:bg-slate-50 dark:disabled:bg-slate-50"
                         />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs" />
                     </FormItem>
                   )}
                 />
@@ -116,12 +112,19 @@ export default function ChangePasswordPage() {
                   control={form.control}
                   name="currentPassword"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Current Password</FormLabel>
+                    <FormItem className="space-y-1.5">
+                      <FormLabel className="text-sm font-semibold text-slate-700 dark:text-slate-700">
+                        Current Password <span className="text-rose-500">*</span>
+                      </FormLabel>
                       <FormControl>
-                        <Input type="password" placeholder="Enter your current password" {...field} />
+                        <input
+                          type="password"
+                          placeholder="Enter your current password"
+                          {...field}
+                          className="w-full h-11 px-4 bg-white dark:bg-white border border-slate-200 dark:border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm font-medium text-slate-900 dark:text-slate-900 placeholder:text-slate-400 dark:placeholder:text-slate-400"
+                        />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs" />
                     </FormItem>
                   )}
                 />
@@ -130,12 +133,19 @@ export default function ChangePasswordPage() {
                   control={form.control}
                   name="newPassword"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>New Password</FormLabel>
+                    <FormItem className="space-y-1.5">
+                      <FormLabel className="text-sm font-semibold text-slate-700 dark:text-slate-700">
+                        New Password <span className="text-rose-500">*</span>
+                      </FormLabel>
                       <FormControl>
-                        <Input type="password" placeholder="Enter your new password" {...field} />
+                        <input
+                          type="password"
+                          placeholder="Choose a strong password"
+                          {...field}
+                          className="w-full h-11 px-4 bg-white dark:bg-white border border-slate-200 dark:border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm font-medium text-slate-900 dark:text-slate-900 placeholder:text-slate-400 dark:placeholder:text-slate-400"
+                        />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs" />
                     </FormItem>
                   )}
                 />
@@ -144,33 +154,86 @@ export default function ChangePasswordPage() {
                   control={form.control}
                   name="confirmPassword"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Confirm New Password</FormLabel>
+                    <FormItem className="space-y-1.5">
+                      <FormLabel className="text-sm font-semibold text-slate-700 dark:text-slate-700">
+                        Confirm New Password <span className="text-rose-500">*</span>
+                      </FormLabel>
                       <FormControl>
-                        <Input type="password" placeholder="Confirm your new password" {...field} />
+                        <input
+                          type="password"
+                          placeholder="Re-type new password"
+                          {...field}
+                          className="w-full h-11 px-4 bg-white dark:bg-white border border-slate-200 dark:border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm font-medium text-slate-900 dark:text-slate-900 placeholder:text-slate-400 dark:placeholder:text-slate-400"
+                        />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs" />
                     </FormItem>
                   )}
                 />
 
-                <div className="flex gap-4">
-                  <Button type="submit" disabled={isUpdating} className="flex-1">
-                    {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Change Password
-                  </Button>
-                  <Button type="button" variant="outline" asChild>
-                    <Link href={user ? "/" : "/login"}>
-                      <ArrowLeft className="mr-2 h-4 w-4" />
-                      Back
-                    </Link>
-                  </Button>
-                </div>
+                <Button
+                  type="submit"
+                  disabled={isUpdating}
+                  className="w-full h-12 rounded-lg text-base font-bold bg-[#5C59E8] hover:bg-[#4E4BCB] text-white dark:text-white shadow-sm transition-all active:scale-[0.98] border-none mt-4"
+                >
+                  {isUpdating ? (
+                    <Loader2 className="h-5 w-5 animate-spin text-white" />
+                  ) : (
+                    "Update Password"
+                  )}
+                </Button>
               </form>
             </Form>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
+
+        {/* Right Side: Branding Section */}
+        <div className="hidden md:flex md:w-1/2 bg-[#5C59E8] dark:bg-[#5C59E8] relative items-center justify-center p-12 overflow-hidden">
+          {/* Subtle Branding Background Pattern (Diagonal Stripes) */}
+          <div
+            className="absolute inset-0 opacity-[0.1]"
+            style={{
+              backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 15px, #ffffff 15px, #ffffff 17px)`
+            }}
+          />
+
+          {/* Main Branding Content */}
+          <div className="relative z-10 text-center text-white space-y-10">
+            <div className="flex items-center justify-center gap-4">
+               <div className="size-12 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/30 shadow-2xl">
+                  <KeyRound className="size-8 text-white" />
+               </div>
+               <h2 className="text-4xl font-bold tracking-tight text-white">
+                 Security Hub
+               </h2>
+            </div>
+
+            <div className="max-w-sm mx-auto space-y-6">
+              <p className="text-lg font-medium text-white/80 tracking-tight leading-relaxed px-4">
+                "Protecting institutional integrity through high-grade cryptographic standards."
+              </p>
+
+              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 text-left">
+                <h4 className="text-sm font-bold uppercase tracking-tight mb-4 opacity-60">Security Checklist</h4>
+                <ul className="space-y-3">
+                  {[
+                    "Minimum 8 characters",
+                    "Mix of letters and numbers",
+                    "Include special characters",
+                    "Do not reuse old passwords"
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-center gap-3 text-sm font-semibold">
+                       <div className="size-1.5 rounded-full bg-indigo-300" />
+                       {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
 }
+

@@ -38,3 +38,4 @@ const RegistrationAreaChart: React.FC<{ data: ChartData[] }> = ({ data }) => (
 );
 
 export default RegistrationAreaChart;
+

@@ -13,7 +13,8 @@ import studentService from '@/services/students';
 import { AcademicYear } from '@/types/academic-year';
 import { Class } from '@/types/class';
 import { Student } from '@/types/student';
-import { Loader2 } from 'lucide-react';
+import { Loader2, RefreshCw, ArrowRightLeft, ShieldCheck, GraduationCap } from 'lucide-react';
+import { Loader } from '@/components/ui/loader';
 
 interface ClassMapping {
   currentClassId: string | number;
@@ -157,180 +158,249 @@ export default function PromoteStudentsPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
-        <span className="ml-2">Loading data...</span>
+      <div className="flex flex-col justify-center items-center h-[70vh] gap-4">
+        <Loader className="size-10 animate-spin text-primary" />
+        <span className="text-sm font-bold uppercase tracking-[0.2em] text-muted-foreground opacity-50">Syncing Node Registry</span>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-4 p-6">
+    <div className="flex flex-1 flex-col gap-8 p-4 md:p-8 max-w-[1600px] mx-auto w-full pb-24">
         <PageHeader
-          title="Promote Students"
-          description="Map class progressions and promote students to the next academic year"
+          title="Progression Node"
+          description="Map class progressions and promote students to the next academic cycle."
           breadcrumbs={[
             { title: 'Home', href: '/' },
             { title: 'Students', href: '/students' },
-            { title: 'Promote Students' }
+            { title: 'Promote' }
           ]}
           tabs={[
-            { title: 'All Students', href: '/students' },
-            { title: 'Promote Students', href: '/students/promote' },
+            { title: 'Roster Node', url: '/students' },
+            { title: 'Progression Node', url: '/students/promote' },
           ]}
         />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Academic Year Selection</CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Current Academic Year</label>
-            <Select
-              value={selectedCurrentAcademicYearId}
-              onValueChange={setSelectedCurrentAcademicYearId}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select current academic year" />
-              </SelectTrigger>
-              <SelectContent>
-                {academicYears.map((year) => (
-                  <SelectItem key={year.id} value={String(year.id)}>
-                    {year.name || year.year}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Next Academic Year</label>
-            <Select
-              value={selectedNextAcademicYearId}
-              onValueChange={setSelectedNextAcademicYearId}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select next academic year" />
-              </SelectTrigger>
-              <SelectContent>
-                {academicYears.map((year) => (
-                  <SelectItem key={year.id} value={String(year.id)}>
-                    {year.name || year.year}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      {selectedCurrentAcademicYearId && selectedNextAcademicYearId && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Class Progression Mapping</CardTitle>
-            <p className="text-muted-foreground">
-              Map classes from the current academic year to their corresponding classes in the next academic year.
-              Select "Graduation" if students from a class will not move to another class.
-            </p>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Current Class</TableHead>
-                  <TableHead>Students in Current Class</TableHead>
-                  <TableHead>Promote To Class</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {currentAcademicYearClasses.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={3} className="text-center text-muted-foreground">
-                      No classes found for students in the selected current academic year.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  currentAcademicYearClasses.map(currentClass => {
-                    const studentCount = studentsInCurrentYear.filter(s => s.class_id === currentClass.id).length;
-                    const currentMapping = classMappings.find(m => m.currentClassId === currentClass.id);
-
-                    return (
-                      <TableRow key={currentClass.id}>
-                        <TableCell className="font-medium">{currentClass.name}</TableCell>
-                        <TableCell>{studentCount}</TableCell>
-                        <TableCell>
-                          <Select
-                            value={String(currentMapping?.nextClassId ?? 'null')}
-                            onValueChange={(value: string) => handleClassMappingChange(currentClass.id, value)}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select next class" />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="lg:col-span-4 space-y-6">
+            <Card className="border-slate-100 shadow-sm overflow-hidden">
+                <CardHeader className="bg-muted/5 border-b py-4">
+                    <CardTitle className="text-sm font-bold flex items-center gap-2">
+                        <ArrowRightLeft className="size-4 text-primary" /> Mapping Parameters
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6 pt-6">
+                    <div className="space-y-3">
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Current Cycle</label>
+                        <Select
+                            value={selectedCurrentAcademicYearId}
+                            onValueChange={setSelectedCurrentAcademicYearId}
+                        >
+                            <SelectTrigger className="h-11 rounded-xl border-slate-200">
+                                <SelectValue placeholder="Select Year" />
                             </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="null">Graduation / No Promotion</SelectItem>
-                              {classes.map(nextClass => (
-                                <SelectItem key={nextClass.id} value={String(nextClass.id)}>
-                                  {nextClass.name}
-                                </SelectItem>
-                              ))}
+                            <SelectContent className="rounded-xl shadow-2xl">
+                                {academicYears.map((year) => (
+                                    <SelectItem key={year.id} value={String(year.id)} className="font-semibold">
+                                        {year.name || year.year}
+                                    </SelectItem>
+                                ))}
                             </SelectContent>
-                          </Select>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      )}
+                        </Select>
+                    </div>
+                    <div className="space-y-3">
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Target Cycle</label>
+                        <Select
+                            value={selectedNextAcademicYearId}
+                            onValueChange={setSelectedNextAcademicYearId}
+                        >
+                            <SelectTrigger className="h-11 rounded-xl border-slate-200">
+                                <SelectValue placeholder="Select Year" />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-xl shadow-2xl">
+                                {academicYears.map((year) => (
+                                    <SelectItem key={year.id} value={String(year.id)} className="font-semibold">
+                                        {year.name || year.year}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
 
-      {selectedCurrentAcademicYearId && selectedNextAcademicYearId && studentsInCurrentYear.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Promotion Summary</CardTitle>
-            <p className="text-muted-foreground">
-              Review the students to be promoted and their new class assignments.
-            </p>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Student Name</TableHead>
-                  <TableHead>Current Class</TableHead>
-                  <TableHead>New Class</TableHead>
-                  <TableHead>New Academic Year</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {studentsInCurrentYear.map(student => {
-                  const currentClass = classes.find(cls => cls.id === student.class_id);
-                  const mapping = classMappings.find(m => m.currentClassId === student.class_id);
-                  const nextClass = classes.find(cls => cls.id === mapping?.nextClassId);
-                  const nextAcademicYear = academicYears.find(year => String(year.id) === selectedNextAcademicYearId);
+                    <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 space-y-2">
+                        <div className="flex items-center gap-2 text-primary">
+                            <ShieldCheck className="size-3.5" />
+                            <span className="text-[10px] font-bold uppercase tracking-widest">Protocol Verification</span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+                            Promotion will update student records and reset performance metrics for the next academic cycle.
+                        </p>
+                    </div>
+                </CardContent>
+            </Card>
 
-                  return (
-                    <TableRow key={student.id}>
-                      <TableCell>{student.first_name} {student.last_name}</TableCell>
-                      <TableCell>{currentClass?.name || 'N/A'}</TableCell>
-                      <TableCell>{nextClass?.name || 'Graduating'}</TableCell>
-                      <TableCell>{nextAcademicYear?.name || nextAcademicYear?.year || 'N/A'}</TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-            <div className="mt-6 flex justify-end">
-              <Button onClick={handlePromoteStudents} disabled={promoting}>
-                {promoting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                {promoting ? 'Promoting...' : 'Confirm & Promote Students'}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+            {studentsInCurrentYear.length > 0 && (
+                <Card className="border-slate-100 shadow-sm overflow-hidden bg-slate-900 text-white">
+                    <CardContent className="p-6 space-y-4">
+                        <div className="flex items-center justify-between">
+                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Ready for Migration</p>
+                            <RefreshCw className={cn("size-4 text-primary", promoting && "animate-spin")} />
+                        </div>
+                        <p className="text-5xl font-bold tracking-tighter">{studentsInCurrentYear.length}</p>
+                        <p className="text-[11px] text-slate-400 font-medium leading-relaxed">
+                            Total students eligible for progression across all command units.
+                        </p>
+                        <Button
+                            className="w-full h-12 rounded-xl font-bold uppercase tracking-widest text-xs shadow-xl shadow-primary/20 mt-2"
+                            onClick={handlePromoteStudents}
+                            disabled={promoting || !selectedNextAcademicYearId}
+                        >
+                            {promoting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                            Execute Progression
+                        </Button>
+                    </CardContent>
+                </Card>
+            )}
+        </div>
+
+        <div className="lg:col-span-8 space-y-8">
+            {selectedCurrentAcademicYearId && selectedNextAcademicYearId && (
+                <Card className="border-slate-100 shadow-sm overflow-hidden">
+                    <CardHeader className="bg-muted/5 border-b py-5 px-6">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <CardTitle className="text-lg font-bold">Progression Logic</CardTitle>
+                                <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Map unit hierarchies for next cycle</p>
+                            </div>
+                            <Badge variant="outline" className="h-6 rounded-lg border-primary/20 text-primary font-bold text-[10px] uppercase">Automated Mapping</Badge>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        <Table>
+                            <TableHeader className="bg-muted/10">
+                                <TableRow className="border-none">
+                                    <TableHead className="pl-6 py-4 text-[10px] font-bold uppercase tracking-tight text-slate-500">Current Unit</TableHead>
+                                    <TableHead className="text-[10px] font-bold uppercase tracking-tight text-slate-500 text-center">Volume</TableHead>
+                                    <TableHead className="pr-6 text-[10px] font-bold uppercase tracking-tight text-slate-500 text-right">Target Progression</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {currentAcademicYearClasses.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={3} className="text-center py-20 text-muted-foreground italic text-sm">
+                                            No unit hierarchies discovered for current cycle.
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (
+                                    currentAcademicYearClasses.map(currentClass => {
+                                        const studentCount = studentsInCurrentYear.filter(s => s.class_id === currentClass.id).length;
+                                        const currentMapping = classMappings.find(m => m.currentClassId === currentClass.id);
+
+                                        return (
+                                            <TableRow key={currentClass.id} className="hover:bg-muted/30 transition-colors border-b last:border-none">
+                                                <TableCell className="pl-6 py-4 font-bold text-sm text-slate-700">{currentClass.name}</TableCell>
+                                                <TableCell className="text-center">
+                                                    <Badge variant="secondary" className="h-5 px-2 text-[10px] font-bold bg-slate-100">{studentCount} Node(s)</Badge>
+                                                </TableCell>
+                                                <TableCell className="pr-6 text-right">
+                                                    <Select
+                                                        value={String(currentMapping?.nextClassId ?? 'null')}
+                                                        onValueChange={(value: string) => handleClassMappingChange(currentClass.id, value)}
+                                                    >
+                                                        <SelectTrigger className="h-9 w-[180px] ml-auto rounded-lg bg-muted/20 border-slate-200 text-xs font-semibold">
+                                                            <SelectValue placeholder="Select Destination" />
+                                                        </SelectTrigger>
+                                                        <SelectContent className="rounded-xl shadow-2xl">
+                                                            <SelectItem value="null" className="text-rose-600 font-bold">Graduation / Archive</SelectItem>
+                                                            {classes.map(nextClass => (
+                                                                <SelectItem key={nextClass.id} value={String(nextClass.id)} className="font-semibold">
+                                                                    {nextClass.name}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </TableCell>
+                                            </TableRow>
+                                        );
+                                    })
+                                )}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+            )}
+
+            {selectedCurrentAcademicYearId && selectedNextAcademicYearId && studentsInCurrentYear.length > 0 && (
+                <Card className="border-slate-100 shadow-sm overflow-hidden">
+                    <CardHeader className="bg-muted/5 border-b py-5 px-6">
+                        <div>
+                            <CardTitle className="text-lg font-bold">Migration Manifest</CardTitle>
+                            <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Review student-level node assignment</p>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        <div className="max-h-[500px] overflow-y-auto">
+                            <Table>
+                                <TableHeader className="bg-muted/10 sticky top-0 z-10">
+                                    <TableRow className="border-none">
+                                        <TableHead className="pl-6 py-4 text-[10px] font-bold uppercase tracking-tight text-slate-500">Student Identity</TableHead>
+                                        <TableHead className="text-[10px] font-bold uppercase tracking-tight text-slate-500">Current</TableHead>
+                                        <TableHead className="pr-6 text-[10px] font-bold uppercase tracking-tight text-slate-500 text-right">Progression Target</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {studentsInCurrentYear.map(student => {
+                                        const currentClass = classes.find(cls => cls.id === student.class_id);
+                                        const mapping = classMappings.find(m => m.currentClassId === student.class_id);
+                                        const nextClass = classes.find(cls => cls.id === mapping?.nextClassId);
+
+                                        return (
+                                            <TableRow key={student.id} className="hover:bg-muted/30 transition-colors border-b last:border-none">
+                                                <TableCell className="pl-6 py-4">
+                                                    <div className="flex flex-col">
+                                                        <span className="font-bold text-sm text-foreground">{student.first_name} {student.last_name}</span>
+                                                        <span className="text-[10px] text-muted-foreground font-mono uppercase">ID: {String(student.id).substring(0,8)}</span>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Badge variant="outline" className="text-[10px] font-bold uppercase border-slate-100 text-slate-400">{currentClass?.name || 'N/A'}</Badge>
+                                                </TableCell>
+                                                <TableCell className="pr-6 text-right">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <div className="h-px w-4 bg-muted" />
+                                                        <Badge
+                                                            variant={nextClass ? "default" : "outline"}
+                                                            className={cn(
+                                                                "text-[10px] font-bold uppercase",
+                                                                !nextClass && "text-rose-500 border-rose-100 bg-rose-50"
+                                                            )}
+                                                        >
+                                                            {nextClass ? (
+                                                                <>
+                                                                    <GraduationCap className="size-3 mr-1.5 opacity-50" />
+                                                                    {nextClass.name}
+                                                                </>
+                                                            ) : 'Archiving / Graduation'}
+                                                        </Badge>
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        );
+                                    })}
+                                </TableBody>
+                            </Table>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+        </div>
       </div>
+
+      <div className="flex items-center gap-3 justify-center py-12 opacity-20 grayscale">
+        <ShieldCheck className="size-6 text-muted-foreground" />
+        <p className="text-[10px] font-bold uppercase tracking-[0.3em]">Command Progression Protocol Node</p>
+      </div>
+    </div>
   );
 }
+

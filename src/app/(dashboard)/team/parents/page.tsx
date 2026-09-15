@@ -70,7 +70,7 @@ export default function ParentsDirectoryPage() {
             header: 'Total Wards',
             cell: (row) => (
                 <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="text-[10px] font-black">{row.ward_count} {row.ward_count === 1 ? 'WARD' : 'WARDS'}</Badge>
+                    <Badge variant="secondary" className="text-[10px] font-bold">{row.ward_count} {row.ward_count === 1 ? 'WARD' : 'WARDS'}</Badge>
                 </div>
             )
         },
@@ -120,3 +120,4 @@ export default function ParentsDirectoryPage() {
         </div>
     );
 }
+

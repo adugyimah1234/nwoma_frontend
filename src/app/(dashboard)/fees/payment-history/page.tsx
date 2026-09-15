@@ -115,7 +115,7 @@ export default function PaymentHistoryPage() {
                     </Popover>
                 </div>
 
-                <Button variant="outline" className="h-12 rounded-2xl border-2 font-black uppercase tracking-widest text-[10px] px-8" onClick={refresh}>
+                <Button variant="outline" className="h-12 rounded-2xl border-2 font-bold uppercase tracking-tight text-[10px] px-8" onClick={refresh}>
                     <RefreshCw className={loading ? "mr-2 h-4 w-4 animate-spin" : "mr-2 h-4 w-4"} /> Sync Records
                 </Button>
             </div>
@@ -123,7 +123,7 @@ export default function PaymentHistoryPage() {
             <Tabs value={activeSchool || "none"} onValueChange={setActiveSchool} className="space-y-8">
                 <TabsList className="flex w-full h-auto p-1 bg-muted/50 rounded-2xl sm:w-fit gap-1 overflow-x-auto no-scrollbar">
                     {schools.map((s) => (
-                        <TabsTrigger key={s.id} value={s.id.toString()} className="flex-1 sm:flex-none px-6 py-3.5 rounded-xl font-black text-[10px] uppercase tracking-widest data-[state=active]:bg-background data-[state=active]:text-primary transition-all">
+                        <TabsTrigger key={s.id} value={s.id.toString()} className="flex-1 sm:flex-none px-6 py-3.5 rounded-xl font-bold text-[10px] uppercase tracking-tight data-[state=active]:bg-background data-[state=active]:text-primary transition-all">
                             {s.name}
                         </TabsTrigger>
                     ))}
@@ -146,7 +146,7 @@ export default function PaymentHistoryPage() {
                         {
                             key: "id",
                             header: "Receipt",
-                            cell: (r) => <span className="font-black text-[10px] tracking-widest opacity-60">R-{String(r.id).padStart(6, "0")}</span>
+                            cell: (r) => <span className="font-bold text-[10px] tracking-tight opacity-60">R-{String(r.id).padStart(6, "0")}</span>
                         },
                         {
                             key: "identity",
@@ -155,7 +155,7 @@ export default function PaymentHistoryPage() {
                                 const s = students.find((st) => Number(st.id) === Number(r.student_id)) || applicants.find((a) => Number(a.id) === Number(r.registration_id));
                                 return (
                                     <div className="flex flex-col">
-                                        <p className="font-black text-sm tracking-tighter uppercase">{s ? `${s.first_name} ${s.last_name}` : 'Unknown'}</p>
+                                        <p className="font-bold text-sm tracking-tight uppercase">{s ? `${s.first_name} ${s.last_name}` : 'Unknown'}</p>
                                         <p className="text-[9px] font-bold text-muted-foreground uppercase">{r.class_name}</p>
                                     </div>
                                 );
@@ -164,7 +164,7 @@ export default function PaymentHistoryPage() {
                         {
                             key: "intake",
                             header: "Intake",
-                            cell: (r) => <span className="font-black text-primary">{formatCurrency(r.amount ?? 0)}</span>
+                            cell: (r) => <span className="font-bold text-primary">{formatCurrency(r.amount ?? 0)}</span>
                         },
                         {
                             key: "status",
@@ -176,7 +176,7 @@ export default function PaymentHistoryPage() {
                                 studentReceipts.forEach(r => r.receipt_items?.forEach(i => paidTypes.add(i.receipt_type)));
 
                                 // In a real professional app, this logic would be pre-calculated in the service layer or hook
-                                return <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest border-none bg-muted/50 px-3 py-1">PROCESSED</Badge>;
+                                return <Badge variant="outline" className="text-[9px] font-bold uppercase tracking-tight border-none bg-muted/50 px-3 py-1">PROCESSED</Badge>;
                             }
                         },
                         {
@@ -205,9 +205,9 @@ export default function PaymentHistoryPage() {
                                         onValueChange={(val) => setActiveClassTab(prev => ({ ...prev, [schoolId]: val }))}
                                     >
                                         <TabsList className="bg-background/50 border h-10 p-1 rounded-xl">
-                                            <TabsTrigger value="all" className="text-[10px] font-black px-4 rounded-lg">ALL UNITS</TabsTrigger>
+                                            <TabsTrigger value="all" className="text-[10px] font-bold px-4 rounded-lg">ALL UNITS</TabsTrigger>
                                             {schoolClasses.map((c) => (
-                                                <TabsTrigger key={c.id} value={c.id.toString()} className="text-[10px] font-black px-4 rounded-lg uppercase">{c.name}</TabsTrigger>
+                                                <TabsTrigger key={c.id} value={c.id.toString()} className="text-[10px] font-bold px-4 rounded-lg uppercase">{c.name}</TabsTrigger>
                                             ))}
                                         </TabsList>
                                     </Tabs>
@@ -228,3 +228,4 @@ export default function PaymentHistoryPage() {
         </div>
     );
 }
+

@@ -309,7 +309,7 @@ export default function ProvisionsStorePage() {
                                     ))
                                 ) : (
                                     <div className="col-span-full py-24 text-center border-2 border-dashed rounded-xl bg-muted/5">
-                                        <p className="text-sm text-muted-foreground italic font-medium uppercase tracking-widest">No matching items found in registry.</p>
+                                        <p className="text-sm text-muted-foreground italic font-medium uppercase tracking-tight">No matching items found in registry.</p>
                                     </div>
                                 )}
                             </div>
@@ -329,7 +329,7 @@ export default function ProvisionsStorePage() {
                                     <CardContent className="p-5 flex flex-col gap-5 overflow-hidden">
                                         <div className="space-y-4 shrink-0">
                                             <div className="space-y-1.5">
-                                                <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest flex items-center gap-2">
+                                                <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight flex items-center gap-2">
                                                     <UserCircle className="size-3" /> Student Payer
                                                 </Label>
                                                 <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
@@ -347,7 +347,7 @@ export default function ProvisionsStorePage() {
                                             </div>
 
                                             <div className="space-y-1.5">
-                                                <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest flex items-center gap-2">
+                                                <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight flex items-center gap-2">
                                                     <Banknote className="size-3" /> Payment Method
                                                 </Label>
                                                 <div className="grid grid-cols-2 gap-2">
@@ -370,7 +370,7 @@ export default function ProvisionsStorePage() {
                                         <Separator className="opacity-60 shrink-0" />
 
                                         <div className="flex-1 overflow-hidden flex flex-col min-h-0">
-                                            <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest mb-3 shrink-0">Itemized Breakdown</Label>
+                                            <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight mb-3 shrink-0">Itemized Breakdown</Label>
                                             <ScrollArea className="flex-1 pr-3">
                                                 <div className="space-y-4">
                                                     {cart.length > 0 ? cart.map(c => (
@@ -424,12 +424,12 @@ export default function ProvisionsStorePage() {
                                         <div className="pt-2 space-y-4 shrink-0 mt-auto">
                                             <Separator className="opacity-60" />
                                             <div className="flex justify-between items-center">
-                                                <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Total Payable</span>
-                                                <span className="text-2xl font-bold tracking-tighter">{formatCurrency(totalAmount)}</span>
+                                                <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-tight">Total Payable</span>
+                                                <span className="text-2xl font-bold tracking-tight">{formatCurrency(totalAmount)}</span>
                                             </div>
                                             <Button
                                                 disabled={cart.length === 0 || loading}
-                                                className="w-full h-12 font-bold uppercase text-xs tracking-widest gap-2 shadow-none"
+                                                className="w-full h-12 font-bold uppercase text-xs tracking-tight gap-2 shadow-none"
                                                 onClick={handleCheckout}
                                             >
                                                 {loading ? <RefreshCw className="size-4 animate-spin" /> : <Receipt className="size-4" />}
@@ -452,14 +452,14 @@ export default function ProvisionsStorePage() {
                             </div>
                             <div>
                                 <h3 className="font-bold text-base leading-tight uppercase tracking-tight">Inventory Control</h3>
-                                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Stock registry and procurement node.</p>
+                                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-tight">Stock registry and procurement node.</p>
                             </div>
                         </div>
 
                         {isAdmin && (
                             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                                 <DialogTrigger asChild>
-                                    <Button size="sm" className="gap-2 font-bold uppercase text-[10px] tracking-widest">
+                                    <Button size="sm" className="gap-2 font-bold uppercase text-[10px] tracking-tight">
                                         <Plus className="size-4" /> Register Item
                                     </Button>
                                 </DialogTrigger>
@@ -471,12 +471,12 @@ export default function ProvisionsStorePage() {
                                         </DialogHeader>
                                         <div className="grid gap-4 py-4">
                                             <div className="grid gap-1.5">
-                                                <Label htmlFor="name" className="text-[10px] font-bold uppercase tracking-widest">Item Name</Label>
+                                                <Label htmlFor="name" className="text-[10px] font-bold uppercase tracking-tight">Item Name</Label>
                                                 <Input id="name" required placeholder="e.g. School Cloth (3 Yards)" value={newItem.name} onChange={e => setNewItem({...newItem, name: e.target.value})} className="uppercase text-xs" />
                                             </div>
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div className="grid gap-1.5">
-                                                    <Label htmlFor="category" className="text-[10px] font-bold uppercase tracking-widest">Category</Label>
+                                                    <Label htmlFor="category" className="text-[10px] font-bold uppercase tracking-tight">Category</Label>
                                                     <Select value={newItem.category} onValueChange={v => setNewItem({...newItem, category: v as InventoryItem['category']})}>
                                                         <SelectTrigger id="category" className="text-xs uppercase"><SelectValue /></SelectTrigger>
                                                         <SelectContent>
@@ -488,17 +488,17 @@ export default function ProvisionsStorePage() {
                                                     </Select>
                                                 </div>
                                                 <div className="grid gap-1.5">
-                                                    <Label htmlFor="price" className="text-[10px] font-bold uppercase tracking-widest">Unit Price (GHS)</Label>
+                                                    <Label htmlFor="price" className="text-[10px] font-bold uppercase tracking-tight">Unit Price (GHS)</Label>
                                                     <Input id="price" type="number" step="0.01" required value={newItem.price || ''} onChange={e => setNewItem({...newItem, price: parseFloat(e.target.value)})} />
                                                 </div>
                                             </div>
                                             <div className="grid gap-1.5">
-                                                <Label htmlFor="stock" className="text-[10px] font-bold uppercase tracking-widest">Stock Quantity</Label>
+                                                <Label htmlFor="stock" className="text-[10px] font-bold uppercase tracking-tight">Stock Quantity</Label>
                                                 <Input id="stock" type="number" value={newItem.stock_quantity || ''} onChange={e => setNewItem({...newItem, stock_quantity: parseInt(e.target.value)})} />
                                             </div>
                                         </div>
                                         <DialogFooter>
-                                            <Button type="submit" className="w-full font-bold uppercase text-xs tracking-widest">Complete Registration</Button>
+                                            <Button type="submit" className="w-full font-bold uppercase text-xs tracking-tight">Complete Registration</Button>
                                         </DialogFooter>
                                     </form>
                                 </DialogContent>
@@ -511,11 +511,11 @@ export default function ProvisionsStorePage() {
                             <Table>
                                 <TableHeader className="bg-muted/30">
                                     <TableRow>
-                                        <TableHead className="font-bold text-[10px] uppercase tracking-widest py-4 pl-6">Item Identity</TableHead>
-                                        <TableHead className="font-bold text-[10px] uppercase tracking-widest">Classification</TableHead>
-                                        <TableHead className="font-bold text-[10px] uppercase tracking-widest">Unit Price</TableHead>
-                                        <TableHead className="font-bold text-[10px] uppercase tracking-widest text-center">Quota Status</TableHead>
-                                        <TableHead className="text-right font-bold text-[10px] uppercase tracking-widest pr-6">Operations</TableHead>
+                                        <TableHead className="font-bold text-[10px] uppercase tracking-tight py-4 pl-6">Item Identity</TableHead>
+                                        <TableHead className="font-bold text-[10px] uppercase tracking-tight">Classification</TableHead>
+                                        <TableHead className="font-bold text-[10px] uppercase tracking-tight">Unit Price</TableHead>
+                                        <TableHead className="font-bold text-[10px] uppercase tracking-tight text-center">Quota Status</TableHead>
+                                        <TableHead className="text-right font-bold text-[10px] uppercase tracking-tight pr-6">Operations</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -538,7 +538,7 @@ export default function ProvisionsStorePage() {
                                                             {item.stock_quantity}
                                                         </span>
                                                         {item.stock_quantity < 10 && (
-                                                            <Badge variant="destructive" className="text-[8px] h-4 px-1 leading-none uppercase font-bold tracking-tighter">Critical</Badge>
+                                                            <Badge variant="destructive" className="text-[8px] h-4 px-1 leading-none uppercase font-bold tracking-tight">Critical</Badge>
                                                         )}
                                                     </div>
                                                 </TableCell>
@@ -553,7 +553,7 @@ export default function ProvisionsStorePage() {
                                         ))
                                     ) : (
                                         <TableRow>
-                                            <TableCell colSpan={5} className="text-center py-24 text-muted-foreground italic text-[10px] uppercase tracking-widest opacity-40">
+                                            <TableCell colSpan={5} className="text-center py-24 text-muted-foreground italic text-[10px] uppercase tracking-tight opacity-40">
                                                 Registry Synchronized. No items found.
                                             </TableCell>
                                         </TableRow>
@@ -567,3 +567,4 @@ export default function ProvisionsStorePage() {
         </div>
     );
 }
+

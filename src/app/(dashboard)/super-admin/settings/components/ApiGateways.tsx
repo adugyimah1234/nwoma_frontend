@@ -33,7 +33,7 @@ export function ApiGateways({ apiToken, onRegenerate }: ApiGatewaysProps) {
       <CardContent className="space-y-6 pt-6">
         <div className="p-6 border-2 border-primary/20 bg-primary/5 rounded-xl space-y-4">
           <div className="flex items-center justify-between">
-            <Label className="text-xs font-black uppercase text-primary">Master Access Key</Label>
+            <Label className="text-xs font-bold uppercase text-primary">Master Access Key</Label>
             <Badge className="bg-emerald-500 text-white border-none">{apiToken ? 'ACTIVE' : 'INACTIVE'}</Badge>
           </div>
           <div className="flex gap-2">
@@ -50,10 +50,11 @@ export function ApiGateways({ apiToken, onRegenerate }: ApiGatewaysProps) {
           </div>
           <p className="text-[10px] text-muted-foreground italic">Use this token for secure communication with Arkesel SMS and financial gateways.</p>
         </div>
-        <Button variant="outline" onClick={onRegenerate} className="w-full h-12 border-dashed gap-2 text-xs font-black tracking-widest uppercase">
+        <Button variant="outline" onClick={onRegenerate} className="w-full h-12 border-dashed gap-2 text-xs font-bold tracking-tight uppercase">
           <RefreshCw className="size-3" /> Regenerate Network Key
         </Button>
       </CardContent>
     </Card>
   );
 }
+

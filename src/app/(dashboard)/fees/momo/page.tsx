@@ -111,13 +111,13 @@ export default function MomoReconciliationPage() {
                                 </div>
                                 <div className="text-center space-y-1">
                                     <p className="font-bold text-sm tracking-tight">Click to browse file</p>
-                                    <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest">Accepts .xlsx .csv</p>
+                                    <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">Accepts .xlsx .csv</p>
                                 </div>
                                 <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" accept=".xlsx,.xls,.csv" onChange={handleFileUpload} />
                             </div>
 
                             <div className="space-y-3">
-                                <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-1">Required Columns</h4>
+                                <h4 className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground px-1">Required Columns</h4>
                                 <div className="grid grid-cols-2 gap-2">
                                     {["TransactionID", "Amount", "Description", "Date"].map(col => (
                                         <div key={col} className="flex items-center gap-2 text-[10px] font-semibold bg-muted/40 p-2 rounded-lg border border-border/30">
@@ -129,7 +129,7 @@ export default function MomoReconciliationPage() {
 
                             <Button
                                 disabled={fileData.length === 0 || loading}
-                                className="w-full h-11 font-bold uppercase text-xs tracking-widest gap-2 shadow-none"
+                                className="w-full h-11 font-bold uppercase text-xs tracking-tight gap-2 shadow-none"
                                 onClick={runReconciliation}
                             >
                                 {loading ? <RefreshCw className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
@@ -191,7 +191,7 @@ export default function MomoReconciliationPage() {
                             onClick={() => { setResults(null); setFileData([]); }}
                         >
                             <RefreshCw className="size-5 text-muted-foreground" />
-                            <span className="font-bold text-[10px] uppercase tracking-widest">New Batch</span>
+                            <span className="font-bold text-[10px] uppercase tracking-tight">New Batch</span>
                         </Button>
                     </div>
 
@@ -249,3 +249,4 @@ export default function MomoReconciliationPage() {
         </div>
     );
 }
+

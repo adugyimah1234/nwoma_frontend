@@ -227,3 +227,4 @@ export default function AddFeeDialog({ onSuccess }: AddFeeDialogProps) {
     </Dialog>
   );
 }
+

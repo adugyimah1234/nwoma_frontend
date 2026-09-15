@@ -93,3 +93,4 @@ const spec: IPieChartSpec = {
 export default function Chart() {
   return <VChart spec={spec} />;
 }
+

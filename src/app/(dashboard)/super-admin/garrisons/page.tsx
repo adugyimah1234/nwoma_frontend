@@ -315,11 +315,11 @@ export default function GarrisonsManagementPage() {
                     <CardContent className="space-y-6 pt-6">
                         <div className="flex items-center justify-between border-b pb-4">
                             <span className="text-sm font-medium text-muted-foreground">Active Commands</span>
-                            <span className="text-2xl font-black text-foreground">{garrisons.length}</span>
+                            <span className="text-2xl font-bold text-foreground">{garrisons.length}</span>
                         </div>
                         <div className="flex items-center justify-between border-b pb-4">
                             <span className="text-sm font-medium text-muted-foreground">Officers in Field</span>
-                            <span className="text-2xl font-black text-foreground">{directors.length}</span>
+                            <span className="text-2xl font-bold text-foreground">{directors.length}</span>
                         </div>
                         <div className="p-4 rounded-xl bg-background border text-[11px] text-muted-foreground leading-relaxed shadow-inner">
                             <div className="flex gap-2 items-start text-primary">
@@ -425,3 +425,4 @@ export default function GarrisonsManagementPage() {
     </div>
   );
 }
+

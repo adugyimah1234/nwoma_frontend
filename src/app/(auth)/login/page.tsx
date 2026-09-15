@@ -1,30 +1,48 @@
 'use client';
-/* eslint-disable react/jsx-no-undef */
-/* eslint-disable @typescript-eslint/no-explicit-any
-*/
-/* eslint-disable no-console */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable react/no-unescaped-entities */
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { EyeIcon, EyeOffIcon, LockIcon, UserIcon, ArrowRightIcon } from 'lucide-react';
+
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { EyeIcon, EyeOffIcon, ChevronLeft, Timer, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Loader } from '@/components/ui/loader';
 import Image from "next/image";
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export default function ProfessionalLogin() {
   const { signIn, error: authError } = useAuth();
+  const searchParams = useSearchParams();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const [socialLoading, setSocialLoading] = useState(false);
+  const [countdown, setCountdown] = useState<number | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    if (searchParams.get('expired')) {
+      setLocalError("Your session has expired. Please log in again.");
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (countdown !== null && countdown > 0) {
+      timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+    } else if (countdown === 0) {
+      setCountdown(null);
+      setLocalError(null);
+    }
+    return () => clearTimeout(timer);
+  }, [countdown]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (countdown) return;
     setLocalError(null);
     setSocialLoading(true);
 
@@ -32,146 +50,163 @@ export default function ProfessionalLogin() {
       await signIn(username, password);
       router.push('/');
     } catch (err: any) {
-      setLocalError(err?.response?.data?.message || err?.message || 'Login failed. Please check your credentials.');
+      if (err.status === 429) {
+        setCountdown(err.retryAfter || 60);
+        setLocalError(`Too many attempts. ${err.retryAfter || 60}s lock.`);
+      } else {
+        setLocalError(err?.response?.data?.message || err?.message || 'Invalid credentials.');
+      }
     } finally {
       setSocialLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 font-sans">
-      {/* Left panel */}
-      <div className="hidden lg:flex lg:w-1/2 bg-indigo-600 items-center justify-center p-12">
-        <div className="max-w-md text-white">
-          <div className="text-4xl font-bold mb-6">Welcome back</div>
-          <p className="text-indigo-200 text-lg mb-8">
-            Access your dashboard and manage your institution analytics with ease.
-          </p>
-          <div className="bg-white/10 p-6 rounded-lg backdrop-blur-sm">
-            <div className="text-xl font-medium mb-4">Why people love our platform</div>
-            <ul className="space-y-3">
-              {["Real-time analytics", "Secure cloud access", "24/7 technical support", "Mobile-friendly interface"].map((item, i) => (
-                <li key={i} className="flex items-center">
-                  <div className="h-2 w-2 rounded-full bg-indigo-300 mr-2"></div>
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </div>
+    <div className="h-screen w-full flex items-center justify-center bg-muted/30 font-sans overflow-hidden p-4">
+      {/* Main Container Card */}
+      <div className="w-full max-w-[1150px] h-full max-h-[680px] flex bg-card rounded-3xl shadow-[0_35px_60px_-15px_rgba(0,0,0,0.1)] overflow-hidden border border-border">
 
-      {/* Right panel */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
-        <div className="w-full max-w-md">
-          <div className="text-center mb-10">
-            <div className="flex items-center justify-center mx-auto mb-8">
-              <Image src="/logo.png" alt="Logo" width={100} height={100} className='w-24 h-auto'/>
-            </div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Sign in to Dashboard</h1>
-            <p className="mt-2 text-gray-600 dark:text-gray-400">Enter your credentials to access your account</p>
+        {/* Left Side: Form Section */}
+        <div className="w-full md:w-1/2 p-10 md:p-16 flex flex-col bg-card">
+          <div>
+            <Button variant="ghost" size="sm" asChild className="rounded-xl border border-border gap-2 text-muted-foreground hover:text-foreground">
+              <Link href="/">
+                <ChevronLeft className="size-4" />
+                Back
+              </Link>
+            </Button>
           </div>
 
-          {(localError || authError) && (
-            <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 text-red-700 dark:bg-red-900/30 dark:border-red-800 dark:text-red-400">
-              <p className="text-sm font-medium">{localError || authError}</p>
+          <div className="flex-1 flex flex-col justify-center max-w-[360px] mx-auto w-full">
+            <div className="text-center mb-10">
+              <h1 className="text-3xl font-bold tracking-tight mb-2">Sign In</h1>
+              <p className="text-sm text-muted-foreground font-medium">Welcome back! Please sign in to access your account.</p>
             </div>
-          )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Username
-              </label>
-              <div className="relative rounded-lg shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <UserIcon className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="username"
-                  name="username"
+            {(localError || authError) && (
+              <div className="mb-6 px-4 py-3 rounded-xl bg-destructive/10 border border-destructive/20 flex items-center gap-2 text-destructive">
+                <ShieldCheck className="size-4" />
+                <p className="text-xs font-semibold">{localError || authError}</p>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold text-muted-foreground ml-1">
+                  Email Address <span className="text-destructive">*</span>
+                </Label>
+                <Input
                   required
+                  disabled={!!countdown || socialLoading}
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg bg-white dark:bg-gray-800 dark:border-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  placeholder="Your username"
+                  className="h-12 px-5"
+                  placeholder="user@example.com"
                 />
               </div>
-            </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Password
-                </label>
-                <Link href="/change-password" title='Forgot Password' className="text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400">
-                  Forgot password?
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold text-muted-foreground ml-1">
+                  Password <span className="text-destructive">*</span>
+                </Label>
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    disabled={!!countdown || socialLoading}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="h-12 px-5 pr-12"
+                    placeholder="Type your password"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-0 top-0 h-12 w-12 text-muted-foreground hover:text-foreground"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOffIcon className="size-4" /> : <EyeIcon className="size-4" />}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between px-1">
+                <div className="flex items-center space-x-2.5">
+                  <Checkbox id="remember" />
+                  <Label htmlFor="remember" className="text-xs font-medium text-muted-foreground cursor-pointer select-none">
+                    Keep me logged in
+                  </Label>
+                </div>
+                <Link
+                  href="/change-password"
+                  className="text-sm font-semibold text-primary hover:underline underline-offset-4"
+                >
+                  Forget Password?
                 </Link>
               </div>
-              <div className="relative rounded-lg shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <LockIcon className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  autoComplete="current-password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg bg-white dark:bg-gray-800 dark:border-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  placeholder="••••••••"
-                />
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? (
-                    <EyeOffIcon className="h-5 w-5 text-gray-400" />
-                  ) : (
-                    <EyeIcon className="h-5 w-5 text-gray-400" />
-                  )}
-                </button>
-              </div>
+
+              <Button
+                type="submit"
+                disabled={socialLoading || !!countdown}
+                className="w-full h-12 rounded-xl text-base font-bold shadow-lg"
+              >
+                {socialLoading ? (
+                  <Loader className="animate-spin" />
+                ) : countdown ? (
+                  `Locked (${countdown}s)`
+                ) : (
+                  "Login"
+                )}
+              </Button>
+            </form>
+
+            <div className="mt-8 text-center space-y-4">
+               <p className="text-sm font-medium text-muted-foreground">
+                New here? <Link href="/register" className="text-primary hover:underline underline-offset-4 font-bold">Create an account</Link>
+              </p>
+              <p className="text-xs font-semibold text-muted-foreground tracking-tight">
+                System Help: <Link href="/guide" className="text-foreground hover:underline underline-offset-4 font-bold">Operational Guide</Link>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Side: Branding Section */}
+        <div className="hidden md:flex md:w-1/2 bg-primary relative items-center justify-center p-16 overflow-hidden">
+          {/* Subtle Branding Background Pattern (Diagonal Stripes) */}
+          <div
+            className="absolute inset-0 opacity-[0.1]"
+            style={{
+              backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 15px, hsl(var(--primary-foreground)) 15px, hsl(var(--primary-foreground)) 17px)`
+            }}
+          />
+
+          <div className="relative z-10 text-center text-primary-foreground space-y-10">
+            <div className="flex items-center justify-center gap-4">
+               <div className="size-14 bg-primary-foreground/10 backdrop-blur-xl rounded-2xl flex items-center justify-center border border-primary-foreground/20 shadow-2xl">
+                  <Image
+                    src="/logo.png"
+                    alt="Logo"
+                    width={38}
+                    height={38}
+                    className="brightness-0 invert opacity-90"
+                  />
+               </div>
+               <h2 className="text-4xl font-bold tracking-tight">
+                 Garrison Admin
+               </h2>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
-                  Remember me
-                </label>
-              </div>
+            <div className="max-w-sm mx-auto space-y-5">
+              <p className="text-lg font-medium opacity-80 tracking-tight leading-snug">
+                Built for Developers, Designed for Efficiency
+              </p>
+              <h3 className="text-3xl font-bold leading-tight tracking-tight">
+                Next.js Admin Dashboard <br /> Templates and Components
+              </h3>
             </div>
-
-            <button
-              type="submit"
-              disabled={socialLoading}
-              className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-            >
-              {socialLoading ? (
-                <Loader className="h-5 w-5" />
-              ) : (
-                <>
-                  Sign in
-                  <ArrowRightIcon className="ml-2 h-4 w-4" />
-                </>
-              )}
-            </button>
-          </form>
-
-          <p className="mt-10 text-center text-sm text-gray-600 dark:text-gray-400">
-            SECURE EDUCATIONAL COMMAND REGISTRY
-          </p>
+          </div>
         </div>
       </div>
     </div>

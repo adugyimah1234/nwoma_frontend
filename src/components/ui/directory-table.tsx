@@ -66,3 +66,4 @@ export function DirectoryTable<T extends Record<string, unknown>>({
     </Card>
   );
 }
+

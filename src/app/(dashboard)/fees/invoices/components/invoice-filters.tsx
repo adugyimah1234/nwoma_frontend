@@ -256,3 +256,4 @@ export function InvoiceFilters({ onFilterChange, currentFilters }: InvoiceFilter
   );
 }
 
+

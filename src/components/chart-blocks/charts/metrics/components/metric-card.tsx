@@ -47,3 +47,4 @@ function ChangeIndicator({ change }: { change: number }) {
     </span>
   );
 }
+

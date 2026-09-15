@@ -102,29 +102,29 @@ export default function FeesPage() {
             <div className="flex items-center gap-3">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="outline" id="tour-export-data" className="h-12 rounded-2xl border-2 font-black uppercase tracking-widest text-[10px] px-6" disabled={isExporting}>
+                        <Button variant="outline" id="tour-export-data" className="h-10 rounded-xl border border-slate-200 font-bold text-xs px-6 hover:bg-slate-50 transition-all" disabled={isExporting}>
                             {isExporting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
                             Export Data
                         </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="rounded-2xl border-none shadow-2xl p-2 w-56">
-                        <DropdownMenuLabel className="text-[9px] font-black uppercase tracking-widest text-muted-foreground px-3 py-2">Select Format</DropdownMenuLabel>
+                    <DropdownMenuContent align="end" className="rounded-2xl border border-slate-100 shadow-2xl p-2 w-56">
+                        <DropdownMenuLabel className="text-[10px] font-bold text-slate-400 px-3 py-2 uppercase tracking-tight">Select Format</DropdownMenuLabel>
                         <DropdownMenuSeparator className="mx-2" />
-                        <DropdownMenuItem onClick={() => handleExport('pdf')} className="rounded-xl h-11 font-bold"><FileText className="mr-3 size-4 text-primary" /> PDF Document</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleExport('excel')} className="rounded-xl h-11 font-bold"><BarChart className="mr-3 size-4 text-primary" /> Excel Sheet</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleExport('pdf')} className="rounded-xl h-11 font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"><FileText className="mr-3 size-4 text-indigo-500" /> PDF Document</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleExport('excel')} className="rounded-xl h-11 font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"><BarChart className="mr-3 size-4 text-indigo-500" /> Excel Sheet</DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
 
-                <Button className="h-12 rounded-2xl font-black uppercase tracking-widest text-[10px] px-8 shadow-xl shadow-primary/20" id="tour-new-receipt" onClick={() => setShowNewInvoiceDialog(true)}>
+                <Button className="h-10 rounded-xl font-bold text-xs px-8 shadow-lg shadow-indigo-500/10 bg-indigo-600 hover:bg-indigo-700 text-white transition-all active:scale-[0.98]" id="tour-new-receipt" onClick={() => setShowNewInvoiceDialog(true)}>
                     <Plus className="h-4 w-4 mr-2" /> New Receipt
                 </Button>
             </div>
         </PageHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-            <TabsList id="tour-financial-tabs" className="flex w-full h-auto p-1 bg-muted/50 rounded-2xl sm:w-fit gap-1 overflow-x-auto no-scrollbar">
+            <TabsList id="tour-financial-tabs" className="flex w-full h-auto p-1 bg-slate-100/80 rounded-2xl sm:w-fit gap-1 overflow-x-auto no-scrollbar border border-slate-200/50">
               {tabs.map((tab) => (
-                <TabsTrigger key={tab.id} value={tab.id} className="flex-1 sm:flex-none flex items-center gap-3 px-6 py-3.5 rounded-xl font-black text-[10px] uppercase tracking-widest data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-lg transition-all whitespace-nowrap">
+                <TabsTrigger key={tab.id} value={tab.id} className="flex-1 sm:flex-none flex items-center gap-3 px-6 py-3 rounded-xl font-bold text-xs data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm transition-all whitespace-nowrap">
                   <tab.icon className="h-4 w-4" />
                   {tab.label}
                 </TabsTrigger>
@@ -157,12 +157,12 @@ export default function FeesPage() {
 
         <Dialog open={showNewInvoiceDialog} onOpenChange={setShowNewInvoiceDialog}>
             <DialogContent className="sm:max-w-[700px] rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden">
-                <div className="bg-primary p-8 text-white relative overflow-hidden">
+                <div className="bg-indigo-600 p-8 text-white relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12"><Receipt className="size-32" /></div>
                     <DialogHeader className="relative z-10 space-y-2">
-                        <Badge className="w-fit bg-white/20 text-white border-none font-black text-[10px] tracking-[0.2em] px-4 py-1.5 uppercase">Treasury Entry</Badge>
-                        <DialogTitle className="text-3xl font-black tracking-tighter">Issue New Receipt</DialogTitle>
-                        <DialogDescription className="text-white/60 text-sm font-medium italic">Execute a financial transaction for the institutional registry.</DialogDescription>
+                        <Badge className="w-fit bg-white/20 text-white border-none font-bold text-[10px] tracking-tight px-4 py-1.5 uppercase">Treasury Entry</Badge>
+                        <DialogTitle className="text-3xl font-bold tracking-tight">Issue New Receipt</DialogTitle>
+                        <DialogDescription className="text-indigo-100/70 text-sm font-medium italic">Execute a financial transaction for the institutional registry.</DialogDescription>
                     </DialogHeader>
                 </div>
                 <div className="p-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
@@ -175,3 +175,4 @@ export default function FeesPage() {
     </div>
   );
 }
+

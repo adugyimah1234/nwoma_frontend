@@ -9,7 +9,9 @@ import {
     GraduationCap,
     Wand2,
     MessageSquare,
-    BookOpen
+    BookOpen,
+    ChevronLeft,
+    ChevronRight
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -71,6 +73,10 @@ export default function GradebookPage() {
     // Marks State
     const [marks, setMarks] = useState<StudentMark[]>([]);
 
+    // Pagination State
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+
     const loadInitialData = useCallback(async () => {
         try {
             const [subRes, classRes, yearsRes, remarkRes] = await Promise.all([
@@ -117,6 +123,7 @@ export default function GradebookPage() {
 
         setFetching(true);
         setMarks([]);
+        setCurrentPage(1);
         try {
             const data = await gradebookService.getClassMarks(selection.classId, selection.termId, selection.subjectId);
             setMarks(data);
@@ -202,6 +209,10 @@ export default function GradebookPage() {
         }
     };
 
+    // Pagination Logic
+    const totalPages = Math.max(1, Math.ceil(marks.length / itemsPerPage));
+    const paginatedMarks = marks.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
     return (
         <div className="flex flex-1 flex-col gap-8 p-4 md:p-8 max-w-[1600px] mx-auto w-full pb-24">
             <PageHeader
@@ -280,19 +291,27 @@ export default function GradebookPage() {
             ) : marks.length > 0 ? (
                 <div className="space-y-6 animate-in fade-in duration-500">
                     <Card className="shadow-sm overflow-hidden">
-                        <CardHeader className="flex flex-row items-center justify-between border-b py-4 px-6">
+                        <CardHeader className="flex flex-row items-center justify-between border-b py-4 px-6 gap-4">
                             <div className="flex items-center gap-3">
                                 <div className="size-8 rounded bg-primary/10 text-primary flex items-center justify-center">
                                     <BookOpen className="size-4" />
                                 </div>
                                 <div>
                                     <CardTitle className="text-lg font-semibold">Student Assessment List</CardTitle>
-                                    <CardDescription className="text-xs">Input student marks for the selected term.</CardDescription>
+                                    <CardDescription className="text-xs">Input student marks for the selected term. • {marks.length} Students</CardDescription>
                                 </div>
                             </div>
-                            <Badge variant="secondary">
-                                {marks.length} Students
-                            </Badge>
+
+                            <div className="flex items-center gap-2">
+                                <Button variant="outline" size="sm" className="gap-2">
+                                    <FileText className="size-4" />
+                                    <span className="hidden sm:inline">Export Draft</span>
+                                </Button>
+                                <Button onClick={handleSave} disabled={loading} size="sm" className="gap-2 px-6">
+                                    {loading ? <RefreshCw className="size-4 animate-spin" /> : <Save className="size-4" />}
+                                    Save Changes
+                                </Button>
+                            </div>
                         </CardHeader>
                         <CardContent className="p-0">
                             <div className="overflow-x-auto">
@@ -309,111 +328,130 @@ export default function GradebookPage() {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {marks.map((mark, idx) => (
-                                            <TableRow key={mark.student_id} className="group transition-colors border-b last:border-none">
-                                                <TableCell className="pl-6 py-3 text-sm text-muted-foreground">{idx + 1}</TableCell>
-                                                <TableCell>
-                                                    <span className="font-medium text-sm">
-                                                        {mark.first_name} {mark.last_name}
-                                                    </span>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <div className="flex justify-center">
-                                                        <Input
-                                                            type="number"
-                                                            max={40}
-                                                            className="w-20 text-center h-9"
-                                                            value={mark.ca_score || ''}
-                                                            onChange={(e) => handleMarkChange(idx, 'ca_score', e.target.value)}
-                                                        />
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <div className="flex justify-center">
-                                                        <Input
-                                                            type="number"
-                                                            max={60}
-                                                            className="w-20 text-center h-9"
-                                                            value={mark.exam_score || ''}
-                                                            onChange={(e) => handleMarkChange(idx, 'exam_score', e.target.value)}
-                                                        />
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell className="text-center">
-                                                    <span className="text-sm font-semibold text-primary">
-                                                        {mark.total_score || 0}
-                                                    </span>
-                                                </TableCell>
-                                                <TableCell className="text-center">
-                                                    <Badge variant={mark.grade === 'F' ? 'destructive' : 'default'} className="w-8 justify-center">
-                                                        {mark.grade || '-'}
-                                                    </Badge>
-                                                </TableCell>
-                                                <TableCell className="pr-6">
-                                                    <div className="flex gap-2 items-center">
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="size-8 text-amber-500 hover:text-amber-600 hover:bg-amber-50 shrink-0"
-                                                            onClick={() => handleAutoSuggest(idx)}
-                                                            title="Suggest Remark"
-                                                        >
-                                                            <Wand2 className="size-4" />
-                                                        </Button>
-                                                        <Input
-                                                            className="h-9 text-xs"
-                                                            placeholder="Enter remarks..."
-                                                            value={mark.teacher_remarks || ''}
-                                                            onChange={(e) => handleMarkChange(idx, 'teacher_remarks', e.target.value)}
-                                                        />
-                                                        <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild>
-                                                                <Button variant="ghost" size="icon" className="size-8 text-primary">
-                                                                    <MessageSquare className="size-4" />
-                                                                </Button>
-                                                            </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="end" className="w-[320px]">
-                                                                <DropdownMenuLabel className="text-xs font-semibold uppercase text-muted-foreground">Remarks Bank</DropdownMenuLabel>
-                                                                <DropdownMenuSeparator />
-                                                                <ScrollArea className="h-[250px]">
-                                                                    {remarksBank.map(r => (
-                                                                        <DropdownMenuItem
-                                                                            key={r.id}
-                                                                            className="p-3 cursor-pointer"
-                                                                            onClick={() => handleMarkChange(idx, 'teacher_remarks', r.remark_text)}
-                                                                        >
-                                                                            <div className="flex flex-col gap-1">
-                                                                                <Badge variant="secondary" className="w-fit text-[10px] uppercase">
-                                                                                    {r.category}
-                                                                                </Badge>
-                                                                                <span className="text-xs leading-relaxed">{r.remark_text}</span>
-                                                                            </div>
-                                                                        </DropdownMenuItem>
-                                                                    ))}
-                                                                </ScrollArea>
-                                                                {remarksBank.length === 0 && (
-                                                                    <div className="p-8 text-center text-xs text-muted-foreground italic">Remarks bank is empty</div>
-                                                                )}
-                                                            </DropdownMenuContent>
-                                                        </DropdownMenu>
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
+                                        {paginatedMarks.map((mark, pIdx) => {
+                                            const idx = (currentPage - 1) * itemsPerPage + pIdx;
+                                            return (
+                                                <TableRow key={mark.student_id} className="group transition-colors border-b last:border-none">
+                                                    <TableCell className="pl-6 py-3 text-sm text-muted-foreground">{idx + 1}</TableCell>
+                                                    <TableCell>
+                                                        <span className="font-medium text-sm">
+                                                            {mark.first_name} {mark.last_name}
+                                                        </span>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="flex justify-center">
+                                                            <Input
+                                                                type="number"
+                                                                max={40}
+                                                                className="w-20 text-center h-9"
+                                                                value={mark.ca_score || ''}
+                                                                onChange={(e) => handleMarkChange(idx, 'ca_score', e.target.value)}
+                                                            />
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="flex justify-center">
+                                                            <Input
+                                                                type="number"
+                                                                max={60}
+                                                                className="w-20 text-center h-9"
+                                                                value={mark.exam_score || ''}
+                                                                onChange={(e) => handleMarkChange(idx, 'exam_score', e.target.value)}
+                                                            />
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell className="text-center">
+                                                        <span className="text-sm font-semibold text-primary">
+                                                            {mark.total_score || 0}
+                                                        </span>
+                                                    </TableCell>
+                                                    <TableCell className="text-center">
+                                                        <Badge variant={mark.grade === 'F' ? 'destructive' : 'default'} className="w-8 justify-center">
+                                                            {mark.grade || '-'}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell className="pr-6">
+                                                        <div className="flex gap-2 items-center">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="size-8 text-amber-500 hover:text-amber-600 hover:bg-amber-50 shrink-0"
+                                                                onClick={() => handleAutoSuggest(idx)}
+                                                                title="Suggest Remark"
+                                                            >
+                                                                <Wand2 className="size-4" />
+                                                            </Button>
+                                                            <Input
+                                                                className="h-9 text-xs"
+                                                                placeholder="Enter remarks..."
+                                                                value={mark.teacher_remarks || ''}
+                                                                onChange={(e) => handleMarkChange(idx, 'teacher_remarks', e.target.value)}
+                                                            />
+                                                            <DropdownMenu>
+                                                                <DropdownMenuTrigger asChild>
+                                                                    <Button variant="ghost" size="icon" className="size-8 text-primary">
+                                                                        <MessageSquare className="size-4" />
+                                                                    </Button>
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent align="end" className="w-[320px]">
+                                                                    <DropdownMenuLabel className="text-xs font-semibold uppercase text-muted-foreground">Remarks Bank</DropdownMenuLabel>
+                                                                    <DropdownMenuSeparator />
+                                                                    <ScrollArea className="h-[250px]">
+                                                                        {remarksBank.map(r => (
+                                                                            <DropdownMenuItem
+                                                                                key={r.id}
+                                                                                className="p-3 cursor-pointer"
+                                                                                onClick={() => handleMarkChange(idx, 'teacher_remarks', r.remark_text)}
+                                                                            >
+                                                                                <div className="flex flex-col gap-1">
+                                                                                    <Badge variant="secondary" className="w-fit text-[10px] uppercase">
+                                                                                        {r.category}
+                                                                                    </Badge>
+                                                                                    <span className="text-xs leading-relaxed">{r.remark_text}</span>
+                                                                                </div>
+                                                                            </DropdownMenuItem>
+                                                                        ))}
+                                                                    </ScrollArea>
+                                                                    {remarksBank.length === 0 && (
+                                                                        <div className="p-8 text-center text-xs text-muted-foreground italic">Remarks bank is empty</div>
+                                                                    )}
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            );
+                                        })}
                                     </TableBody>
                                 </Table>
                             </div>
                         </CardContent>
                     </Card>
 
-                    <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6">
-                        <Button variant="outline" className="gap-2">
-                            <FileText className="size-4" /> Export Draft
-                        </Button>
-                        <Button onClick={handleSave} disabled={loading} className="gap-2 px-10">
-                            {loading ? <RefreshCw className="size-4 animate-spin" /> : <Save className="size-4" />}
-                            Save Changes
-                        </Button>
+                    <div className="flex items-center justify-between mt-4">
+                        <p className="text-sm text-muted-foreground">
+                            Page {currentPage} of {totalPages} • {marks.length} Students Total
+                        </p>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={currentPage === 1}
+                                onClick={() => setCurrentPage(prev => prev - 1)}
+                            >
+                                <ChevronLeft className="h-4 w-4 mr-1" />
+                                Previous
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={currentPage === totalPages}
+                                onClick={() => setCurrentPage(prev => prev + 1)}
+                            >
+                                Next
+                                <ChevronRight className="h-4 w-4 ml-1" />
+                            </Button>
+                        </div>
                     </div>
                 </div>
             ) : !fetching && (

@@ -451,15 +451,15 @@ export default function ResultsPage() {
                 <Table>
                 <TableHeader className="bg-muted/30">
                     <TableRow className="hover:bg-transparent border-none">
-                    <TableHead className="w-12 text-center text-[10px] font-bold uppercase tracking-widest">#</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase tracking-widest">Category</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase tracking-widest">Full Name</TableHead>
-                    <TableHead className="text-[10px] font-bold uppercase tracking-widest text-center">Applied For</TableHead>
-                    <TableHead className="w-28 text-[10px] font-bold uppercase tracking-widest text-center">Score %</TableHead>
-                    {isAdmin && <TableHead className="text-[10px] font-bold uppercase tracking-widest">Institutional Unit</TableHead>}
-                    {isAdmin && <TableHead className="text-[10px] font-bold uppercase tracking-widest">Target Class</TableHead>}
-                    <TableHead className="w-24 text-[10px] font-bold uppercase tracking-widest text-center">Verdict</TableHead>
-                    {isAdmin && <TableHead className="text-right text-[10px] font-bold uppercase tracking-widest pr-6">Action</TableHead>}
+                    <TableHead className="w-12 text-center text-[10px] font-bold uppercase tracking-tight">#</TableHead>
+                    <TableHead className="text-[10px] font-bold uppercase tracking-tight">Category</TableHead>
+                    <TableHead className="text-[10px] font-bold uppercase tracking-tight">Full Name</TableHead>
+                    <TableHead className="text-[10px] font-bold uppercase tracking-tight text-center">Applied For</TableHead>
+                    <TableHead className="w-28 text-[10px] font-bold uppercase tracking-tight text-center">Score %</TableHead>
+                    {isAdmin && <TableHead className="text-[10px] font-bold uppercase tracking-tight">Institutional Unit</TableHead>}
+                    {isAdmin && <TableHead className="text-[10px] font-bold uppercase tracking-tight">Target Class</TableHead>}
+                    <TableHead className="w-24 text-[10px] font-bold uppercase tracking-tight text-center">Verdict</TableHead>
+                    {isAdmin && <TableHead className="text-right text-[10px] font-bold uppercase tracking-tight pr-6">Action</TableHead>}
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -571,3 +571,4 @@ export default function ResultsPage() {
     </div>
   );
 }
+

@@ -331,7 +331,7 @@ export default function GarrisonDirectorDashboardPage() {
                     <div className="size-8 rounded bg-primary/10 flex items-center justify-center text-primary"><Building className="size-4" /></div>
                     <div>
                         <p className="text-xs text-muted-foreground font-bold uppercase">Assigned Command</p>
-                        <p className="text-sm font-black">{data?.garrison.name}</p>
+                        <p className="text-sm font-bold">{data?.garrison.name}</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -364,3 +364,4 @@ export default function GarrisonDirectorDashboardPage() {
       </div>
   );
 }
+

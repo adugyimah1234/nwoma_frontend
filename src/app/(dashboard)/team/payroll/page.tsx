@@ -141,7 +141,7 @@ export default function StaffPayrollPage() {
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4 bg-muted/20 p-2 rounded-xl border">
                              <div className="flex items-center gap-2 px-3">
-                                <Label className="text-[10px] font-black uppercase text-muted-foreground">Period</Label>
+                                <Label className="text-[10px] font-bold uppercase text-muted-foreground">Period</Label>
                                 <div className="flex gap-2">
                                     <Input type="number" className="w-16 h-8 text-xs font-bold" value={period.month} onChange={e => setPeriod({...period, month: parseInt(e.target.value)})} />
                                     <Input type="number" className="w-24 h-8 text-xs font-bold" value={period.year} onChange={e => setPeriod({...period, year: parseInt(e.target.value)})} />
@@ -183,9 +183,9 @@ export default function StaffPayrollPage() {
                                             <TableCell className="text-xs">{formatCurrency(p.base_salary)}</TableCell>
                                             <TableCell className="text-xs text-emerald-600">+{formatCurrency(p.allowances)}</TableCell>
                                             <TableCell className="text-xs text-rose-600">-{formatCurrency(p.deductions)}</TableCell>
-                                            <TableCell className="font-black text-sm">{formatCurrency(p.net_salary)}</TableCell>
+                                            <TableCell className="font-bold text-sm">{formatCurrency(p.net_salary)}</TableCell>
                                             <TableCell>
-                                                <Badge className={p.payment_status === 'paid' ? 'bg-emerald-500' : 'bg-orange-500' + " text-[9px] font-black uppercase"}>
+                                                <Badge className={p.payment_status === 'paid' ? 'bg-emerald-500' : 'bg-orange-500' + " text-[9px] font-bold uppercase"}>
                                                     {p.payment_status}
                                                 </Badge>
                                             </TableCell>
@@ -259,22 +259,22 @@ export default function StaffPayrollPage() {
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
                             <div className="grid gap-2">
-                                <Label className="text-[10px] font-black uppercase">Base Salary (GHS)</Label>
+                                <Label className="text-[10px] font-bold uppercase">Base Salary (GHS)</Label>
                                 <Input type="number" required value={editingStaff?.base_salary || 0} onChange={e => setEditingStaff({...editingStaff!, base_salary: parseFloat(e.target.value)})} />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="grid gap-2">
-                                    <Label className="text-[10px] font-black uppercase">Allowances</Label>
+                                    <Label className="text-[10px] font-bold uppercase">Allowances</Label>
                                     <Input type="number" value={editingStaff?.allowances || 0} onChange={e => setEditingStaff({...editingStaff!, allowances: parseFloat(e.target.value)})} />
                                 </div>
                                 <div className="grid gap-2">
-                                    <Label className="text-[10px] font-black uppercase">Deductions</Label>
+                                    <Label className="text-[10px] font-bold uppercase">Deductions</Label>
                                     <Input type="number" value={editingStaff?.deductions || 0} onChange={e => setEditingStaff({...editingStaff!, deductions: parseFloat(e.target.value)})} />
                                 </div>
                             </div>
                         </div>
                         <DialogFooter>
-                            <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 font-black uppercase">Update Remuneration Registry</Button>
+                            <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 font-bold uppercase">Update Remuneration Registry</Button>
                         </DialogFooter>
                     </form>
                 </DialogContent>
@@ -282,8 +282,9 @@ export default function StaffPayrollPage() {
 
             <div className="flex items-center gap-2 justify-center py-6 opacity-30 grayscale">
                 <ShieldCheck className="size-8" />
-                <p className="text-[10px] font-black uppercase tracking-[0.4em]">Institutional Remuneration Integrity</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.4em]">Institutional Remuneration Integrity</p>
             </div>
         </div>
     );
 }
+

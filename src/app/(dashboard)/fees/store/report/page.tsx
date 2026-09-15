@@ -63,7 +63,7 @@ export default function InventoryReportPage() {
         <div className="flex flex-1 items-center justify-center h-[500px]">
             <div className="flex flex-col items-center gap-2">
                 <RefreshCw className="size-8 animate-spin text-muted-foreground/50" />
-                <p className="text-sm font-medium text-muted-foreground animate-pulse uppercase tracking-widest">Analyzing Logistics...</p>
+                <p className="text-sm font-medium text-muted-foreground animate-pulse uppercase tracking-tight">Analyzing Logistics...</p>
             </div>
         </div>
     );
@@ -184,3 +184,4 @@ export default function InventoryReportPage() {
         </div>
     );
 }
+

@@ -53,3 +53,4 @@ const StatusPieChart: React.FC<{ data: PieData[]; total: number }> = ({ data, to
 };
 
 export default StatusPieChart;
+

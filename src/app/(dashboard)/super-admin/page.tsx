@@ -127,12 +127,12 @@ export default function SuperAdminDashboardPage() {
         >
           <div className="flex items-center gap-3">
             <Select value={selectedGarrisonId} onValueChange={setSelectedGarrisonId}>
-                <SelectTrigger className="w-[280px] h-10 shadow-sm">
-                    <LayoutGrid className="size-4 mr-2 text-muted-foreground" />
+                <SelectTrigger className="w-[280px] h-10 shadow-sm border-slate-200">
+                    <LayoutGrid className="size-4 mr-2 text-slate-400" />
                     <SelectValue placeholder="All Garrisons" />
                 </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="all" className="font-bold">General (All Garrisons)</SelectItem>
+                <SelectContent className="rounded-xl border-slate-200 shadow-xl">
+                    <SelectItem value="all" className="font-semibold">General (All Garrisons)</SelectItem>
                     {data?.garrisonsPerformance.map(g => (
                         <SelectItem key={g.garrison_id} value={g.garrison_id}>{g.garrison_name}</SelectItem>
                     ))}
@@ -156,16 +156,16 @@ export default function SuperAdminDashboardPage() {
         {selectedGarrisonId === 'all' && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {(filteredMetrics?.categoryRevenue || []).map((cat: any) => (
-                    <Card key={cat.category} className="shadow-sm">
+                    <Card key={cat.category} className="shadow-sm border-slate-100">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
+                            <CardTitle className="text-sm font-semibold text-slate-600">
                                 {cat.category} Revenue
                             </CardTitle>
-                            <Badge variant="secondary" className="text-[10px] uppercase font-bold">Audit</Badge>
+                            <Badge variant="secondary" className="text-[10px] font-bold tracking-tight">Audit</Badge>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{formatCurrency(cat.total)}</div>
-                            <p className="text-xs text-muted-foreground mt-1">Verified {cat.category} fee collections</p>
+                            <div className="text-2xl font-bold text-slate-900 tracking-tight">{formatCurrency(cat.total)}</div>
+                            <p className="text-xs text-slate-400 mt-1">Verified {cat.category} collections</p>
                         </CardContent>
                     </Card>
                 ))}
@@ -173,10 +173,10 @@ export default function SuperAdminDashboardPage() {
         )}
 
         {/* Garrison Command Table */}
-        <Card className="shadow-sm">
-            <CardHeader>
-                <CardTitle>Garrison Operational Breakdown</CardTitle>
-                <CardDescription>Comparison of battalion strength and fee collections.</CardDescription>
+        <Card className="shadow-sm border-slate-100 rounded-2xl overflow-hidden">
+            <CardHeader className="border-b border-slate-50 bg-slate-50/50">
+                <CardTitle className="text-base font-bold text-slate-900">Garrison Operational Breakdown</CardTitle>
+                <CardDescription className="text-xs font-medium text-slate-500">Comparison of battalion strength and fee collections.</CardDescription>
             </CardHeader>
             <CardContent className="p-0">
                 <Table>
@@ -192,10 +192,10 @@ export default function SuperAdminDashboardPage() {
                     <TableBody>
                         {(data?.garrisonsPerformance || []).map((g) => (
                             <TableRow key={g.garrison_id} className={selectedGarrisonId !== 'all' && String(selectedGarrisonId) !== String(g.garrison_id) ? 'opacity-30' : ''}>
-                                <TableCell className="pl-6 font-semibold">{g.garrison_name}</TableCell>
-                                <TableCell className="text-center">{g.total_schools}</TableCell>
-                                <TableCell className="text-center font-medium">{g.total_students}</TableCell>
-                                <TableCell className="text-right font-bold text-primary">{formatCurrency(g.total_collected)}</TableCell>
+                                <TableCell className="pl-6 font-bold text-slate-900">{g.garrison_name}</TableCell>
+                                <TableCell className="text-center font-medium text-slate-600">{g.total_schools}</TableCell>
+                                <TableCell className="text-center font-semibold text-slate-700">{g.total_students}</TableCell>
+                                <TableCell className="text-right font-bold text-indigo-600">{formatCurrency(g.total_collected)}</TableCell>
                                 <TableCell className="pr-6">
                                     <div className="flex flex-wrap gap-1">
                                         {g.director_name ? g.director_name.split(', ').map((name, i) => (
@@ -266,3 +266,4 @@ export default function SuperAdminDashboardPage() {
       </div>
   );
 }
+

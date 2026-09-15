@@ -25,7 +25,7 @@ export function BrandingForm({ control, logoPreview, onUploadClick, fileInputRef
       <CardContent className="space-y-8 pt-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
           <div className="space-y-4">
-            <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground">Network Master Crest</FormLabel>
+            <FormLabel className="text-xs font-bold uppercase tracking-tight text-muted-foreground">Network Master Crest</FormLabel>
             <div
               onClick={onUploadClick}
               className="border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center gap-3 bg-muted/10 hover:bg-muted/30 transition-all cursor-pointer group relative overflow-hidden"
@@ -40,7 +40,7 @@ export function BrandingForm({ control, logoPreview, onUploadClick, fileInputRef
             </div>
           </div>
           <div className="space-y-4">
-            <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground">Document Header Logic</FormLabel>
+            <FormLabel className="text-xs font-bold uppercase tracking-tight text-muted-foreground">Document Header Logic</FormLabel>
             <div className="space-y-4">
               <FormField
                 control={control}
@@ -77,7 +77,7 @@ export function BrandingForm({ control, logoPreview, onUploadClick, fileInputRef
             name="branding.footer_text"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground">Document Footer Text (Standard)</FormLabel>
+                <FormLabel className="text-xs font-bold uppercase tracking-tight text-muted-foreground">Document Footer Text (Standard)</FormLabel>
                 <FormControl>
                   <Input className="mt-2" {...field} />
                 </FormControl>
@@ -90,3 +90,4 @@ export function BrandingForm({ control, logoPreview, onUploadClick, fileInputRef
     </Card>
   );
 }
+

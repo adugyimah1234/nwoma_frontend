@@ -68,8 +68,8 @@ export default function FeesOverview() {
     <div className="space-y-10 animate-in fade-in duration-500">
       <div className="flex justify-between items-center">
         <div className="space-y-1">
-            <h3 className="text-xl font-black tracking-tight uppercase">Institutional Treasury</h3>
-            <p className="text-[10px] font-black uppercase tracking-widest text-primary/60 opacity-60">Real-time revenue monitoring</p>
+            <h3 className="text-xl font-bold tracking-tight uppercase">Institutional Treasury</h3>
+            <p className="text-[10px] font-bold uppercase tracking-tight text-primary/60 opacity-60">Real-time revenue monitoring</p>
         </div>
         <Button variant="outline" className="h-10 rounded-xl border-2 font-bold text-xs" onClick={refresh}>
             <RefreshCw className={refreshing ? "mr-2 h-4 w-4 animate-spin" : "mr-2 h-4 w-4"} /> Sync
@@ -88,17 +88,17 @@ export default function FeesOverview() {
                 <CardHeader className="bg-primary/5 px-8 py-8 border-b border-primary/10">
                     <div className="flex items-center justify-between">
                         <div className="space-y-1">
-                            <CardTitle className="text-lg font-black uppercase tracking-wider">Revenue Milestone</CardTitle>
-                            <CardDescription className="text-[10px] font-black uppercase tracking-widest opacity-60">Cycle: {progress?.period || 'Current Term'}</CardDescription>
+                            <CardTitle className="text-lg font-bold uppercase tracking-wider">Revenue Milestone</CardTitle>
+                            <CardDescription className="text-[10px] font-bold uppercase tracking-tight opacity-60">Cycle: {progress?.period || 'Current Term'}</CardDescription>
                         </div>
-                        <Badge className="bg-primary text-white border-none font-black text-xl px-4 py-2 rounded-2xl shadow-lg shadow-primary/20">
+                        <Badge className="bg-primary text-white border-none font-bold text-xl px-4 py-2 rounded-2xl shadow-lg shadow-primary/20">
                             {progress?.percentage.toFixed(0)}%
                         </Badge>
                     </div>
                 </CardHeader>
                 <CardContent className="p-8 sm:p-12 space-y-12">
                     <div className="space-y-6">
-                        <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/80">
+                        <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-tight text-muted-foreground/80">
                             <span>Achievement Progress</span>
                             <span>Target: {financialReports.formatCurrency(progress?.target || 0)}</span>
                         </div>
@@ -114,12 +114,12 @@ export default function FeesOverview() {
 
                     <div className="grid grid-cols-2 gap-8">
                         <div className="p-8 rounded-[2rem] bg-emerald-500/5 border border-emerald-500/10 space-y-2">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600/60">Collected Funds</p>
-                            <p className="text-2xl font-black tracking-tighter text-emerald-600">{financialReports.formatCurrency(progress?.collected || 0)}</p>
+                            <p className="text-[10px] font-bold uppercase tracking-tight text-emerald-600/60">Collected Funds</p>
+                            <p className="text-2xl font-bold tracking-tight text-emerald-600">{financialReports.formatCurrency(progress?.collected || 0)}</p>
                         </div>
                         <div className="p-8 rounded-[2rem] bg-amber-500/5 border border-amber-500/10 space-y-2">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-amber-600/60">Remaining Dues</p>
-                            <p className="text-2xl font-black tracking-tighter text-amber-600">{financialReports.formatCurrency(progress?.remaining || 0)}</p>
+                            <p className="text-[10px] font-bold uppercase tracking-tight text-amber-600/60">Remaining Dues</p>
+                            <p className="text-2xl font-bold tracking-tight text-amber-600">{financialReports.formatCurrency(progress?.remaining || 0)}</p>
                         </div>
                     </div>
                 </CardContent>
@@ -130,8 +130,8 @@ export default function FeesOverview() {
               <CardHeader className="bg-muted/20 px-8 py-8 border-b">
                   <div className="flex items-center justify-between">
                       <div className="space-y-1">
-                          <CardTitle className="text-lg font-black uppercase tracking-wider">Treasury Feed</CardTitle>
-                          <CardDescription className="text-[10px] font-black uppercase tracking-widest opacity-60">Real-time ledger updates</CardDescription>
+                          <CardTitle className="text-lg font-bold uppercase tracking-wider">Treasury Feed</CardTitle>
+                          <CardDescription className="text-[10px] font-bold uppercase tracking-tight opacity-60">Real-time ledger updates</CardDescription>
                       </div>
                       <div className="size-10 rounded-xl bg-muted flex items-center justify-center">
                           <Activity className="size-5 text-muted-foreground" />
@@ -148,13 +148,13 @@ export default function FeesOverview() {
                                           <TrendingUp className="size-5" />
                                       </div>
                                       <div className="min-w-0">
-                                          <p className="font-black text-sm tracking-tight truncate uppercase">{tx.student_name}</p>
-                                          <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">ID: {String(tx.id).substring(0,8)}</p>
+                                          <p className="font-bold text-sm tracking-tight truncate uppercase">{tx.student_name}</p>
+                                          <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-tight">ID: {String(tx.id).substring(0,8)}</p>
                                       </div>
                                   </div>
                                   <div className="text-right shrink-0">
-                                      <p className="font-black text-sm text-primary">{financialReports.formatCurrency(tx.amount)}</p>
-                                      <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">{new Date(tx.date).toLocaleDateString()}</p>
+                                      <p className="font-bold text-sm text-primary">{financialReports.formatCurrency(tx.amount)}</p>
+                                      <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-tight">{new Date(tx.date).toLocaleDateString()}</p>
                                   </div>
                               </div>
                           ))}
@@ -166,3 +166,4 @@ export default function FeesOverview() {
     </div>
   );
 }
+

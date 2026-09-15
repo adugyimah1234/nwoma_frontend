@@ -58,3 +58,4 @@ const spec: ICirclePackingChartSpec = {
 export default function Chart() {
   return <VChart spec={spec} />;
 }
+

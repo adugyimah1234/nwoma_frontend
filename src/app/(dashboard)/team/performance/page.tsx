@@ -183,7 +183,7 @@ export default function StaffPerformancePage() {
                                 </CardHeader>
                                 <CardContent className="pt-4">
                                     <div className="text-3xl font-bold text-destructive">02</div>
-                                    <p className="text-xs text-muted-foreground font-medium mt-4 uppercase tracking-tighter">Current month total</p>
+                                    <p className="text-xs text-muted-foreground font-medium mt-4 uppercase tracking-tight">Current month total</p>
                                 </CardContent>
                             </Card>
                         </div>
@@ -256,8 +256,9 @@ export default function StaffPerformancePage() {
 
             <div className="flex items-center gap-2 justify-center py-10 opacity-20">
                 <Shield className="h-6 w-6" />
-                <p className="text-[10px] font-bold uppercase tracking-[0.3em]">Attendance Management System</p>
+                <p className="text-[10px] font-bold uppercase tracking-tight">Attendance Management System</p>
             </div>
         </div>
     );
 }
+

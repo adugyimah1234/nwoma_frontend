@@ -18,3 +18,4 @@ const ChartCard: React.FC<ChartCardProps> = ({ title, description, children, cla
 );
 
 export default ChartCard;
+

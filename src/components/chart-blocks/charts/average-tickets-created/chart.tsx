@@ -145,3 +145,4 @@ export default function Chart({ data }: ChartProps) {
     </Card>
   );
 }
+

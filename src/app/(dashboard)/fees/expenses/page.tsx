@@ -268,8 +268,9 @@ export default function ExpensesTrackerPage() {
 
             <div className="flex items-center gap-2 justify-center py-6 opacity-20">
                 <TrendingDown className="size-6" />
-                <p className="text-[10px] font-bold uppercase tracking-[0.3em]">Institutional Fiscal Integrity</p>
+                <p className="text-[10px] font-bold uppercase tracking-tight">Institutional Fiscal Integrity</p>
             </div>
         </div>
     );
 }
+

@@ -150,3 +150,4 @@ const CategoryStatsCards: React.FC = () => {
 };
 
 export default CategoryStatsCards;
+

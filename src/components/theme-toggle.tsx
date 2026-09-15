@@ -48,3 +48,4 @@ function AutoThemeBadge() {
     </span>
   );
 }
+

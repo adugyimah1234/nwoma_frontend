@@ -41,6 +41,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function ExeatTrackingPage() {
@@ -252,38 +253,38 @@ export default function ExeatTrackingPage() {
     return (
         <div className="flex flex-1 flex-col gap-6 p-6 md:p-8">
             <PageHeader
-                title="Exeat & Leave Tracking"
+                title="Movement Logistics"
                 description="Manage student departures and monitor return compliance within the Garrison."
                 breadcrumbs={[{ title: 'Home', href: '/' }, { title: 'Students', href: '/students' }, { title: 'Exeat' }]}
             >
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
-                        <Button className="gap-2 h-10 shadow-lg shadow-primary/20">
-                            <Plus className="size-4" /> Issue Exeat
+                        <Button className="gap-2 h-10 shadow-lg shadow-primary/20 font-bold text-xs uppercase tracking-wider px-6">
+                            <Plus className="size-3.5" /> Issue Exeat
                         </Button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-[500px]">
+                    <DialogContent className="sm:max-w-[500px] rounded-[2rem] border-none shadow-2xl">
                         <form onSubmit={handleCreate}>
                             <DialogHeader>
-                                <DialogTitle>Issue Official Exeat</DialogTitle>
-                                <DialogDescription>Permission for a student to leave school premises.</DialogDescription>
+                                <DialogTitle className="text-xl font-bold">Issue Official Exeat</DialogTitle>
+                                <DialogDescription className="text-xs font-medium">Generate permission for a student to leave school premises.</DialogDescription>
                             </DialogHeader>
-                            <div className="grid gap-4 py-4">
-                                <div className="grid gap-2">
-                                    <Label>Student Name</Label>
+                            <div className="grid gap-6 py-6">
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Student Selection</Label>
                                     <Select value={newExeat.student_id} onValueChange={v => setNewExeat({...newExeat, student_id: v})}>
-                                        <SelectTrigger className="h-11"><SelectValue placeholder="Select Student" /></SelectTrigger>
-                                        <SelectContent>
+                                        <SelectTrigger className="h-11 rounded-xl bg-muted/30 border-muted-foreground/10"><SelectValue placeholder="Select Student" /></SelectTrigger>
+                                        <SelectContent className="rounded-xl border-slate-100">
                                             {students.map(s => <SelectItem key={s.id} value={s.id!}>{s.first_name} {s.last_name} ({(s as any).class_name})</SelectItem>)}
                                         </SelectContent>
                                     </Select>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div className="grid gap-2">
-                                        <Label>Exeat Type</Label>
+                                    <div className="space-y-2">
+                                        <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Exeat Type</Label>
                                         <Select value={newExeat.exeat_type} onValueChange={v => setNewExeat({...newExeat, exeat_type: v})}>
-                                            <SelectTrigger><SelectValue /></SelectTrigger>
-                                            <SelectContent>
+                                            <SelectTrigger className="rounded-xl bg-muted/30 border-muted-foreground/10"><SelectValue /></SelectTrigger>
+                                            <SelectContent className="rounded-xl border-slate-100">
                                                 <SelectItem value="day">Day Exeat</SelectItem>
                                                 <SelectItem value="weekend">Weekend Leave</SelectItem>
                                                 <SelectItem value="medical">Medical</SelectItem>
@@ -291,24 +292,39 @@ export default function ExeatTrackingPage() {
                                             </SelectContent>
                                         </Select>
                                     </div>
-                                    <div className="grid gap-2">
-                                        <Label>Reason</Label>
-                                        <Input placeholder="Purpose of leave..." value={newExeat.reason} onChange={e => setNewExeat({...newExeat, reason: e.target.value})} />
+                                    <div className="space-y-2">
+                                        <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Purpose/Reason</Label>
+                                        <Input
+                                            placeholder="Enter reason..."
+                                            className="rounded-xl bg-muted/30 border-muted-foreground/10 h-10"
+                                            value={newExeat.reason}
+                                            onChange={e => setNewExeat({...newExeat, reason: e.target.value})}
+                                        />
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div className="grid gap-2">
-                                        <Label>Departure</Label>
-                                        <Input type="datetime-local" value={newExeat.departure_date} onChange={e => setNewExeat({...newExeat, departure_date: e.target.value})} />
+                                    <div className="space-y-2">
+                                        <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Departure</Label>
+                                        <Input
+                                            type="datetime-local"
+                                            className="rounded-xl bg-muted/30 border-muted-foreground/10 h-10"
+                                            value={newExeat.departure_date}
+                                            onChange={e => setNewExeat({...newExeat, departure_date: e.target.value})}
+                                        />
                                     </div>
-                                    <div className="grid gap-2">
-                                        <Label>Expected Return</Label>
-                                        <Input type="datetime-local" value={newExeat.expected_return_date} onChange={e => setNewExeat({...newExeat, expected_return_date: e.target.value})} />
+                                    <div className="space-y-2">
+                                        <Label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Expected Return</Label>
+                                        <Input
+                                            type="datetime-local"
+                                            className="rounded-xl bg-muted/30 border-muted-foreground/10 h-10 text-destructive font-bold"
+                                            value={newExeat.expected_return_date}
+                                            onChange={e => setNewExeat({...newExeat, expected_return_date: e.target.value})}
+                                        />
                                     </div>
                                 </div>
                             </div>
                             <DialogFooter>
-                                <Button type="submit" className="w-full h-12 text-base font-bold bg-indigo-600 hover:bg-indigo-700">Authorize Departure</Button>
+                                <Button type="submit" className="w-full h-12 text-sm font-bold uppercase tracking-widest bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-xl shadow-indigo-100">Authorize Departure</Button>
                             </DialogFooter>
                         </form>
                     </DialogContent>
@@ -316,102 +332,118 @@ export default function ExeatTrackingPage() {
             </PageHeader>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <Card className="border-none shadow-sm bg-indigo-900 text-white">
-                    <CardHeader className="pb-2"><CardTitle className="text-[10px] font-black uppercase tracking-widest text-indigo-300">Currently Departed</CardTitle></CardHeader>
+                <Card className="bg-primary text-primary-foreground">
+                    <CardHeader className="pb-2"><CardTitle className="text-xs font-bold uppercase tracking-widest opacity-70">Currently Departed</CardTitle></CardHeader>
                     <CardContent>
-                        <p className="text-3xl font-black">{exeats.filter(e => e.status === 'departed' || e.status === 'approved').length}</p>
+                        <p className="text-4xl font-bold">{exeats.filter(e => e.status === 'departed' || e.status === 'approved').length}</p>
                     </CardContent>
                 </Card>
-                <Card className="border-none shadow-sm bg-rose-50/50">
-                    <CardHeader className="pb-2"><CardTitle className="text-[10px] font-black uppercase tracking-widest text-rose-600">Overdue Returns</CardTitle></CardHeader>
+                <Card className="bg-destructive/10 border-destructive/20 shadow-none">
+                    <CardHeader className="pb-2"><CardTitle className="text-xs font-bold uppercase tracking-widest text-destructive">Overdue Returns</CardTitle></CardHeader>
                     <CardContent>
-                        <p className="text-3xl font-black text-rose-700">{exeats.filter(e => e.status === 'overdue').length}</p>
+                        <p className="text-4xl font-bold text-destructive">{exeats.filter(e => e.status === 'overdue').length}</p>
                     </CardContent>
                 </Card>
             </div>
 
-            <Card className="border-none shadow-sm">
-                <CardHeader className="border-b bg-muted/5 flex flex-row items-center justify-between">
+            <Card className="overflow-hidden">
+                <CardHeader className="flex flex-row items-center justify-between border-b bg-muted/5 py-4 px-6">
                     <div>
-                        <CardTitle className="text-base font-bold text-slate-800">Operational Exeat Registry</CardTitle>
-                        <CardDescription>Live tracking of student movements across the command.</CardDescription>
+                        <CardTitle className="text-base font-bold">Operational Exeat Registry</CardTitle>
+                        <CardDescription className="text-xs font-medium uppercase tracking-tight">Live tracking of student movements</CardDescription>
                     </div>
-                    <Button variant="ghost" size="sm" onClick={fetchData}><RefreshCw className="size-4" /></Button>
+                    <Button variant="outline" size="icon" onClick={fetchData} className="size-8"><RefreshCw className="size-3.5" /></Button>
                 </CardHeader>
                 <CardContent className="p-0">
-                    <Table>
-                        <TableHeader>
-                            <TableRow className="hover:bg-transparent">
-                                <TableHead className="font-bold">Student</TableHead>
-                                <TableHead className="font-bold">Type</TableHead>
-                                <TableHead className="font-bold">Departure</TableHead>
-                                <TableHead className="font-bold">Expected Return</TableHead>
-                                <TableHead className="font-bold">Status</TableHead>
-                                <TableHead className="text-right font-bold">Action</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {exeats.map(e => (
-                                <TableRow key={e.id}>
-                                    <TableCell>
-                                        <div>
-                                            <p className="font-bold text-xs uppercase">{e.student_name}</p>
-                                            <p className="text-[10px] text-muted-foreground uppercase">{e.class_name}</p>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Badge variant="outline" className="text-[9px] uppercase font-bold">{e.exeat_type}</Badge>
-                                    </TableCell>
-                                    <TableCell className="text-[10px] font-medium">{formatDateTime(e.departure_date)}</TableCell>
-                                    <TableCell className="text-[10px] font-black text-indigo-600">{formatDateTime(e.expected_return_date)}</TableCell>
-                                    <TableCell>
-                                        <Badge className={
-                                            e.status === 'returned' ? 'bg-emerald-500' :
-                                            e.status === 'overdue' ? 'bg-rose-500' :
-                                            e.status === 'departed' ? 'bg-orange-500' : 'bg-indigo-600'
-                                         + " text-[9px] font-black uppercase"}>
-                                            {e.status}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        <div className="flex justify-end gap-2">
-                                            {e.status !== 'returned' && (
-                                                <Button size="sm" variant="outline" className="h-7 text-[10px] font-bold border-emerald-200 text-emerald-600 hover:bg-emerald-50" onClick={() => handleUpdateStatus(e.id, 'returned')}>
-                                                    Mark Returned
-                                                </Button>
-                                            )}
-                                            {e.status === 'approved' && (
-                                                <Button size="sm" variant="outline" className="h-7 text-[10px] font-bold border-orange-200 text-orange-600 hover:bg-orange-50" onClick={() => handleUpdateStatus(e.id, 'departed')}>
-                                                    Mark Departed
-                                                </Button>
-                                            )}
-                                            <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                className="h-7 size-7 p-0 text-indigo-600 hover:bg-indigo-50"
-                                                onClick={() => printExeatCard(e)}
-                                                title="Print Command Pass"
+                    <div className="overflow-x-auto">
+                        <Table>
+                            <TableHeader className="bg-muted/10">
+                                <TableRow className="border-none">
+                                    <TableHead className="font-bold text-xs uppercase tracking-tight pl-6">Student</TableHead>
+                                    <TableHead className="font-bold text-xs uppercase tracking-tight">Type</TableHead>
+                                    <TableHead className="font-bold text-xs uppercase tracking-tight">Departure</TableHead>
+                                    <TableHead className="font-bold text-xs uppercase tracking-tight text-indigo-600">Expected Return</TableHead>
+                                    <TableHead className="font-bold text-xs uppercase tracking-tight">Status</TableHead>
+                                    <TableHead className="text-right font-bold text-xs uppercase tracking-tight pr-6">Action</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {loading ? (
+                                    Array.from({ length: 3 }).map((_, i) => (
+                                        <TableRow key={i}>
+                                            <TableCell colSpan={6} className="py-6 px-6">
+                                                <div className="h-4 bg-muted animate-pulse rounded w-full" />
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : exeats.map(e => (
+                                    <TableRow key={e.id} className="hover:bg-muted/30 transition-colors border-b last:border-none">
+                                        <TableCell className="pl-6 py-4">
+                                            <div className="flex flex-col">
+                                                <p className="font-bold text-sm text-foreground tracking-tight">{e.student_name}</p>
+                                                <p className="text-[10px] text-muted-foreground font-bold uppercase">{e.class_name}</p>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge variant="outline" className="text-[10px] font-bold uppercase border-slate-200">{e.exeat_type}</Badge>
+                                        </TableCell>
+                                        <TableCell className="text-[11px] font-medium text-slate-500">{formatDateTime(e.departure_date)}</TableCell>
+                                        <TableCell className="text-[11px] font-bold text-indigo-600">{formatDateTime(e.expected_return_date)}</TableCell>
+                                        <TableCell>
+                                            <Badge
+                                                variant="secondary"
+                                                className={cn(
+                                                    "text-[10px] font-bold uppercase",
+                                                    e.status === 'returned' && "bg-emerald-50 text-emerald-700 border-emerald-100 shadow-none",
+                                                    e.status === 'overdue' && "bg-destructive/10 text-destructive border-destructive/20 shadow-none",
+                                                    e.status === 'departed' && "bg-amber-50 text-amber-700 border-amber-100 shadow-none",
+                                                    e.status === 'approved' && "bg-indigo-50 text-indigo-700 border-indigo-100 shadow-none"
+                                                )}
                                             >
-                                                <Printer className="size-3" />
-                                            </Button>
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                            {exeats.length === 0 && !loading && (
-                                <TableRow>
-                                    <TableCell colSpan={6} className="text-center py-20 text-muted-foreground italic">No active exeats found.</TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
+                                                {e.status}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell className="text-right pr-6">
+                                            <div className="flex justify-end gap-2">
+                                                {e.status !== 'returned' && (
+                                                    <Button size="sm" variant="outline" className="h-8 rounded-lg text-[10px] font-bold uppercase bg-emerald-50/50 border-emerald-100 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all shadow-sm" onClick={() => handleUpdateStatus(e.id, 'returned')}>
+                                                        Return
+                                                    </Button>
+                                                )}
+                                                {e.status === 'approved' && (
+                                                    <Button size="sm" variant="outline" className="h-8 rounded-lg text-[10px] font-bold uppercase bg-amber-50/50 border-amber-100 text-amber-700 hover:bg-amber-600 hover:text-white transition-all shadow-sm" onClick={() => handleUpdateStatus(e.id, 'departed')}>
+                                                        Depart
+                                                    </Button>
+                                                )}
+                                                <Button
+                                                    size="icon"
+                                                    variant="ghost"
+                                                    className="size-8 text-indigo-600 hover:bg-indigo-50 rounded-lg"
+                                                    onClick={() => printExeatCard(e)}
+                                                    title="Print Pass"
+                                                >
+                                                    <Printer className="size-3.5" />
+                                                </Button>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                                {exeats.length === 0 && !loading && (
+                                    <TableRow>
+                                        <TableCell colSpan={6} className="text-center py-24 text-muted-foreground italic text-sm">No exeat records discovered in command node.</TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
                 </CardContent>
             </Card>
 
             <div className="flex items-center gap-2 justify-center py-6 opacity-30 grayscale">
                 <LogOut className="size-8" />
-                <p className="text-[10px] font-black uppercase tracking-[0.4em]">Student Movement & Security Protocol</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.4em]">Student Movement & Security Protocol</p>
             </div>
         </div>
     );
 }
+

@@ -15,3 +15,4 @@ export default function ChartTitle({
     </h2>
   );
 }
+

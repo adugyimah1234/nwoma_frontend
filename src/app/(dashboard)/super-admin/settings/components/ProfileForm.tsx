@@ -30,8 +30,8 @@ export function ProfileForm({ control, logoPreview, onUploadClick }: ProfileForm
             )}
           </div>
           <div className="space-y-1">
-            <p className="text-lg font-black tracking-tight">System Administrator</p>
-            <p className="text-xs text-muted-foreground uppercase font-bold tracking-widest">Network HQ Supervisor</p>
+            <p className="text-lg font-bold tracking-tight">System Administrator</p>
+            <p className="text-xs text-muted-foreground uppercase font-bold tracking-tight">Network HQ Supervisor</p>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -92,3 +92,4 @@ export function ProfileForm({ control, logoPreview, onUploadClick }: ProfileForm
     </Card>
   );
 }
+

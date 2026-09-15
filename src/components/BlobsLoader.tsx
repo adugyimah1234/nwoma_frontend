@@ -14,3 +14,4 @@ export function BlobsLoader({ className = "" }: { className?: string }) {
     </div>
   );
 }
+

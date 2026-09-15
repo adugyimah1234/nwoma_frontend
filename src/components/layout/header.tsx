@@ -178,3 +178,4 @@ export function Header({ className, fixed = true, children, ...props }: HeaderPr
     </header>
   );
 }
+

@@ -27,7 +27,7 @@ export function GradeGovernanceForm({ control }: GradeGovernanceFormProps) {
       <CardContent className="space-y-6 pt-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="space-y-4">
-            <FormLabel className="text-xs font-black tracking-widest text-muted-foreground uppercase">Assessment Weighting (%)</FormLabel>
+            <FormLabel className="text-xs font-bold tracking-tight text-muted-foreground uppercase">Assessment Weighting (%)</FormLabel>
             <div className="space-y-4">
               <FormField
                 control={control}
@@ -38,7 +38,7 @@ export function GradeGovernanceForm({ control }: GradeGovernanceFormProps) {
                     <FormControl>
                       <Input
                         type="number"
-                        className="w-20 text-right font-black h-8"
+                        className="w-20 text-right font-bold h-8"
                         {...field}
                         onChange={(e) => field.onChange(Number(e.target.value))}
                       />
@@ -55,7 +55,7 @@ export function GradeGovernanceForm({ control }: GradeGovernanceFormProps) {
                     <FormControl>
                       <Input
                         type="number"
-                        className="w-20 text-right font-black h-8"
+                        className="w-20 text-right font-bold h-8"
                         {...field}
                         onChange={(e) => field.onChange(Number(e.target.value))}
                       />
@@ -66,7 +66,7 @@ export function GradeGovernanceForm({ control }: GradeGovernanceFormProps) {
             </div>
           </div>
           <div className="space-y-4">
-            <FormLabel className="text-xs font-black tracking-widest text-muted-foreground uppercase">Grading Template Preview</FormLabel>
+            <FormLabel className="text-xs font-bold tracking-tight text-muted-foreground uppercase">Grading Template Preview</FormLabel>
             <div className="space-y-2 opacity-60">
               <div className="flex items-center gap-2 p-2 rounded bg-muted/30 border text-xs font-bold"><Badge className="w-8 justify-center">A</Badge><span className="flex-1">80 - 100</span><span className="text-emerald-600 uppercase">Excellent</span></div>
               <div className="flex items-center gap-2 p-2 rounded bg-muted/30 border text-xs font-bold"><Badge className="w-8 justify-center" variant="secondary">B</Badge><span className="flex-1">70 - 79</span><span className="text-blue-600 uppercase">Very Good</span></div>
@@ -92,3 +92,4 @@ export function GradeGovernanceForm({ control }: GradeGovernanceFormProps) {
     </Card>
   );
 }
+

@@ -1,17 +1,15 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import {
     CreditCard,
     Printer,
     RefreshCw,
-    Search,
     Users,
     ChevronRight,
-    Building2,
     ShieldCheck,
-    CheckSquare,
-    Square
+    Settings
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,6 +27,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     Table,
     TableBody,
@@ -37,14 +36,15 @@ import {
     TableHeader,
     TableRow
 } from '@/components/ui/table';
+import { cn } from '@/lib/utils';
 
 export default function IDCardGeneratorPage() {
     const [loading, setLoading] = useState(false);
-    const [generating, setGenerating] = useState(false);
+    const [generating] = useState(false);
 
     const [classes, setClasses] = useState<ClassData[]>([]);
     const [students, setStudents] = useState<Student[]>([]);
-    const [selectedClassId, setSelectedClassId] = useState<string>('');
+    const [, setSelectedClassId] = useState<string>('');
     const [selectedStudents, setSelectedIds] = useState<Set<string>>(new Set());
 
     const loadInitialData = useCallback(async () => {
@@ -134,7 +134,7 @@ export default function IDCardGeneratorPage() {
             <head>
                 <title>Student_ID_Batch</title>
                 <style>
-                    body { font-family: 'Arial', sans-serif; padding: 20px; display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; background: #f0f2f5; }
+                    body { font-family: 'Inter', sans-serif; padding: 20px; display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; background: #f8fafc; }
                     .id-card {
                         width: 320px;
                         height: 200px;
@@ -142,57 +142,57 @@ export default function IDCardGeneratorPage() {
                         border-radius: 12px;
                         overflow: hidden;
                         box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-                        border: 1px solid #ddd;
+                        border: 1px solid #e2e8f0;
                         position: relative;
                         display: flex;
                         flex-direction: column;
                     }
                     .card-header {
-                        background: #1e1b4b;
+                        background: #0f172a;
                         color: white;
                         padding: 10px;
                         display: flex;
                         align-items: center;
                         gap: 10px;
-                        border-bottom: 2px solid #fbbf24;
+                        border-bottom: 2px solid #5c59e8;
                     }
                     .logo { height: 30px; width: 30px; object-fit: contain; }
-                    .school-name { font-size: 11px; font-weight: 900; letter-spacing: 0.5px; }
-                    .motto { font-size: 7px; color: #fbbf24; text-transform: uppercase; font-weight: 700; }
+                    .school-name { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; }
+                    .motto { font-size: 7px; color: #94a3b8; text-transform: uppercase; font-weight: 600; }
 
                     .card-body { flex: 1; padding: 15px; display: flex; gap: 15px; align-items: center; }
                     .photo-area {
                         width: 80px;
                         height: 90px;
-                        background: #f3f4f6;
+                        background: #f1f5f9;
                         border-radius: 8px;
-                        border: 2px solid #e5e7eb;
+                        border: 1px solid #e2e8f0;
                         display: flex;
                         align-items: center;
                         justify-content: center;
                     }
-                    .initials { font-size: 24px; font-weight: 900; color: #1e1b4b; opacity: 0.2; }
+                    .initials { font-size: 24px; font-weight: 700; color: #1e293b; opacity: 0.1; }
 
                     .student-details { flex: 1; }
-                    .name { font-size: 14px; font-weight: 900; color: #1e1b4b; margin-bottom: 8px; text-transform: uppercase; border-bottom: 1px solid #eee; padding-bottom: 2px; }
+                    .name { font-size: 14px; font-weight: 800; color: #0f172a; margin-bottom: 8px; text-transform: uppercase; border-bottom: 1px solid #f1f5f9; padding-bottom: 2px; }
                     .info-row { display: flex; font-size: 10px; margin-bottom: 3px; }
-                    .label { color: #6b7280; width: 45px; font-weight: 700; }
-                    .val { color: #111827; font-weight: 800; }
+                    .label { color: #64748b; width: 45px; font-weight: 600; }
+                    .val { color: #0f172a; font-weight: 700; }
 
                     .card-footer {
                         background: #f8fafc;
                         text-align: center;
                         font-size: 8px;
-                        font-weight: 900;
+                        font-weight: 700;
                         padding: 5px;
-                        color: #64748b;
-                        letter-spacing: 2px;
+                        color: #94a3b8;
+                        letter-spacing: 1px;
                         border-top: 1px solid #f1f5f9;
                     }
 
                     @media print {
                         body { background: white; padding: 0; }
-                        .id-card { break-inside: avoid; margin-bottom: 20px; box-shadow: none; border: 1px solid #000; }
+                        .id-card { break-inside: avoid; margin-bottom: 20px; box-shadow: none; border: 1px solid #ccc; }
                     }
                 </style>
             </head>
@@ -208,127 +208,162 @@ export default function IDCardGeneratorPage() {
     };
 
     return (
-        <div className="flex flex-1 flex-col gap-6 p-6 md:p-8">
+        <div className="flex flex-1 flex-col gap-8 p-4 md:p-8 max-w-[1600px] mx-auto w-full">
             <PageHeader
-                title="Garrison ID Batch Generator"
-                description="Produce standardized digital identity cards for student verification."
-                breadcrumbs={[{ title: 'Home', href: '/' }, { title: 'Students', href: '/students' }, { title: 'ID Cards' }]}
+                title="ID Card Generation"
+                description="Produce standardized identity cards for institutional verification."
+                breadcrumbs={[
+                    { title: 'Home', href: '/' },
+                    { title: 'Students', href: '/students' },
+                    { title: 'ID Cards' }
+                ]}
             />
 
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                <div className="lg:col-span-1 space-y-6">
-                    <Card className="border-none shadow-sm bg-indigo-50/50">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-xs font-black uppercase tracking-widest text-indigo-600">Unit Selection</CardTitle>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                {/* Controls */}
+                <div className="lg:col-span-4 space-y-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-sm font-bold flex items-center gap-2">
+                                <Settings className="size-4 text-primary" /> Parameters
+                            </CardTitle>
+                            <CardDescription>Select unit and generation mode.</CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="space-y-2">
-                                <Label className="text-[10px] font-bold uppercase">Classification</Label>
+                        <CardContent className="space-y-6">
+                            <div className="space-y-3">
+                                <Label className="text-xs font-semibold text-muted-foreground">Unit Classification</Label>
                                 <Select onValueChange={handleClassChange}>
-                                    <SelectTrigger className="bg-background h-11"><SelectValue placeholder="Select Class" /></SelectTrigger>
+                                    <SelectTrigger className="h-10">
+                                        <SelectValue placeholder="Select Class" />
+                                    </SelectTrigger>
                                     <SelectContent>
                                         {classes.map(c => <SelectItem key={c.id} value={c.id!}>{c.name}</SelectItem>)}
                                     </SelectContent>
                                 </Select>
                             </div>
+
                             <Button
                                 onClick={generateBatchIDs}
                                 disabled={selectedStudents.size === 0 || generating}
-                                className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-100 gap-2 font-bold"
+                                className="w-full h-11 font-bold gap-2 shadow-sm"
                             >
                                 {generating ? <RefreshCw className="size-4 animate-spin" /> : <Printer className="size-4" />}
-                                Generate {selectedStudents.size} Cards
+                                Generate Batch ({selectedStudents.size})
                             </Button>
                         </CardContent>
                     </Card>
 
-                    <Card className="border-none shadow-sm">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-xs font-black uppercase tracking-widest">ID Preview</CardTitle>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-sm font-bold flex items-center gap-2">
+                                <CreditCard className="size-4 text-primary" /> Preview
+                            </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="aspect-[1.6/1] w-full bg-slate-100 rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center p-4 text-center opacity-40">
-                                <CreditCard className="size-10 mb-2" />
-                                <p className="text-[10px] font-medium">Standard 85mm x 54mm Template</p>
+                            <div className="aspect-[1.6/1] w-full bg-muted/30 rounded-2xl border-2 border-dashed border-muted flex flex-col items-center justify-center p-6 text-center opacity-60">
+                                <Image src="/logo.png" alt="Preview Logo" width={40} height={40} className="grayscale opacity-20 mb-4" />
+                                <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-tight">Standard Template Node</p>
                             </div>
                         </CardContent>
                     </Card>
                 </div>
 
-                <div className="lg:col-span-3">
-                    <Card className="border-none shadow-sm h-full overflow-hidden">
-                        <CardHeader className="border-b bg-muted/5 flex flex-row items-center justify-between">
-                            <div>
-                                <CardTitle className="text-base font-bold">Class Enrollment List</CardTitle>
-                                <CardDescription>Select individual students or the entire class for ID production.</CardDescription>
+                {/* Roster */}
+                <div className="lg:col-span-8">
+                    <Card className="overflow-hidden">
+                        <CardHeader className="flex flex-row items-center justify-between border-b bg-muted/5 py-4 px-6">
+                            <div className="flex items-center gap-3">
+                                <div className="size-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                                    <Users className="size-4" />
+                                </div>
+                                <div>
+                                    <CardTitle className="text-base font-bold">Roster Selection</CardTitle>
+                                    <CardDescription className="text-xs font-medium">Select students for production.</CardDescription>
+                                </div>
                             </div>
                             {students.length > 0 && (
-                                <Button variant="outline" size="sm" onClick={toggleAll} className="h-8 gap-2">
-                                    {selectedStudents.size === students.length ? <CheckSquare className="size-3" /> : <Square className="size-3" />}
-                                    {selectedStudents.size === students.length ? 'Deselect All' : 'Select All'}
-                                </Button>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[10px] font-bold text-muted-foreground uppercase mr-2">{selectedStudents.size} Selected</span>
+                                    <Button variant="outline" size="sm" onClick={toggleAll} className="h-8 rounded-lg font-bold text-[10px] uppercase tracking-wider">
+                                        {selectedStudents.size === students.length ? 'Deselect All' : 'Select All'}
+                                    </Button>
+                                </div>
                             )}
                         </CardHeader>
                         <CardContent className="p-0">
-                            <Table>
-                                <TableHeader className="bg-muted/10">
-                                    <TableRow>
-                                        <TableHead className="w-12"></TableHead>
-                                        <TableHead className="font-bold">Student Name</TableHead>
-                                        <TableHead className="font-bold">ID Number</TableHead>
-                                        <TableHead className="font-bold">Status</TableHead>
-                                        <TableHead className="text-right font-bold">Action</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {loading ? (
-                                        <TableRow>
-                                            <TableCell colSpan={5} className="text-center py-20">
-                                                <RefreshCw className="size-6 animate-spin mx-auto text-muted-foreground" />
-                                                <p className="text-xs text-muted-foreground mt-2 italic font-bold">Syncing Roster...</p>
-                                            </TableCell>
+                            <div className="overflow-x-auto">
+                                <Table>
+                                    <TableHeader className="bg-muted/10">
+                                        <TableRow className="border-none">
+                                            <TableHead className="w-12 pl-6"></TableHead>
+                                            <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-tight">Full Name</TableHead>
+                                            <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-tight">Identity Code</TableHead>
+                                            <TableHead className="text-xs font-bold text-muted-foreground uppercase tracking-tight">Status</TableHead>
+                                            <TableHead className="text-right pr-6"></TableHead>
                                         </TableRow>
-                                    ) : students.length > 0 ? (
-                                        students.map((s) => (
-                                            <TableRow
-                                                key={s.id}
-                                                className={`group transition-colors cursor-pointer ${selectedStudents.has(s.id!) ? 'bg-indigo-50/50' : ''}`}
-                                                onClick={() => toggleStudent(s.id!)}
-                                            >
-                                                <TableCell>
-                                                    {selectedStudents.has(s.id!) ?
-                                                        <CheckSquare className="size-4 text-indigo-600" /> :
-                                                        <Square className="size-4 text-slate-300" />
-                                                    }
-                                                </TableCell>
-                                                <TableCell>
-                                                    <div className="font-bold text-xs uppercase tracking-tight">{s.first_name} {s.last_name}</div>
-                                                </TableCell>
-                                                <TableCell className="font-mono text-[10px] text-slate-400">GSS-${String(s.id).substring(0,8).toUpperCase()}</TableCell>
-                                                <TableCell><Badge variant="secondary" className="text-[9px] uppercase font-bold">{s.status}</Badge></TableCell>
-                                                <TableCell className="text-right">
-                                                    <ChevronRight className="size-4 ml-auto text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    </TableHeader>
+                                    <TableBody>
+                                        {loading ? (
+                                            Array.from({ length: 5 }).map((_, i) => (
+                                                <TableRow key={i}>
+                                                    <TableCell colSpan={5} className="py-6 px-6">
+                                                        <div className="h-4 bg-muted animate-pulse rounded w-full" />
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        ) : students.length > 0 ? (
+                                            students.map((s) => (
+                                                <TableRow
+                                                    key={s.id}
+                                                    className={cn(
+                                                        "group cursor-pointer transition-colors border-b border-muted/50 last:border-none",
+                                                        selectedStudents.has(s.id!) ? "bg-primary/5 hover:bg-primary/10" : "hover:bg-muted/50"
+                                                    )}
+                                                    onClick={() => toggleStudent(s.id!)}
+                                                >
+                                                    <TableCell className="pl-6">
+                                                        <Checkbox
+                                                            checked={selectedStudents.has(s.id!)}
+                                                            onCheckedChange={() => toggleStudent(s.id!)}
+                                                            className="rounded-md"
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <span className="font-bold text-sm text-foreground tracking-tight">{s.first_name} {s.last_name}</span>
+                                                    </TableCell>
+                                                    <TableCell className="font-mono text-[11px] text-muted-foreground">
+                                                        GSS-{String(s.id).substring(0,8).toUpperCase()}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Badge variant={s.status === 'active' ? 'default' : 'secondary'} className="text-[9px] font-bold uppercase tracking-tight px-2 py-0">
+                                                            {s.status}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell className="text-right pr-6">
+                                                        <ChevronRight className="size-4 ml-auto text-muted-foreground/30 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        ) : (
+                                            <TableRow>
+                                                <TableCell colSpan={5} className="text-center py-24 text-muted-foreground italic text-sm">
+                                                    No roster records found.
                                                 </TableCell>
                                             </TableRow>
-                                        ))
-                                    ) : (
-                                        <TableRow>
-                                            <TableCell colSpan={5} className="text-center py-20 text-muted-foreground italic">
-                                                No students found. Select a class to begin.
-                                            </TableCell>
-                                        </TableRow>
-                                    )}
-                                </TableBody>
-                            </Table>
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
                         </CardContent>
                     </Card>
                 </div>
             </div>
 
-            <div className="flex items-center gap-2 justify-center py-10 opacity-20 grayscale">
-                <ShieldCheck className="size-8" />
-                <p className="text-[10px] font-black uppercase tracking-[0.4em]">Official Command Verification System</p>
+            <div className="flex items-center gap-3 justify-center py-12 opacity-20 grayscale">
+                <ShieldCheck className="size-6 text-muted-foreground" />
+                <p className="text-[10px] font-bold uppercase tracking-[0.3em]">Institutional Verification Node</p>
             </div>
         </div>
     );
 }
+

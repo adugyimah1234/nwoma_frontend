@@ -59,7 +59,6 @@ export function CreateReceiptForm({
   realStudents,
   categories,
   classes,
-  existingReceipts,
   onSuccess,
   onCancel
 }: CreateReceiptFormProps) {
@@ -174,80 +173,25 @@ export function CreateReceiptForm({
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <div className="space-y-4">
-            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Allocation Breakdown</Label>
-            <div className="space-y-3">
-                {fields.map((field, index) => (
-                    <div key={field.id} className="flex items-end gap-3 animate-in slide-in-from-top-2">
-                        <div className="flex-1 space-y-2">
-                            <Select
-                                onValueChange={(val) => form.setValue(`receipt_type.${index}.type`, val)}
-                                value={watchReceiptTypes[index]?.type}
-                            >
-                                <SelectTrigger className="h-12 rounded-xl bg-muted/30 border-none font-bold">
-                                    <SelectValue placeholder="Select Allocation" />
-                                </SelectTrigger>
-                                <SelectContent className="rounded-xl border-none shadow-2xl">
-                                    <SelectItem value="levy" className="font-bold">Levy</SelectItem>
-                                    <SelectItem value="registration" className="font-bold">Registration</SelectItem>
-                                    <SelectItem value="textBooks" className="font-bold">Text Books</SelectItem>
-                                    <SelectItem value="exerciseBooks" className="font-bold">Exercise Books</SelectItem>
-                                    <SelectItem value="jersey" className="font-bold">Jersey</SelectItem>
-                                    <SelectItem value="crest" className="font-bold">Crest</SelectItem>
-                                    <SelectItem value="furniture" className="font-bold">Furniture</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        {watchReceiptTypes[index]?.type === 'jersey' && (
-                            <div className="w-32 space-y-2">
-                                <Select onValueChange={(val) => form.setValue("jersey_size", val)}>
-                                    <SelectTrigger className="h-12 rounded-xl bg-muted/30 border-none font-bold">
-                                        <SelectValue placeholder="Size" />
-                                    </SelectTrigger>
-                                    <SelectContent className="rounded-xl border-none shadow-2xl">
-                                        {Object.keys(JERSEY_PRICE_MAP).map(s => <SelectItem key={s} value={s} className="font-bold">{s}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        )}
-
-                        <div className="w-28 h-12 flex items-center justify-end px-4 rounded-xl bg-primary/5 font-black text-primary border border-primary/10">
-                            GHS {watchReceiptTypes[index]?.amount}
-                        </div>
-
-                        {fields.length > 1 && (
-                            <Button type="button" variant="ghost" size="icon" className="h-12 w-12 rounded-xl text-destructive hover:bg-destructive/10" onClick={() => remove(index)}>
-                                <X className="size-4" />
-                            </Button>
-                        )}
-                    </div>
-                ))}
-            </div>
-            <Button type="button" variant="outline" className="w-full h-12 border-dashed border-2 rounded-xl gap-2 font-black uppercase tracking-widest text-[10px]" onClick={() => append({ type: '', amount: 0 })}>
-                <Plus className="size-3" /> Add Item
-            </Button>
-        </div>
-
         <div className="space-y-4 relative">
-            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{isRegistration ? 'Applicant' : 'Student'} Designation</Label>
+            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Payer Designation</Label>
             <div className="relative">
                 <Input
                     placeholder="Search by name..."
-                    className="h-14 rounded-2xl bg-muted/30 border-none shadow-sm font-bold pl-12"
+                    className="h-12 rounded-xl bg-muted/30 border-slate-200 pl-11 text-sm font-semibold"
                     value={studentSearchQuery}
                     onChange={(e) => setStudentSearchQuery(e.target.value)}
                     onFocus={() => setOpenStudentCombobox(true)}
                 />
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-primary/40" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             </div>
 
             {openStudentCombobox && studentSearchQuery && (
-                <Card className="absolute z-50 w-full mt-2 border-none shadow-2xl rounded-2xl overflow-hidden max-h-60 overflow-y-auto">
+                <Card className="absolute z-50 w-full mt-2 border-slate-100 shadow-2xl rounded-2xl overflow-hidden max-h-60 overflow-y-auto">
                     {filteredSearchList.map(person => (
                         <div
                             key={person.id}
-                            className="p-4 hover:bg-primary hover:text-white cursor-pointer transition-colors border-b last:border-none group"
+                            className="p-4 hover:bg-indigo-600 hover:text-white cursor-pointer transition-colors border-b border-slate-50 last:border-none group"
                             onClick={() => {
                                 if (isRegistration) form.setValue("registration_id", person.id);
                                 else form.setValue("student_id", person.id);
@@ -255,29 +199,90 @@ export function CreateReceiptForm({
                                 setOpenStudentCombobox(false);
                             }}
                         >
-                            <p className="font-bold uppercase text-sm">{person.first_name} {person.last_name}</p>
-                            <p className="text-[10px] opacity-60 font-black uppercase tracking-widest">{(person as any).student_id || person.id}</p>
+                            <p className="font-bold uppercase text-xs">{person.first_name} {person.last_name}</p>
+                            <p className="text-[9px] opacity-60 font-bold uppercase tracking-tight">{(person as any).student_id || person.id}</p>
                         </div>
                     ))}
+                    {filteredSearchList.length === 0 && (
+                        <div className="p-8 text-center text-xs text-muted-foreground italic">No identity discovered</div>
+                    )}
                 </Card>
             )}
         </div>
 
-        <div className="p-6 rounded-[2rem] bg-primary text-white space-y-4 shadow-xl shadow-primary/20">
-            <div className="flex items-center justify-between">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60">Total Treasury Intake</p>
-                <CreditCard className="size-4 opacity-40" />
+        <div className="space-y-4">
+            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Allocation Breakdown</Label>
+            <div className="space-y-3">
+                {fields.map((field, index) => (
+                    <div key={field.id} className="flex items-start gap-3 animate-in slide-in-from-top-2">
+                        <div className="flex-1 space-y-2">
+                            <Select
+                                onValueChange={(val) => form.setValue(`receipt_type.${index}.type`, val)}
+                                value={watchReceiptTypes[index]?.type}
+                            >
+                                <SelectTrigger className="h-11 rounded-xl bg-muted/20 border-slate-100 font-bold text-xs">
+                                    <SelectValue placeholder="Allocation Type" />
+                                </SelectTrigger>
+                                <SelectContent className="rounded-xl border-slate-100 shadow-2xl">
+                                    <SelectItem value="levy" className="font-bold text-xs cursor-pointer">Levy</SelectItem>
+                                    <SelectItem value="registration" className="font-bold text-xs cursor-pointer">Registration</SelectItem>
+                                    <SelectItem value="textBooks" className="font-bold text-xs cursor-pointer">Text Books</SelectItem>
+                                    <SelectItem value="exerciseBooks" className="font-bold text-xs cursor-pointer">Exercise Books</SelectItem>
+                                    <SelectItem value="jersey" className="font-bold text-xs cursor-pointer">Jersey</SelectItem>
+                                    <SelectItem value="crest" className="font-bold text-xs cursor-pointer">Crest</SelectItem>
+                                    <SelectItem value="furniture" className="font-bold text-xs cursor-pointer">Furniture</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {watchReceiptTypes[index]?.type === 'jersey' && (
+                            <div className="w-24">
+                                <Select onValueChange={(val) => form.setValue("jersey_size", val)}>
+                                    <SelectTrigger className="h-11 rounded-xl bg-muted/20 border-slate-100 font-bold text-xs">
+                                        <SelectValue placeholder="Size" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-xl border-slate-100 shadow-2xl">
+                                        {Object.keys(JERSEY_PRICE_MAP).map(s => <SelectItem key={s} value={s} className="font-bold text-xs">{s}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+
+                        <div className="w-28 h-11 flex items-center justify-end px-4 rounded-xl bg-indigo-50/50 font-bold text-indigo-600 border border-indigo-100 text-xs">
+                            GHS {watchReceiptTypes[index]?.amount}
+                        </div>
+
+                        {fields.length > 1 && (
+                            <Button type="button" variant="ghost" size="icon" className="h-11 w-11 rounded-xl text-destructive hover:bg-destructive/5" onClick={() => remove(index)}>
+                                <X className="size-4" />
+                            </Button>
+                        )}
+                    </div>
+                ))}
             </div>
-            <p className="text-4xl font-black tracking-tighter">GHS {form.watch("amount")}</p>
+            <Button type="button" variant="outline" className="w-full h-10 border-dashed border-2 rounded-xl gap-2 font-bold uppercase tracking-widest text-[9px] hover:bg-muted/30" onClick={() => append({ type: '', amount: 0 })}>
+                <Plus className="size-3" /> Add Item
+            </Button>
+        </div>
+
+        <div className="p-6 rounded-3xl bg-muted/30 border border-border space-y-3 shadow-sm">
+            <div className="flex items-center justify-between">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Authorized Total Due</p>
+                <div className="size-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+                    <CreditCard className="size-4" />
+                </div>
+            </div>
+            <p className="text-3xl font-bold tracking-tight text-foreground">GHS {form.watch("amount")}.00</p>
         </div>
 
         <div className="flex gap-3 pt-4">
-            <Button type="button" variant="ghost" className="flex-1 h-14 rounded-2xl font-bold" onClick={onCancel}>Cancel</Button>
-            <Button type="submit" disabled={loading} className="flex-[2] h-14 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-primary/20">
-                {loading ? <RefreshCw className="size-4 animate-spin mr-2" /> : <Shield className="size-4 mr-2" />}
-                Authorize & Synchronize
+            <Button type="button" variant="ghost" className="flex-1 h-12 rounded-xl font-bold text-xs uppercase tracking-widest" onClick={onCancel}>Cancel</Button>
+            <Button type="submit" disabled={loading} className="flex-[2] h-12 rounded-xl font-bold uppercase tracking-widest text-xs shadow-xl shadow-indigo-100">
+                {loading ? <RefreshCw className="size-3.5 animate-spin mr-2" /> : <Shield className="size-3.5 mr-2" />}
+                Authorize & Sync
             </Button>
         </div>
     </form>
   );
 }
+

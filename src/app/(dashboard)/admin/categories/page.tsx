@@ -129,7 +129,7 @@ export default function CategoryManagement() {
     {
       key: 'code',
       header: 'Code',
-      cell: (row) => <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">{row.code}</span>,
+      cell: (row) => <span className="font-mono text-xs bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded border border-slate-200">{row.code}</span>,
     },
     {
       key: 'description',
@@ -222,7 +222,7 @@ export default function CategoryManagement() {
       if (!open) { setEditingCategory(null); form.reset(); }
     }}>
       <DialogTrigger asChild>
-        <Button size="sm">
+        <Button size="sm" className="font-bold">
           <Plus className="h-4 w-4 mr-2" />
           Add Category
         </Button>
@@ -360,3 +360,4 @@ export default function CategoryManagement() {
     </div>
   );
 }
+

@@ -21,11 +21,11 @@ export function StatsCard({ title, value, description, icon: Icon, trend, classN
   return (
     <Card className={cn('', className)}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
-        {Icon && <Icon className="h-4 w-4 text-muted-foreground" />}
+        <CardTitle className="text-xs font-semibold text-slate-500 uppercase tracking-tight">{title}</CardTitle>
+        {Icon && <Icon className="h-4 w-4 text-slate-400" />}
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
+        <div className="text-2xl font-bold text-slate-900 tracking-tight">{value}</div>
         {trend && (
           <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
             {isPositive ? (
@@ -46,3 +46,4 @@ export function StatsCard({ title, value, description, icon: Icon, trend, classN
     </Card>
   );
 }
+

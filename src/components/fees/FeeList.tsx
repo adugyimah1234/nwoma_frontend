@@ -579,3 +579,4 @@ export default function FeeList({ schoolId }: FeeListProps) {
     </Card>
   );
 }
+

@@ -21,3 +21,4 @@ export const VisActorLogo: React.FC<IconSvgProps> = ({
     ></path>
   </svg>
 );
+

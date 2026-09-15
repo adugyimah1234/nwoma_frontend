@@ -87,11 +87,11 @@ export function NotificationBell() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80 p-0 shadow-xl border-none">
         <div className="flex items-center justify-between px-4 py-3 bg-muted/20">
-          <span className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Notifications</span>
+          <span className="text-sm font-bold uppercase tracking-tight text-muted-foreground">Notifications</span>
           {unreadCount > 0 && (
             <button
                 onClick={handleMarkAllRead}
-                className="text-[10px] font-black text-primary uppercase hover:underline flex items-center gap-1"
+                className="text-[10px] font-bold text-primary uppercase hover:underline flex items-center gap-1"
             >
                 <CheckCheck className="size-3" /> Mark all read
             </button>
@@ -138,3 +138,4 @@ export function NotificationBell() {
     </DropdownMenu>
   );
 }
+

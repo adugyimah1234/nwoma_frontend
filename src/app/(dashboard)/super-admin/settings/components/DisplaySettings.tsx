@@ -67,7 +67,7 @@ export function DisplaySettings() {
             <ZoomIn className="size-5 text-muted-foreground shrink-0" />
           </div>
 
-          <div className="flex justify-between items-center text-[10px] text-muted-foreground font-black uppercase tracking-widest px-1">
+          <div className="flex justify-between items-center text-[10px] text-muted-foreground font-bold uppercase tracking-tight px-1">
             <span>Compact</span>
             <span>Default</span>
             <span>Comfortable</span>
@@ -97,3 +97,4 @@ export function DisplaySettings() {
     </Card>
   );
 }
+
