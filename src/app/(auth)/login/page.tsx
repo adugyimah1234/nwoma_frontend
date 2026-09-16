@@ -162,9 +162,7 @@ export default function ProfessionalLogin() {
             </form>
 
             <div className="mt-8 text-center space-y-4">
-               <p className="text-sm font-medium text-muted-foreground">
-                New here? <Link href="/register" className="text-primary hover:underline underline-offset-4 font-bold">Create an account</Link>
-              </p>
+              
               <p className="text-xs font-semibold text-muted-foreground tracking-tight">
                 System Help: <Link href="/guide" className="text-foreground hover:underline underline-offset-4 font-bold">Operational Guide</Link>
               </p>
@@ -200,10 +198,10 @@ export default function ProfessionalLogin() {
 
             <div className="max-w-sm mx-auto space-y-5">
               <p className="text-lg font-medium opacity-80 tracking-tight leading-snug">
-                Built for Developers, Designed for Efficiency
+                
               </p>
               <h3 className="text-3xl font-bold leading-tight tracking-tight">
-                Next.js Admin Dashboard <br /> Templates and Components
+                <br /> 
               </h3>
             </div>
           </div>
