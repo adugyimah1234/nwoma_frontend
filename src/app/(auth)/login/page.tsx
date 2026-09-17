@@ -175,9 +175,7 @@ export default function ProfessionalLogin() {
             </form>
 
             <div className="mt-8 text-center space-y-4">
-               <p className="text-sm font-medium text-muted-foreground">
-                New here? <Link href="/register" className="text-primary hover:underline underline-offset-4 font-bold">Create an account</Link>
-              </p>
+
               <p className="text-xs font-semibold text-muted-foreground tracking-tight">
                 System Help: <Link href="/guide" className="text-foreground hover:underline underline-offset-4 font-bold">User Manual</Link>
               </p>
