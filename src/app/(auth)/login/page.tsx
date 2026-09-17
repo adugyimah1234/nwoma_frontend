@@ -69,30 +69,24 @@ export default function ProfessionalLogin() {
         {/* Left Side: Form Section */}
         <div className="w-full md:w-1/2 p-10 md:p-16 flex flex-col bg-card">
           {/* Logo and Name at the top */}
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-center mb-4">
             <div className="flex items-center gap-3">
-              <div className="size-10 bg-[#5C59E8] rounded-xl flex items-center justify-center shadow-md">
+              <div className="size-16 flex items-center justify-center ">
                 <Image
                   src="/logo.png"
                   alt="Logo"
-                  width={24}
-                  height={24}
-                  className="brightness-0 invert"
+                  width={34}
+                  height={34}
+                  className=""
                 />
               </div>
-              <h2 className="text-xl font-bold tracking-tight">Garrison Admin</h2>
+
             </div>
-            <Button variant="ghost" size="sm" asChild className="rounded-xl border border-border gap-2 text-muted-foreground hover:text-foreground">
-              <Link href="/">
-                <ChevronLeft className="size-4" />
-                Back
-              </Link>
-            </Button>
           </div>
 
           <div className="flex-1 flex flex-col justify-center max-w-[360px] mx-auto w-full">
-            <div className="text-center mb-10">
-              <h1 className="text-3xl font-bold tracking-tight mb-2">School Portal Login</h1>
+            <div className="text-center mb-6">
+              <h1 className="text-3xl font-bold tracking-tight mb-2 ">LOGIN PORTAL </h1>
               <p className="text-sm text-muted-foreground font-medium">Please enter your details to log in to the school portal.</p>
             </div>
 
@@ -194,7 +188,7 @@ export default function ProfessionalLogin() {
             priority
           />
           {/* Dark overlay for readability if text is added later */}
-          <div className="absolute inset-0 bg-black/40" />
+          <div className="absolute inset-0 " />
         </div>
       </div>
     </div>
