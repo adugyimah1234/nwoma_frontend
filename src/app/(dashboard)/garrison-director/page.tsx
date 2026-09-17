@@ -236,7 +236,7 @@ export default function GarrisonDirectorDashboardPage() {
     return (
       <div className="flex h-96 flex-col items-center justify-center space-y-4">
         <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
-        <p className="text-sm font-medium text-muted-foreground italic">Syncing Command Records...</p>
+        <p className="text-sm font-medium text-muted-foreground italic">Syncing School Records...</p>
       </div>
     );
   }
@@ -244,13 +244,13 @@ export default function GarrisonDirectorDashboardPage() {
   return (
     <div className="flex flex-1 flex-col gap-6 p-6 md:p-8">
         <PageHeader
-          title={data?.garrison.name || 'Garrison Directorate'}
-          description={`Command HQ: ${data?.garrison.location || 'Secure Location'}`}
-          breadcrumbs={[{ title: 'Home', href: '/' }, { title: 'Garrison Directorate' }]}
+          title={data?.garrison.name || 'Garrison Education Office'}
+          description={`Headquarters: ${data?.garrison.location || 'Secure Location'}`}
+          breadcrumbs={[{ title: 'Home', href: '/' }, { title: 'Garrison Education' }]}
         >
           <div className="flex items-center gap-3">
             <Select value={selectedSchoolId} onValueChange={setSelectedSchoolId}>
-                <SelectTrigger className="w-[260px] h-10 bg-white dark:bg-slate-950 shadow-sm">
+                <SelectTrigger className="w-[260px] h-10 shadow-sm dark:shadow-none">
                     <LayoutGrid className="size-4 mr-2 text-muted-foreground" />
                     <SelectValue placeholder="All Schools" />
                 </SelectTrigger>
@@ -263,7 +263,7 @@ export default function GarrisonDirectorDashboardPage() {
             </Select>
 
             <Button variant="outline" size="sm" onClick={fetchDashboardData} className="h-10">
-              <RefreshCw className="mr-2 h-4 w-4" /> Sync
+              <RefreshCw className="mr-2 h-4 w-4" /> Refresh
             </Button>
 
             <Dialog open={isSchoolDialogOpen} onOpenChange={setIsSchoolDialogOpen}>
@@ -275,14 +275,14 @@ export default function GarrisonDirectorDashboardPage() {
               <DialogContent className="sm:max-w-[500px]">
                 <form onSubmit={handleCreateSchool}>
                   <DialogHeader>
-                    <DialogTitle>Register New School Unit</DialogTitle>
-                    <DialogDescription>Add a new educational facility to this Garrison Command.</DialogDescription>
+                    <DialogTitle>Register New School</DialogTitle>
+                    <DialogDescription>Add a new school to this Garrison's oversight.</DialogDescription>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
                     <div className="grid gap-2"><Label>School Name *</Label><Input value={newSchool.name} onChange={(e) => setNewSchool({ ...newSchool, name: e.target.value })} required /></div>
                     <div className="grid gap-2"><Label>Location Address *</Label><Input value={newSchool.address} onChange={(e) => setNewSchool({ ...newSchool, address: e.target.value })} required /></div>
                   </div>
-                  <DialogFooter><Button type="submit">Create Unit</Button></DialogFooter>
+                  <DialogFooter><Button type="submit">Create School</Button></DialogFooter>
                 </form>
               </DialogContent>
             </Dialog>
@@ -291,9 +291,9 @@ export default function GarrisonDirectorDashboardPage() {
 
         {/* Metric Cards Row */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatsCard title="Managed Units" value={filteredMetrics?.totalSchools || 0} icon={School} />
-          <StatsCard title="Total Strength" value={filteredMetrics?.totalStudents || 0} icon={Users} />
-          <StatsCard title="Command Staff" value={filteredMetrics?.staffCount || 0} icon={ShieldCheck} />
+          <StatsCard title="Managed Schools" value={filteredMetrics?.totalSchools || 0} icon={School} />
+          <StatsCard title="Total Students" value={filteredMetrics?.totalStudents || 0} icon={Users} />
+          <StatsCard title="Staff Count" value={filteredMetrics?.staffCount || 0} icon={ShieldCheck} />
           <StatsCard title="Total Revenue" value={formatCurrency(Number(filteredMetrics?.totalCollections || 0))} icon={Wallet} />
         </div>
 
@@ -301,8 +301,8 @@ export default function GarrisonDirectorDashboardPage() {
           {/* Performance Visualization */}
           <Card className="lg:col-span-8 shadow-sm">
             <CardHeader className="pb-4 border-b">
-              <CardTitle className="text-base font-semibold">Unit Strength Analysis</CardTitle>
-              <CardDescription>Enrollment distribution across command schools.</CardDescription>
+              <CardTitle className="text-base font-semibold">Enrollment Analysis</CardTitle>
+              <CardDescription>Student distribution across schools.</CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
               <div className="h-[300px] w-full">
@@ -319,26 +319,26 @@ export default function GarrisonDirectorDashboardPage() {
             </CardContent>
           </Card>
 
-          {/* Quick Command Info */}
+          {/* Quick Info */}
           <Card className="lg:col-span-4 shadow-sm">
             <CardHeader className="border-b">
-              <CardTitle className="text-base font-semibold">Command Metadata</CardTitle>
-              <CardDescription>Jurisdiction profile.</CardDescription>
+              <CardTitle className="text-base font-semibold">Garrison Profile</CardTitle>
+              <CardDescription>Office metadata.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 pt-4">
               <div className="rounded-lg bg-muted/40 p-4 border border-border/50">
                 <div className="flex items-center gap-3 mb-2">
                     <div className="size-8 rounded bg-primary/10 flex items-center justify-center text-primary"><Building className="size-4" /></div>
                     <div>
-                        <p className="text-xs text-muted-foreground font-bold uppercase">Assigned Command</p>
+                        <p className="text-xs text-muted-foreground font-bold uppercase">Garrison Office</p>
                         <p className="text-sm font-bold">{data?.garrison.name}</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
                     <div className="size-8 rounded bg-emerald-500/10 flex items-center justify-center text-emerald-600"><MapPin className="size-4" /></div>
                     <div>
-                        <p className="text-xs text-muted-foreground font-bold uppercase">HQ Location</p>
-                        <p className="text-sm font-medium">{data?.garrison.location || 'Secure Base'}</p>
+                        <p className="text-xs text-muted-foreground font-bold uppercase">Location</p>
+                        <p className="text-sm font-medium">{data?.garrison.location || 'Not Set'}</p>
                     </div>
                 </div>
               </div>
@@ -349,7 +349,7 @@ export default function GarrisonDirectorDashboardPage() {
         {/* Detailed Directory Table */}
         <Card className="shadow-sm">
           <CardHeader className="border-b pb-4 mb-0">
-              <CardTitle className="text-base font-bold">Garrison Units Directory</CardTitle>
+              <CardTitle className="text-base font-bold">School Directory</CardTitle>
               <CardDescription>Comprehensive metrics for all schools under your jurisdiction.</CardDescription>
           </CardHeader>
           <CardContent className="p-0">
@@ -357,7 +357,7 @@ export default function GarrisonDirectorDashboardPage() {
               data={(filteredMetrics?.schools || []) as any[]}
               columns={schoolColumns as any}
               rowKey="school_id"
-              emptyMessage="No schools under this Garrison Command yet."
+              emptyMessage="No schools found."
             />
           </CardContent>
         </Card>

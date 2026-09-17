@@ -75,8 +75,13 @@ export default function PaymentHistoryPage() {
         try {
             const html = await getPrintableReceipt(String(id));
             const w = window.open("", "_blank");
-            w?.document.write(html);
-            w?.document.close();
+            if (w) {
+                w.document.open();
+                w.document.write(html);
+                w.document.close();
+            } else {
+                toast.error("Popup blocked! Please allow popups for this site.");
+            }
         } catch (err) {
             toast.error("Print failed");
         }
@@ -152,7 +157,7 @@ export default function PaymentHistoryPage() {
                             key: "identity",
                             header: "Identity",
                             cell: (r) => {
-                                const s = students.find((st) => Number(st.id) === Number(r.student_id)) || applicants.find((a) => Number(a.id) === Number(r.registration_id));
+                                const s = students.find((st) => String(st.id) === String(r.student_id)) || applicants.find((a) => String(a.id) === String(r.registration_id));
                                 return (
                                     <div className="flex flex-col">
                                         <p className="font-bold text-sm tracking-tight uppercase">{s ? `${s.first_name} ${s.last_name}` : 'Unknown'}</p>

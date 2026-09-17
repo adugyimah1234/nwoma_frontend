@@ -102,8 +102,6 @@ export default function AdminDashboard() {
             icon={Lock}
             links={[
               { label: "User Directory", href: "/admin/user-management" },
-              { label: "Roles & Permissions", href: "/admin/roles" },
-              { label: "Module Access Control", href: "/admin/module-access" },
             ]}
           />
 

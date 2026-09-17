@@ -31,6 +31,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   updateUserProfile: (data: UpdateUserPayload) => Promise<void>;
   isAdmin: boolean;
+  isAccountant: boolean;
 }
 
 export type { AuthContextType };
@@ -182,7 +183,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   const isAuthenticated = !!token && !!user;
-  const isAdmin = !!(user?.role && ['admin', 'super_admin', 'garrison_director'].includes(user.role.toLowerCase()));
+  const isAdmin = !!(user?.role && ['admin', 'super_admin', 'garrison_director', 'school_admin', 'schooladmin'].includes(user.role.toLowerCase().replace(/_/g, '').replace(/\s/g, '')));
+  const isAccountant = !!(user?.role && user.role.toLowerCase().includes('accountant'));
 
   const value: AuthContextType = { 
     user, 
@@ -192,7 +194,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     isLoading,
     isAuthenticated, 
     updateUserProfile,
-    isAdmin
+    isAdmin,
+    isAccountant
   };
 
   // Prevent flicker during initial session restoration

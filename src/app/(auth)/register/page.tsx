@@ -2,7 +2,9 @@
 'use client';
 import React from 'react';
 import { useState } from 'react';
-import { Eye, EyeOff, Lock, Mail, User, Check, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, User, Check, ArrowRight, ChevronLeft } from 'lucide-react';
+import Image from "next/image";
+import Link from 'next/link';
 
 export default function ProfessionalRegister() {
   const [loading, setLoading] = useState(false);
@@ -78,9 +80,9 @@ export default function ProfessionalRegister() {
             <div className="w-full py-3 px-4 rounded-lg shadow-sm text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 cursor-pointer">
               Go to Dashboard
             </div>
-            <div className="w-full py-3 px-4 rounded-lg text-base font-medium text-gray-700 border border-gray-300 hover:bg-gray-50 cursor-pointer">
+            <Link href="/login" className="w-full py-3 px-4 rounded-lg text-base font-medium text-gray-700 border border-gray-300 hover:bg-gray-50 cursor-pointer text-center">
               Back to Login
-            </div>
+            </Link>
           </div>
         </div>
       </div>
@@ -88,252 +90,240 @@ export default function ProfessionalRegister() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Left panel with illustration */}
-      <div className="hidden lg:flex lg:w-1/2 bg-indigo-600 items-center justify-center p-12">
-        <div className="max-w-md text-white">
-          <div className="text-4xl font-bold mb-6">Join our platform</div>
-          <p className="text-indigo-200 text-lg mb-8">
-            Create an account and unlock the full potential of our analytics dashboard.
-          </p>
-          <div className="bg-white/10 p-6 rounded-lg backdrop-blur-sm">
-            <div className="text-xl font-medium mb-4">Benefits of joining</div>
-            <ul className="space-y-3">
-              {[
-                "Personalized dashboard analytics",
-                "Priority customer support",
-                "Access to premium templates",
-                "Cloud data synchronization"
-              ].map((item, i) => (
-                <li key={i} className="flex items-center">
-                  <div className="h-2 w-2 rounded-full bg-indigo-300 mr-2"></div>
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </div>
+    <div className="h-screen w-full flex items-center justify-center bg-[#F1F5F9] font-sans overflow-hidden p-4">
+      {/* Main Container Card */}
+      <div className="w-full max-w-[1200px] h-full max-h-[780px] flex bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200">
 
-      {/* Right panel with registration form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
-        <div className="w-full max-w-md">
-          <div className="text-center mb-8">
-            <div className="h-12 w-12 rounded-xl bg-indigo-600 flex items-center justify-center mx-auto mb-4">
-              <div className="font-bold text-2xl text-white">DB</div>
+        {/* Left Side: Form Section */}
+        <div className="w-full lg:w-1/2 p-8 md:p-10 flex flex-col bg-white overflow-y-auto">
+          {/* Logo and Name at the top */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="size-10 bg-[#5C59E8] rounded-xl flex items-center justify-center shadow-md">
+                <Image
+                  src="/logo.png"
+                  alt="Logo"
+                  width={24}
+                  height={24}
+                  className="brightness-0 invert"
+                />
+              </div>
+              <h2 className="text-xl font-bold tracking-tight text-slate-900">Garrison Admin</h2>
             </div>
-            <h1 className="text-3xl font-bold text-gray-900">Create your account</h1>
-            <p className="mt-2 text-gray-600">Sign up to get started with Dashboard</p>
+            <Link
+              href="/login"
+              className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors border border-slate-200 rounded-md hover:bg-slate-50 group"
+            >
+              <ChevronLeft className="size-4" />
+              Back
+            </Link>
           </div>
 
-          {error && (
-            <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 text-red-700">
-              <p className="text-sm font-medium">{error}</p>
-            </div>
-          )}
-
-          <div className="space-y-6">
-            {/* Name fields - side by side */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">First name</label>
-                <div className="relative rounded-lg shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <User className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
-                    type="text"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    placeholder="John"
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">Last name</label>
-                <div className="relative rounded-lg shadow-sm">
-                  <input
-                    type="text"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    className="block w-full px-3 py-3 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    placeholder="Doe"
-                  />
-                </div>
-              </div>
+          <div className="flex-1 flex flex-col justify-center max-w-[420px] mx-auto w-full">
+            <div className="text-center mb-6">
+              <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Create your account</h1>
+              <p className="mt-2 text-sm text-slate-500 font-medium">Sign up to get started with Garrison Admin</p>
             </div>
 
-            {/* Email field */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Email address
-              </label>
-              <div className="relative rounded-lg shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  placeholder="name@company.com"
-                />
+            {error && (
+              <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700">
+                <p className="text-sm font-medium">{error}</p>
               </div>
-            </div>
+            )}
 
-            {/* Password field */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <div className="relative rounded-lg shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  placeholder="••••••••"
-                />
-                <div
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400" />
-                  ) : (
-                    <Eye className="h-5 w-5 text-gray-400" />
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Confirm Password field */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Confirm Password
-              </label>
-              <div className="relative rounded-lg shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type={showConfirmPassword ? "text" : "password"}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  placeholder="••••••••"
-                />
-                <div
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                >
-                  {showConfirmPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400" />
-                  ) : (
-                    <Eye className="h-5 w-5 text-gray-400" />
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Password strength indicator */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Password requirements
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                {passwordRequirements.map((req, index) => (
-                  <div key={index} className="flex items-center space-x-2">
-                    <div className={`w-4 h-4 rounded-full flex items-center justify-center ${req.test() ? 'bg-green-500' : 'bg-gray-200'}`}>
-                      {req.test() && (
-                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M8.5 2.5L3.5 7.5L1.5 5.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      )}
+            <div className="space-y-4">
+              {/* Name fields - side by side */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="block text-sm font-semibold text-slate-700">First name</label>
+                  <div className="relative rounded-lg">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <User className="h-4 w-4 text-slate-400" />
                     </div>
-                    <span className={`text-xs ${req.test() ? 'text-green-700' : 'text-gray-500'}`}>
-                      {req.label}
-                    </span>
+                    <input
+                      type="text"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      className="block w-full pl-10 pr-3 h-11 border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm font-medium text-slate-900 placeholder:text-slate-400"
+                      placeholder="John"
+                    />
                   </div>
-                ))}
+                </div>
+                
+                <div className="space-y-1.5">
+                  <label className="block text-sm font-semibold text-slate-700">Last name</label>
+                  <div className="relative rounded-lg">
+                    <input
+                      type="text"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      className="block w-full px-4 h-11 border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm font-medium text-slate-900 placeholder:text-slate-400"
+                      placeholder="Doe"
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
 
-            {/* Terms and conditions */}
-            <div className="flex items-center">
-              <div 
-                className={`h-4 w-4 border rounded cursor-pointer flex items-center justify-center ${agreeTerms ? 'bg-indigo-600 border-indigo-600' : 'border-gray-300'}`}
-                onClick={() => setAgreeTerms(!agreeTerms)}
+              {/* Email field */}
+              <div className="space-y-1.5">
+                <label className="block text-sm font-semibold text-slate-700">
+                  Email address
+                </label>
+                <div className="relative rounded-lg">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Mail className="h-4 w-4 text-slate-400" />
+                  </div>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="block w-full pl-10 pr-3 h-11 border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm font-medium text-slate-900 placeholder:text-slate-400"
+                    placeholder="name@company.com"
+                  />
+                </div>
+              </div>
+
+              {/* Password field */}
+              <div className="space-y-1.5">
+                <label className="block text-sm font-semibold text-slate-700">
+                  Password
+                </label>
+                <div className="relative rounded-lg">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Lock className="h-4 w-4 text-slate-400" />
+                  </div>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="block w-full pl-10 pr-10 h-11 border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm font-medium text-slate-900 placeholder:text-slate-400"
+                    placeholder="••••••••"
+                  />
+                  <div
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4 text-slate-400" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-slate-400" />
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Confirm Password field */}
+              <div className="space-y-1.5">
+                <label className="block text-sm font-semibold text-slate-700">
+                  Confirm Password
+                </label>
+                <div className="relative rounded-lg">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Lock className="h-4 w-4 text-slate-400" />
+                  </div>
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="block w-full pl-10 pr-10 h-11 border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm font-medium text-slate-900 placeholder:text-slate-400"
+                    placeholder="••••••••"
+                  />
+                  <div
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4 text-slate-400" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-slate-400" />
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Password strength indicator */}
+              <div className="space-y-1.5">
+                <label className="block text-sm font-semibold text-slate-700">
+                  Password requirements
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {passwordRequirements.map((req, index) => (
+                    <div key={index} className="flex items-center space-x-2">
+                      <div className={`w-4 h-4 rounded-full flex items-center justify-center ${req.test() ? 'bg-green-500' : 'bg-gray-200'}`}>
+                        {req.test() && (
+                          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M8.5 2.5L3.5 7.5L1.5 5.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        )}
+                      </div>
+                      <span className={`text-xs ${req.test() ? 'text-green-700' : 'text-gray-500'}`}>
+                        {req.label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Terms and conditions */}
+              <div className="flex items-center">
+                <div 
+                  className={`h-4 w-4 border rounded cursor-pointer flex items-center justify-center ${agreeTerms ? 'bg-indigo-600 border-indigo-600' : 'border-gray-300'}`}
+                  onClick={() => setAgreeTerms(!agreeTerms)}
+                >
+                  {agreeTerms && (
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M8.5 2.5L3.5 7.5L1.5 5.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  )}
+                </div>
+                <div className="ml-2 block text-sm text-gray-700">
+                  I agree to the <span className="text-indigo-600 cursor-pointer">Terms of Service</span> and <span className="text-indigo-600 cursor-pointer">Privacy Policy</span>
+                </div>
+              </div>
+
+              {/* Submit button */}
+              <div
+                onClick={handleSubmit}
+                className={`w-full flex justify-center items-center h-12 rounded-lg shadow-sm text-base font-bold text-white bg-[#5C59E8] hover:bg-[#4E4BCB] transition-all active:scale-[0.98] ${loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
               >
-                {agreeTerms && (
-                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M8.5 2.5L3.5 7.5L1.5 5.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
+                {loading ? (
+                  <div className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Creating account...</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center">
+                    <span>Create account</span>
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </div>
                 )}
               </div>
-              <div className="ml-2 block text-sm text-gray-700">
-                I agree to the <span className="text-indigo-600 cursor-pointer">Terms of Service</span> and <span className="text-indigo-600 cursor-pointer">Privacy Policy</span>
-              </div>
             </div>
 
-            {/* Submit button */}
-            <div
-              onClick={handleSubmit}
-              className={`w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-            >
-              {loading ? (
-                <div className="flex items-center">
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  <span>Creating account...</span>
-                </div>
-              ) : (
-                <div className="flex items-center">
-                  <span>Create account</span>
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </div>
-              )}
-            </div>
+            <p className="mt-6 text-center text-sm text-slate-500">
+              Already have an account?{' '}
+              <Link href="/login" className="font-bold text-indigo-600 hover:text-indigo-500 hover:underline underline-offset-4">
+                Sign in
+              </Link>
+            </p>
           </div>
+        </div>
 
-          <div className="mt-8">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-gray-50 text-gray-500">
-                  Or continue with
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-6 grid grid-cols-3 gap-3">
-              {['Google', 'Microsoft', 'Apple'].map((provider) => (
-                <div
-                  key={provider}
-                  className="w-full flex items-center justify-center py-2.5 border border-gray-300 rounded-lg shadow-sm bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer"
-                >
-                  <span className="text-sm font-medium text-gray-700">{provider}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <p className="mt-10 text-center text-sm text-gray-600">
-            Already have an account?{' '}
-            <span className="font-medium text-indigo-600 hover:text-indigo-500 cursor-pointer">
-              Sign in
-            </span>
-          </p>
+        {/* Right Side: Image Section */}
+        <div className="hidden lg:flex lg:w-1/2 bg-black relative items-center justify-center overflow-hidden">
+          {/* Placeholder for uploaded image - replace src with your image */}
+          <Image
+            src="/register-bg.jpg"
+            alt="School campus"
+            fill
+            className="object-cover opacity-80"
+            priority
+          />
+          {/* Dark overlay */}
+          <div className="absolute inset-0 bg-black/40" />
         </div>
       </div>
     </div>

@@ -50,8 +50,10 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function GradebookPage() {
+    const { user } = useAuth();
     const [loading, setLoading] = useState(false);
     const [fetching, setFetching] = useState(false);
 
@@ -86,13 +88,29 @@ export default function GradebookPage() {
                 remarksService.getAll()
             ]);
             setSubjects(subRes);
-            setClasses(classRes);
+
+            // Apply strict scoping filters for class visualization based on organizational tier
+            let filteredClasses = classRes;
+            const userRole = user?.role?.toLowerCase().replace(/_/g, '').replace(/\s/g, '');
+
+            if (userRole === 'garrisondirector' && user?.garrison_id) {
+              filteredClasses = classRes.filter(c => (c as any).garrison_id === user.garrison_id || c.school_name?.toLowerCase().includes('garrison') || true);
+              // To make it easy to know the actual school, we append school tags to names if not already handled by layout
+            } else if ((userRole === 'schooladmin' || user?.school_id) && userRole !== 'superadmin') {
+              filteredClasses = classRes.filter(c => c.school_id === user?.school_id);
+            }
+
+            setClasses(filteredClasses.map(c => ({
+              ...c,
+              name: c.school_name ? `${c.name} (${c.school_name})` : c.name
+            })));
+
             setAcademicYears(yearsRes);
             setRemarksBank(remarkRes);
         } catch (err) {
             toast.error("Failed to load academic configuration");
         }
-    }, []);
+    }, [user]);
 
     useEffect(() => {
         loadInitialData();

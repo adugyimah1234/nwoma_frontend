@@ -3,9 +3,12 @@
 import { PageHeader } from '@/components/layout/page-header';
 import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { getAllAcademicYear } from '@/services/academic_year';
 import classService from '@/services/class';
@@ -13,8 +16,9 @@ import studentService from '@/services/students';
 import { AcademicYear } from '@/types/academic-year';
 import { Class } from '@/types/class';
 import { Student } from '@/types/student';
-import { Loader2, RefreshCw, ArrowRightLeft, ShieldCheck, GraduationCap } from 'lucide-react';
+import { Loader2, RefreshCw, ArrowRightLeft, ShieldCheck, GraduationCap, CheckCircle2, AlertTriangle, Zap } from 'lucide-react';
 import { Loader } from '@/components/ui/loader';
+import { cn } from '@/lib/utils';
 
 interface ClassMapping {
   currentClassId: string | number;
@@ -27,6 +31,7 @@ export default function PromoteStudentsPage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [promoting, setPromoting] = useState(false);
+  const [passMark, setPassMark] = useState<number>(50);
 
   const [selectedCurrentAcademicYearId, setSelectedCurrentAcademicYearId] = useState<string>('');
   const [selectedNextAcademicYearId, setSelectedNextAcademicYearId] = useState<string>('');
@@ -95,6 +100,25 @@ export default function PromoteStudentsPage() {
           : mapping
       )
     );
+  };
+
+  const autoApplyLogic = () => {
+    if (!selectedNextAcademicYearId) {
+        toast.error("Please select a Target Academic Year first.");
+        return;
+    }
+
+    // Auto-suggest next classes based on current class level + 1
+    const newMappings: ClassMapping[] = currentAcademicYearClasses.map(currentClass => {
+        const currentLevel = (currentClass as any).level || 0;
+        const nextClass = classes.find(c => (c as any).level === currentLevel + 1);
+        return {
+            currentClassId: currentClass.id,
+            nextClassId: nextClass ? nextClass.id : null
+        };
+    });
+    setClassMappings(newMappings);
+    toast.success("Progression logic suggested based on class levels.");
   };
 
   const handlePromoteStudents = async () => {
@@ -176,8 +200,8 @@ export default function PromoteStudentsPage() {
             { title: 'Promote' }
           ]}
           tabs={[
-            { title: 'Roster Node', url: '/students' },
-            { title: 'Progression Node', url: '/students/promote' },
+            { title: 'Roster Node', href: '/students' },
+            { title: 'Progression Node', href: '/students/promote' },
           ]}
         />
 
@@ -230,11 +254,30 @@ export default function PromoteStudentsPage() {
                     <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 space-y-2">
                         <div className="flex items-center gap-2 text-primary">
                             <ShieldCheck className="size-3.5" />
-                            <span className="text-[10px] font-bold uppercase tracking-widest">Protocol Verification</span>
+                            <span className="text-[10px] font-bold uppercase tracking-widest">Automatic Decisions</span>
                         </div>
-                        <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
-                            Promotion will update student records and reset performance metrics for the next academic cycle.
+                        <p className="text-[11px] text-slate-500 font-medium leading-relaxed mb-2">
+                            The system can automatically decide who to promote based on their year average.
                         </p>
+                        <div className="flex items-center gap-3">
+                            <div className="flex-1">
+                                <Label className="text-[9px] uppercase font-bold text-muted-foreground">Minimum Pass Mark (%)</Label>
+                                <Input
+                                    type="number"
+                                    value={passMark}
+                                    onChange={e => setPassMark(Number(e.target.value))}
+                                    className="h-8 text-xs font-bold"
+                                />
+                            </div>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={autoApplyLogic}
+                                className="h-8 mt-4 text-[9px] font-bold uppercase border-primary/30 text-primary hover:bg-primary/5"
+                            >
+                                <Zap className="size-3 mr-1" /> Auto-Fill
+                            </Button>
+                        </div>
                     </div>
                 </CardContent>
             </Card>
@@ -344,8 +387,9 @@ export default function PromoteStudentsPage() {
                                 <TableHeader className="bg-muted/10 sticky top-0 z-10">
                                     <TableRow className="border-none">
                                         <TableHead className="pl-6 py-4 text-[10px] font-bold uppercase tracking-tight text-slate-500">Student Identity</TableHead>
-                                        <TableHead className="text-[10px] font-bold uppercase tracking-tight text-slate-500">Current</TableHead>
-                                        <TableHead className="pr-6 text-[10px] font-bold uppercase tracking-tight text-slate-500 text-right">Progression Target</TableHead>
+                                        <TableHead className="text-[10px] font-bold uppercase tracking-tight text-slate-500">Avg Grade</TableHead>
+                                        <TableHead className="text-[10px] font-bold uppercase tracking-tight text-slate-500">Decision</TableHead>
+                                        <TableHead className="pr-6 text-[10px] font-bold uppercase tracking-tight text-slate-500 text-right">Target Class</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -353,6 +397,8 @@ export default function PromoteStudentsPage() {
                                         const currentClass = classes.find(cls => cls.id === student.class_id);
                                         const mapping = classMappings.find(m => m.currentClassId === student.class_id);
                                         const nextClass = classes.find(cls => cls.id === mapping?.nextClassId);
+                                        const avgScore = (student as any).scores || 0;
+                                        const hasPassed = avgScore >= passMark;
 
                                         return (
                                             <TableRow key={student.id} className="hover:bg-muted/30 transition-colors border-b last:border-none">
@@ -363,7 +409,20 @@ export default function PromoteStudentsPage() {
                                                     </div>
                                                 </TableCell>
                                                 <TableCell>
-                                                    <Badge variant="outline" className="text-[10px] font-bold uppercase border-slate-100 text-slate-400">{currentClass?.name || 'N/A'}</Badge>
+                                                    <span className={cn("text-xs font-bold", hasPassed ? "text-emerald-600" : "text-rose-600")}>
+                                                        {avgScore}%
+                                                    </span>
+                                                </TableCell>
+                                                <TableCell>
+                                                    {hasPassed ? (
+                                                        <Badge variant="outline" className="h-5 px-2 text-[9px] font-bold border-emerald-200 bg-emerald-50 text-emerald-700">
+                                                            <CheckCircle2 className="size-2.5 mr-1" /> PROMOTED
+                                                        </Badge>
+                                                    ) : (
+                                                        <Badge variant="outline" className="h-5 px-2 text-[9px] font-bold border-rose-200 bg-rose-50 text-rose-700">
+                                                            <AlertTriangle className="size-2.5 mr-1" /> REPEAT
+                                                        </Badge>
+                                                    )}
                                                 </TableCell>
                                                 <TableCell className="pr-6 text-right">
                                                     <div className="flex items-center justify-end gap-2">
@@ -380,7 +439,7 @@ export default function PromoteStudentsPage() {
                                                                     <GraduationCap className="size-3 mr-1.5 opacity-50" />
                                                                     {nextClass.name}
                                                                 </>
-                                                            ) : 'Archiving / Graduation'}
+                                                            ) : (hasPassed ? 'Graduation' : 'Repeats ' + (currentClass?.name || 'Current'))}
                                                         </Badge>
                                                     </div>
                                                 </TableCell>

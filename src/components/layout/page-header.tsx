@@ -64,10 +64,13 @@ export function PageHeader({ title, description, breadcrumbs, tabs, children }: 
       {tabs && tabs.length > 0 && (
         <div className="mt-4 flex overflow-x-auto no-scrollbar pb-1">
           <div className="inline-flex h-9 items-center justify-center rounded-lg bg-muted/50 p-1 text-muted-foreground border border-border/40">
-            {tabs.map((tab) => {
+            {tabs.map((tab, idx) => {
+              if (!tab.href) return null;
+
               // Find if there's a more specific match in the tabs list
               const hasMoreSpecificMatch = tabs.some(
                 (other) =>
+                  other.href &&
                   other.href !== tab.href &&
                   other.href.startsWith(tab.href + '/') &&
                   pathname.startsWith(other.href)
@@ -80,7 +83,7 @@ export function PageHeader({ title, description, breadcrumbs, tabs, children }: 
               );
               return (
                 <Link
-                  key={tab.href}
+                  key={tab.href || idx}
                   href={tab.href}
                   className={cn(
                     'inline-flex items-center justify-center whitespace-nowrap rounded-md px-4 py-1 text-xs md:text-sm font-semibold ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',

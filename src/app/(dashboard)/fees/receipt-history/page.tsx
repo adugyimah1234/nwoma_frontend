@@ -93,8 +93,25 @@ export default function ReceiptHistoryPage() {
       if (action === "print") {
         const html = await getPrintableReceipt(String(id));
         const w = window.open("", "_blank");
-        w?.document.write(html);
-        w?.document.close();
+        if (w) {
+          w.document.open();
+          w.document.write(html);
+          w.document.close();
+        } else {
+          toast.error("Popup blocked! Please allow popups.");
+        }
+      } else if (action === "download") {
+          // Robust download using absolute URL
+          const html = await getPrintableReceipt(String(id));
+          const blob = new Blob([html], { type: 'text/html' });
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `receipt-R-${id.toString().padStart(6, "0")}.html`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
       } else {
         toast.info(`${action} feature coming soon`);
       }
@@ -102,6 +119,33 @@ export default function ReceiptHistoryPage() {
       console.error("Action error:", err);
       toast.error("Action failed");
     }
+  };
+
+  const handleExportCSV = () => {
+    if (filteredReceipts.length === 0) {
+      toast.error("No data to export");
+      return;
+    }
+    const headers = ["Receipt #", "Student", "Amount", "Date", "Items"];
+    const rows = filteredReceipts.map(r => [
+      `R-${r.id.toString().padStart(6, "0")}`,
+      renderStudentName(r),
+      r.amount,
+      format(new Date(r.date_issued), "yyyy-MM-dd"),
+      (r.receipt_items?.map(i => i.receipt_type) ?? []).join("; ")
+    ]);
+
+    const csv = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "receipts_history.csv";
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    toast.success("CSV Exported successfully");
   };
 
   const [applicants, setApplicants] = useState<RegistrationData[]>([]);
@@ -260,7 +304,7 @@ export default function ReceiptHistoryPage() {
 
             <Button
               variant="outline"
-              onClick={() => toast.info("CSV export coming soon!")}
+              onClick={handleExportCSV}
             >
               <Download className="h-4 w-4 mr-2" /> Export CSV
             </Button>

@@ -34,18 +34,18 @@ export default function StudentsDirectory() {
     ];
 
     return (
-        <div className="flex flex-1 flex-col gap-8 p-4 md:p-8 max-w-[1600px] mx-auto w-full pb-24">
+        <div className="flex flex-1 flex-col gap-6 p-4 md:p-8 max-w-[1600px] mx-auto w-full pb-24">
             <PageHeader
-                title="Student Directory"
-                description="Comprehensive directory of all students currently enrolled in the network."
+                title="Student Registry"
+                description="List of all students currently enrolled in the school network."
                 breadcrumbs={[{ title: 'Home', href: '/' }, { title: 'Students' }]}
             >
                 <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" className="h-9 px-4 hidden sm:flex font-semibold text-xs" onClick={refresh}>
-                        <RefreshCw className={loading ? "mr-2 h-4 w-4 animate-spin" : "mr-2 h-4 w-4"} /> Refresh
+                    <Button variant="outline" size="sm" className="h-10 px-4 hidden sm:flex font-bold text-xs rounded-xl" onClick={refresh}>
+                        <RefreshCw className={loading ? "mr-2 h-4 w-4 animate-spin" : "mr-2 h-4 w-4"} /> Sync
                     </Button>
-                    <Button size="sm" className="h-9 px-6 font-semibold text-xs shadow-sm" onClick={() => router.push('/registration/new')}>
-                        <UserPlus className="mr-2 h-4 w-4" /> New Student
+                    <Button size="sm" className="h-10 px-6 font-bold text-xs shadow-sm rounded-xl" onClick={() => router.push('/registration/new')}>
+                        <UserPlus className="mr-2 h-4 w-4" /> Add Student
                     </Button>
                 </div>
             </PageHeader>

@@ -51,9 +51,10 @@ export interface ReceiptFilters {
 
 export interface CreateReceiptPayload {
   student_id?: string;
+  registration_id?: string;
   payment_id?: string;
   fee_id?: string;
-  receipt_type: any; // backend expects array of objects or single type
+  receipt_type: { type: string; amount: number }[];
   amount: number;
   date_issued?: string;
   venue?: string;
@@ -62,4 +63,6 @@ export interface CreateReceiptPayload {
   class_id?: string;
   school_id?: string;
   garrison_id?: string;
+  category?: string | number;
+  jersey_size?: string;
 }

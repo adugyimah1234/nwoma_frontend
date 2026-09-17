@@ -23,9 +23,10 @@ export interface ParentDashboardData {
 }
 
 const parentService = {
-    getAll: async (): Promise<ParentRecord[]> => {
-        const res = await api.get('/parents');
-        return res.data;
+    getAll: async (params?: any): Promise<ParentRecord[]> => {
+        const config = params && Object.keys(params).length > 0 ? { params } : {};
+        const res = await api.get('/parents', config);
+        return res.data.parents || res.data;
     },
 
     getDashboard: async (phone: string): Promise<ParentDashboardData> => {

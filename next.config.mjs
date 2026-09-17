@@ -1,14 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    serverActions: {}, // use object instead of `true`
+    serverActions: {},
   },
   eslint: {
-    // Warning: This allows production builds to successfully complete even if
-    // your project has ESLint errors.
     ignoreDuringBuilds: true,
-  },typescript: {
-    // ⚠️ This allows production builds to succeed even if there are type errors
+  },
+  typescript: {
     ignoreBuildErrors: true,
   },
   async headers() {
@@ -35,12 +33,12 @@ const nextConfig = {
   async rewrites() {
     return [
       {
-        source: '/:3000',
-        destination: 'https://3gecbackend-k4dd3nsdw-morrisonadus-projects.vercel.app/:5000', // Proxy to Express backend
+        // Proxy all /api requests to the backend server to avoid CORS issues
+        source: '/api/:path*',
+        destination: 'http://localhost:5000/api/:path*',
       },
     ];
   },
-
 };
 
 export default nextConfig;

@@ -68,7 +68,20 @@ export default function ProfessionalLogin() {
 
         {/* Left Side: Form Section */}
         <div className="w-full md:w-1/2 p-10 md:p-16 flex flex-col bg-card">
-          <div>
+          {/* Logo and Name at the top */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="size-10 bg-[#5C59E8] rounded-xl flex items-center justify-center shadow-md">
+                <Image
+                  src="/logo.png"
+                  alt="Logo"
+                  width={24}
+                  height={24}
+                  className="brightness-0 invert"
+                />
+              </div>
+              <h2 className="text-xl font-bold tracking-tight">Garrison Admin</h2>
+            </div>
             <Button variant="ghost" size="sm" asChild className="rounded-xl border border-border gap-2 text-muted-foreground hover:text-foreground">
               <Link href="/">
                 <ChevronLeft className="size-4" />
@@ -79,8 +92,8 @@ export default function ProfessionalLogin() {
 
           <div className="flex-1 flex flex-col justify-center max-w-[360px] mx-auto w-full">
             <div className="text-center mb-10">
-              <h1 className="text-3xl font-bold tracking-tight mb-2">Sign In</h1>
-              <p className="text-sm text-muted-foreground font-medium">Welcome back! Please sign in to access your account.</p>
+              <h1 className="text-3xl font-bold tracking-tight mb-2">School Portal Login</h1>
+              <p className="text-sm text-muted-foreground font-medium">Please enter your details to log in to the school portal.</p>
             </div>
 
             {(localError || authError) && (
@@ -166,47 +179,24 @@ export default function ProfessionalLogin() {
                 New here? <Link href="/register" className="text-primary hover:underline underline-offset-4 font-bold">Create an account</Link>
               </p>
               <p className="text-xs font-semibold text-muted-foreground tracking-tight">
-                System Help: <Link href="/guide" className="text-foreground hover:underline underline-offset-4 font-bold">Operational Guide</Link>
+                System Help: <Link href="/guide" className="text-foreground hover:underline underline-offset-4 font-bold">User Manual</Link>
               </p>
             </div>
           </div>
         </div>
 
-        {/* Right Side: Branding Section */}
-        <div className="hidden md:flex md:w-1/2 bg-primary relative items-center justify-center p-16 overflow-hidden">
-          {/* Subtle Branding Background Pattern (Diagonal Stripes) */}
-          <div
-            className="absolute inset-0 opacity-[0.1]"
-            style={{
-              backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 15px, hsl(var(--primary-foreground)) 15px, hsl(var(--primary-foreground)) 17px)`
-            }}
+        {/* Right Side: Image Section */}
+        <div className="hidden md:flex md:w-1/2 bg-black relative items-center justify-center overflow-hidden">
+          {/* Placeholder for uploaded image - replace src with your image */}
+          <Image
+            src="/login-bg.jpg"
+            alt="School campus"
+            fill
+            className="object-cover opacity-80"
+            priority
           />
-
-          <div className="relative z-10 text-center text-primary-foreground space-y-10">
-            <div className="flex items-center justify-center gap-4">
-               <div className="size-14 bg-primary-foreground/10 backdrop-blur-xl rounded-2xl flex items-center justify-center border border-primary-foreground/20 shadow-2xl">
-                  <Image
-                    src="/logo.png"
-                    alt="Logo"
-                    width={38}
-                    height={38}
-                    className="brightness-0 invert opacity-90"
-                  />
-               </div>
-               <h2 className="text-4xl font-bold tracking-tight">
-                 Garrison Admin
-               </h2>
-            </div>
-
-            <div className="max-w-sm mx-auto space-y-5">
-              <p className="text-lg font-medium opacity-80 tracking-tight leading-snug">
-                Built for Developers, Designed for Efficiency
-              </p>
-              <h3 className="text-3xl font-bold leading-tight tracking-tight">
-                Next.js Admin Dashboard <br /> Templates and Components
-              </h3>
-            </div>
-          </div>
+          {/* Dark overlay for readability if text is added later */}
+          <div className="absolute inset-0 bg-black/40" />
         </div>
       </div>
     </div>

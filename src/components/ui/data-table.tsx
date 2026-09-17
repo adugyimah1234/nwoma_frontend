@@ -94,6 +94,11 @@ export function DataTable<T extends Record<string, unknown>>({
     new Set(columns.map((c) => String(c.key)))
   );
 
+  // Sync visible columns if the columns prop changes (e.g. during development or dynamic columns)
+  React.useEffect(() => {
+    setVisibleColumns(new Set(columns.map((c) => String(c.key))));
+  }, [columns.length]); // Use length as a simple proxy, or deep compare if needed
+
   // Client-side filtering by search
   const filteredData = React.useMemo(() => {
     let result = data;

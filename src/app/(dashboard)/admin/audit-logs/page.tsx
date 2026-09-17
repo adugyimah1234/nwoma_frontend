@@ -91,7 +91,7 @@ export default function AuditLogsPage() {
                                             <div className="flex items-center gap-2">
                                                 <Activity className="size-3 text-slate-400" />
                                                 <span className="text-xs font-medium uppercase">{log.target_type}</span>
-                                                <span className="text-[10px] font-mono text-slate-400">ID: {log.target_id?.substring(0,8)}...</span>
+                                                <span className="text-[10px] font-mono text-slate-400">REF: {log.target_id?.substring(0,8).toUpperCase()}</span>
                                             </div>
                                         </TableCell>
                                         <TableCell className="text-right font-mono text-[10px] text-slate-400">

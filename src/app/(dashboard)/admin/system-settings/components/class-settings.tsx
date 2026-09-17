@@ -26,6 +26,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import classService from '@/services/class';
+import { toast } from 'sonner';
 
 interface Class {
   id: string;
@@ -45,6 +46,27 @@ export default function ClassSettings() {
   const [capacity, setCapacity] = useState<number>(0);
   const [school, setSchool] = useState('');
   const [academicYear, setAcademicYear] = useState('');
+
+  useEffect(() => {
+    const fetchClasses = async () => {
+      try {
+        const data = await classService.getAll();
+        // Map ClassData to local Class interface if needed
+        const mapped = data.map(c => ({
+          id: c.id,
+          name: c.name,
+          section: (c as any).section || '',
+          capacity: c.capacity,
+          school: String(c.school_id) === '1' ? 'primary' : 'secondary',
+          academicYear: (c as any).academicYear || '2024-2025'
+        }));
+        setClasses(mapped);
+      } catch (err) {
+        console.error("Failed to load classes", err);
+      }
+    };
+    fetchClasses();
+  }, []);
 
   useEffect(() => {
     if (editingClass) {
@@ -143,14 +165,16 @@ export default function ClassSettings() {
 
     try {
       if (editingClass) {
+        // Fetch existing class first to preserve students_count if needed
+        // Or just send partial update if backend supports it
         await classService.update({
           id: editingClass.id,
           name: payload.name,
-          level: 1,
+          level: (editingClass as any).level || 1,
           school_id: school === 'primary' ? "1" : "2",
           slots: payload.capacity,
           capacity: payload.capacity,
-          students_count: 0
+          students_count: (editingClass as any).students_count || 0
         });
 
         setClasses(prev =>
@@ -160,6 +184,7 @@ export default function ClassSettings() {
               : c
           )
         );
+        toast.success("Class updated successfully");
       } else {
         const created = await classService.create({
           name: payload.name,
@@ -174,6 +199,7 @@ export default function ClassSettings() {
           ...prev,
           { ...payload, id: created.id.toString() },
         ]);
+        toast.success("Class created successfully");
       }
       setIsDialogOpen(false);
       setEditingClass(null);
@@ -184,6 +210,7 @@ export default function ClassSettings() {
       setAcademicYear('');
     } catch (err) {
       console.error('Failed to save class', err);
+      toast.error("Failed to save class");
     }
   }}
 >

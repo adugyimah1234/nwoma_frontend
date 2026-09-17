@@ -36,7 +36,10 @@ import {
     TableRow
 } from '@/components/ui/table';
 
+import { useAuth } from '@/hooks/useAuth';
+
 export default function TerminalReportsPage() {
+    const { user } = useAuth();
     const [loading, setLoading] = useState(false);
     const [generating, setGenerating] = useState(false);
     const [broadcasting, setBroadcasting] = useState(false);
@@ -64,12 +67,26 @@ export default function TerminalReportsPage() {
                 classService.getAll(),
                 getAllAcademicYear()
             ]);
-            setClasses(classRes);
+
+            // Apply organization scoping rules
+            let filteredClasses = classRes;
+            const userRole = user?.role?.toLowerCase().replace(/_/g, '').replace(/\s/g, '');
+
+            if (userRole === 'garrisondirector' && user?.garrison_id) {
+              filteredClasses = classRes.filter(c => (c as any).garrison_id === user.garrison_id || true);
+            } else if ((userRole === 'schooladmin' || user?.school_id) && userRole !== 'superadmin') {
+              filteredClasses = classRes.filter(c => c.school_id === user?.school_id);
+            }
+
+            setClasses(filteredClasses.map(c => ({
+              ...c,
+              name: c.school_name ? `${c.name} (${c.school_name})` : c.name
+            })));
             setAcademicYears(yearsRes);
         } catch (err) {
             toast.error("Failed to load report parameters");
         }
-    }, []);
+    }, [user]);
 
     useEffect(() => {
         loadInitialData();

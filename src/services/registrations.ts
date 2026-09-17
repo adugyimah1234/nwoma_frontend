@@ -15,8 +15,8 @@ export interface RegistrationData {
   academic_year: string;
   last_name: string;
   category: string;
-  category_id?: string;
   date_of_birth: string | null;
+  dob?: string | null; // Added to match student table schema for migration
   class_applying_for: string;
   gender: "Male" | "Female" | "Other";
   email?: string;

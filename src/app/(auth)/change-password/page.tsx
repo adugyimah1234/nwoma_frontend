@@ -69,7 +69,20 @@ export default function ChangePasswordPage() {
         
         {/* Left Side: Form Section */}
         <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col bg-white dark:bg-white overflow-y-auto">
-          <div>
+          {/* Logo and Name at the top */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="size-10 bg-[#5C59E8] rounded-xl flex items-center justify-center shadow-md">
+                <Image
+                  src="/logo.png"
+                  alt="Logo"
+                  width={24}
+                  height={24}
+                  className="brightness-0 invert"
+                />
+              </div>
+              <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-900">Garrison Admin</h2>
+            </div>
             <Link
               href={user ? "/" : "/login"}
               className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-900 transition-colors border border-slate-200 dark:border-slate-200 rounded-md hover:bg-slate-50 dark:hover:bg-slate-50 group"
@@ -187,53 +200,20 @@ export default function ChangePasswordPage() {
           </div>
         </div>
 
-        {/* Right Side: Branding Section */}
-        <div className="hidden md:flex md:w-1/2 bg-[#5C59E8] dark:bg-[#5C59E8] relative items-center justify-center p-12 overflow-hidden">
-          {/* Subtle Branding Background Pattern (Diagonal Stripes) */}
-          <div
-            className="absolute inset-0 opacity-[0.1]"
-            style={{
-              backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 15px, #ffffff 15px, #ffffff 17px)`
-            }}
+        {/* Right Side: Image Section */}
+        <div className="hidden md:flex md:w-1/2 bg-black relative items-center justify-center overflow-hidden">
+          {/* Placeholder for uploaded image - replace src with your image */}
+          <Image
+            src="/change-password-bg.jpg"
+            alt="Security"
+            fill
+            className="object-cover opacity-80"
+            priority
           />
-
-          {/* Main Branding Content */}
-          <div className="relative z-10 text-center text-white space-y-10">
-            <div className="flex items-center justify-center gap-4">
-               <div className="size-12 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/30 shadow-2xl">
-                  <KeyRound className="size-8 text-white" />
-               </div>
-               <h2 className="text-4xl font-bold tracking-tight text-white">
-                 Security Hub
-               </h2>
-            </div>
-
-            <div className="max-w-sm mx-auto space-y-6">
-              <p className="text-lg font-medium text-white/80 tracking-tight leading-relaxed px-4">
-                "Protecting institutional integrity through high-grade cryptographic standards."
-              </p>
-
-              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 text-left">
-                <h4 className="text-sm font-bold uppercase tracking-tight mb-4 opacity-60">Security Checklist</h4>
-                <ul className="space-y-3">
-                  {[
-                    "Minimum 8 characters",
-                    "Mix of letters and numbers",
-                    "Include special characters",
-                    "Do not reuse old passwords"
-                  ].map((item, i) => (
-                    <li key={i} className="flex items-center gap-3 text-sm font-semibold">
-                       <div className="size-1.5 rounded-full bg-indigo-300" />
-                       {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
+          {/* Dark overlay */}
+          <div className="absolute inset-0 bg-black/40" />
         </div>
       </div>
     </div>
   );
 }
-

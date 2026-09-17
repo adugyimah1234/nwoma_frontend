@@ -88,7 +88,10 @@ export default function TermSettings() {
 
     setIsCreating(true);
     try {
-      await gradebookService.createTerm(formData);
+      await gradebookService.createTerm({
+          ...formData,
+          academicYearId: formData.academic_year_id // Compatibility with camelCase
+      } as any);
       toast.success('Academic term created');
       setFormData({ name: '', academic_year_id: '', start_date: '', end_date: '' });
       setIsDialogOpen(false);
@@ -109,8 +112,8 @@ export default function TermSettings() {
       const year = academicYears.find(y => y.id === formData.academic_year_id);
       if (!year) return;
 
-      const startDate = new Date(year.start_date);
-      const endDate = new Date(year.end_date);
+      // const startDate = new Date(year.start_date);
+      // const endDate = new Date(year.end_date);
 
       // Rough calculation for terms
       setIsCreating(true);
@@ -121,9 +124,10 @@ export default function TermSettings() {
                   await gradebookService.createTerm({
                       name: names[i],
                       academic_year_id: year.id,
-                      start_date: year.start_date, // Just placeholders
+                      academicYearId: year.id,
+                      start_date: year.start_date,
                       end_date: year.end_date
-                  });
+                  } as any);
               }
               toast.success("Initialized 3-Term system");
           } else {
@@ -132,9 +136,10 @@ export default function TermSettings() {
                 await gradebookService.createTerm({
                     name: names[i],
                     academic_year_id: year.id,
+                    academicYearId: year.id,
                     start_date: year.start_date,
                     end_date: year.end_date
-                });
+                } as any);
             }
             toast.success("Initialized Semester system");
           }
@@ -319,8 +324,8 @@ export default function TermSettings() {
 
       <CardContent className="p-0">
         <DataTable
-          data={terms}
-          columns={columns}
+          data={terms as any[]}
+          columns={columns as any}
           loading={loading}
           emptyMessage="No academic terms defined. Click 'Add Term' to begin."
           rowKey="id"

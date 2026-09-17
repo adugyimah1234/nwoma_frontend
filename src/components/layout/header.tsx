@@ -68,7 +68,7 @@ export function Header({ className, fixed = true, children, ...props }: HeaderPr
       className={cn(
         'flex h-14 shrink-0 items-center gap-2 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-[box-shadow] duration-200',
         fixed && 'sticky top-0 z-50',
-        offset > 10 && fixed ? 'shadow-md' : 'shadow-xs',
+        offset > 10 && fixed ? 'shadow-md dark:shadow-none' : 'shadow-xs dark:shadow-none',
         className
       )}
       {...props}

@@ -29,7 +29,9 @@ export function useStudentColumns(): DataTableColumn<Student>[] {
                     </div>
                     <div>
                         <div className="font-bold text-sm tracking-tight uppercase">{row.first_name} {row.last_name}</div>
-                        <div className="text-[9px] text-muted-foreground font-bold uppercase tracking-tight opacity-60">ID: {String(row.id).substring(0,8).toUpperCase()}</div>
+                        <div className="text-[9px] text-muted-foreground font-bold uppercase tracking-tight opacity-60">
+                            {row.student_name ? 'ID: ' + row.id : 'REF: ' + String(row.id).substring(0, 8).toUpperCase()}
+                        </div>
                     </div>
                 </div>
             )

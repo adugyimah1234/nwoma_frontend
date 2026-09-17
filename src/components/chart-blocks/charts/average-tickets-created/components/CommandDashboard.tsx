@@ -127,7 +127,7 @@ export default function CommandDashboard() {
                         </Card>
                         <Card className="shadow-sm border">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Monthly Outflow</CardTitle>
+                                <CardTitle className="text-sm font-medium">Monthly Expenses</CardTitle>
                                 <CreditCard className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
@@ -185,9 +185,9 @@ export default function CommandDashboard() {
 
                         <Card className="lg:col-span-3 shadow-sm border bg-background/50">
                             <CardHeader>
-                                <CardTitle>Recent Sales</CardTitle>
+                                <CardTitle>Recent Payments</CardTitle>
                                 <CardDescription>
-                                    You made {data?.recentTransactions.length || 0} sales this month.
+                                    You received {data?.recentTransactions.length || 0} payments this month.
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>

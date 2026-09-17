@@ -5,7 +5,7 @@ import { type Assessment, type CreateAssessmentInput } from '@/types/assessment'
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { createAssessment, deleteAssessment, getAssessments } from '@/services/assessment';
+import { createAssessment, deleteAssessment, getAssessments, updateAssessment } from '@/services/assessment';
 import { PageHeader } from '@/components/layout/page-header';
 import { getAllCategories, Category } from '@/services/categories';
 import {
@@ -28,7 +28,8 @@ import {
     RefreshCw,
     Info,
     LayoutGrid,
-    Users
+    Users,
+    Pencil
 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
@@ -40,6 +41,7 @@ export default function AssessmentManagement() {
   const [classes, setClasses] = useState<ClassData[]>([]);
   const [schools, setSchools] = useState<School[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -90,20 +92,40 @@ export default function AssessmentManagement() {
         category_id: formData.category_id,
       };
 
-      await createAssessment(payload);
-      toast.success('Entrance assessment scheduled.');
+      if (editingId) {
+          await updateAssessment(editingId, payload);
+          toast.success('Assessment updated.');
+      } else {
+          await createAssessment(payload);
+          toast.success('Entrance assessment scheduled.');
+      }
+
       setFormData({
           name: '',
           date: '',
           venue: '',
           school_id: 'all',
           class_id: 'all',
-          category_id: formData.category_id
+          category_id: ''
       });
+      setEditingId(null);
       loadData();
     } catch (err) {
       toast.error('Protocol rejected.');
     }
+  };
+
+  const handleEdit = (assessment: Assessment) => {
+      setEditingId(assessment.id);
+      setFormData({
+          name: assessment.name,
+          date: assessment.date ? assessment.date.split('T')[0] : '',
+          venue: assessment.venue || '',
+          school_id: assessment.school_id || 'all',
+          class_id: assessment.class_id || 'all',
+          category_id: assessment.category_id || ''
+      });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDelete = async (id: string) => {
@@ -131,9 +153,9 @@ export default function AssessmentManagement() {
 
       <div className="grid gap-8 lg:grid-cols-12">
         {/* Creation Form */}
-        <div className="lg:col-span-5 h-fit bg-white dark:bg-slate-900 rounded-xl border shadow-sm p-6 sm:p-8 space-y-6">
+        <div className="lg:col-span-5 h-fit bg-card rounded-xl border shadow-sm dark:shadow-none p-6 sm:p-8 space-y-6">
           <div className="space-y-1">
-            <h2 className="text-xl font-bold">Schedule Assessment</h2>
+            <h2 className="text-xl font-bold">{editingId ? 'Edit Assessment' : 'Schedule Assessment'}</h2>
             <p className="text-sm text-muted-foreground">Configure the scope and details of the evaluation.</p>
           </div>
 
@@ -254,9 +276,17 @@ export default function AssessmentManagement() {
                 </AlertDescription>
             </Alert>
 
-            <Button className="w-full h-11 rounded-md font-semibold text-xs" onClick={handleCreate}>
-                Schedule Assessment
-            </Button>
+            <div className="flex gap-2">
+                {editingId && (
+                    <Button variant="ghost" className="flex-1 h-11" onClick={() => {
+                        setEditingId(null);
+                        setFormData({ name: '', date: '', venue: '', school_id: 'all', class_id: 'all', category_id: '' });
+                    }}>Cancel</Button>
+                )}
+                <Button className="flex-[2] h-11 rounded-md font-semibold text-xs" onClick={handleCreate}>
+                    {editingId ? 'Update Assessment' : 'Schedule Assessment'}
+                </Button>
+            </div>
           </div>
         </div>
 
@@ -264,7 +294,7 @@ export default function AssessmentManagement() {
         <div className="lg:col-span-7 space-y-6">
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-white border flex items-center justify-center text-slate-600 shadow-sm">
+                <div className="h-10 w-10 rounded-lg bg-card border flex items-center justify-center text-muted-foreground shadow-sm dark:shadow-none">
                     <BookOpen className="h-5 w-5" />
                 </div>
                 <div>
@@ -282,7 +312,7 @@ export default function AssessmentManagement() {
                {[1,2,3].map(i => <div key={i} className="h-24 bg-muted/20 animate-pulse rounded-xl border" />)}
             </div>
           ) : assessments.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-32 border-2 border-dashed rounded-xl bg-white/50 text-center px-10">
+            <div className="flex flex-col items-center justify-center py-32 border-2 border-dashed rounded-xl bg-card/50 text-center px-10">
               <Calendar className="size-12 text-muted-foreground/20 mb-4" />
               <h4 className="text-lg font-bold">No Active Sessions</h4>
               <p className="text-sm text-muted-foreground max-w-xs mt-1">Schedule a new entrance assessment session using the panel on the left.</p>
@@ -290,7 +320,7 @@ export default function AssessmentManagement() {
           ) : (
             <div className="grid gap-4">
               {assessments.map((assessment) => (
-                <div key={assessment.id} className="p-5 flex items-center justify-between bg-white dark:bg-slate-900 border rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                <div key={assessment.id} className="p-5 flex items-center justify-between bg-card border rounded-xl shadow-sm dark:shadow-none hover:shadow-md dark:hover:shadow-none transition-shadow">
                     <div className="flex items-center gap-5">
                         <div className="flex flex-col items-center justify-center size-16 rounded-lg bg-primary text-white shadow-sm">
                             <span className="text-[10px] font-bold uppercase opacity-80">
@@ -324,14 +354,24 @@ export default function AssessmentManagement() {
                         </div>
                     </div>
 
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 rounded-md h-9 w-9"
-                        onClick={() => handleDelete(assessment.id)}
-                    >
-                        <Trash2 className="size-4" />
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-muted-foreground/50 hover:text-primary hover:bg-primary/10 rounded-md h-9 w-9"
+                            onClick={() => handleEdit(assessment)}
+                        >
+                            <Pencil className="size-4" />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 rounded-md h-9 w-9"
+                            onClick={() => handleDelete(assessment.id)}
+                        >
+                            <Trash2 className="size-4" />
+                        </Button>
+                    </div>
                 </div>
               ))}
             </div>

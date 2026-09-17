@@ -20,6 +20,8 @@ import { AlertCircle, Info, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
 import { getAllUsers } from '@/services/users';
 import { getUserModuleAccess, updateModuleAccess, getAllModules } from '@/services/modules';
 import { useToast } from '@/hooks/use-toast';
@@ -33,6 +35,8 @@ interface PendingUpdate {
 }
 
 export default function ModuleAccess() {
+  const router = useRouter();
+  const { user } = useAuth();
   // State
   const [users, setUsers] = useState<User[]>([]);
   const [modules, setModules] = useState<Module[]>([]);
@@ -53,6 +57,11 @@ export default function ModuleAccess() {
   const { toast } = useToast();
 
   // Load users and modules on component mount
+  useEffect(() => {
+    // Block all access as per request
+    router.replace('/');
+  }, [router]);
+
   useEffect(() => {
     fetchUsers();
     fetchModules();

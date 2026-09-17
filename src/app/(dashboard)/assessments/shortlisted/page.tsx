@@ -124,6 +124,7 @@ export default function ShortlistedPage() {
         const studentPayload: any = {
           first_name: student.first_name,
           last_name: student.last_name,
+          middle_name: student.middle_name ?? '',
           school_id: student.school_id,
           admission_status: 'admitted',
           academic_year_id: (student.academic_year_id ?? '3').toString(),
@@ -134,7 +135,12 @@ export default function ShortlistedPage() {
           category_id: student.category,
           class_id: student.class_id || student.class_applying_for,
           status: 'inactive',
-          middle_name: student.middle_name ?? ''
+          // Preserve Guardian Intelligence
+          guardian_name: student.guardian_name,
+          guardian_phone_number: student.guardian_phone_number,
+          address: student.address,
+          email: student.email,
+          relationship: student.relationship
         };
 
         await Promise.all([
@@ -634,8 +640,8 @@ export default function ShortlistedPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 py-4">
                   <ProfileItem icon={User} label="Full Identity" value={`${selectedStudent.first_name} ${selectedStudent.middle_name ?? ''} ${selectedStudent.last_name}`} />
                   <ProfileItem icon={Calendar} label="Date of Birth" value={selectedStudent.dob ? new Date(selectedStudent.dob).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '—'} />
-                  <ProfileItem icon={User} label="Gender" value={selectedStudent.gender} />
-                  <ProfileItem icon={Trophy} label="Assessment Score" value={`${selectedStudent.scores}%`} highlight={ (selectedStudent.scores ?? 0) >= 70 } />
+                  <ProfileItem icon={User} label="Gender" value={selectedStudent.gender || '—'} />
+                  <ProfileItem icon={Trophy} label="Assessment Score" value={`${selectedStudent.scores ?? 0}%`} highlight={ (selectedStudent.scores ?? 0) >= 70 } />
                   <ProfileItem icon={Building2} label="Institutional School" value={getSchoolName(selectedStudent.school_id)} />
                   <ProfileItem icon={GraduationCap} label="Assigned Level" value={getClassName(selectedStudent.class_id)} />
                   <ProfileItem icon={Filter} label="Fee Category" value={getCategoryName(selectedStudent.category_id)} />

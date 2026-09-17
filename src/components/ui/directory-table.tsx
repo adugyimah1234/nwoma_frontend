@@ -45,7 +45,7 @@ export function DirectoryTable<T extends Record<string, unknown>>({
   ...props
 }: DirectoryTableProps<T>) {
   return (
-    <Card className={cn("border-none shadow-sm overflow-hidden bg-card/50", cardClassName)}>
+    <Card className={cn("border-none shadow-sm dark:shadow-none overflow-hidden bg-card/50", cardClassName)}>
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <div>

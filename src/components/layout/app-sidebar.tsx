@@ -62,6 +62,7 @@ import { BadgeCheck, Bell, ChevronsUpDown, KeyRound, Settings } from 'lucide-rea
 interface NavSubItem {
   title: string;
   url: string;
+  allowedRoles?: string[];
 }
 
 interface NavItem {
@@ -144,7 +145,7 @@ const navGroups: NavGroup[] = [
         allowedRoles: ['admin', 'frontdesk', 'accountant', 'teacher', 'garrison_director', 'school_admin'],
       },
       {
-        title: 'Profile',
+        title: 'My Account',
         url: '/profile',
         icon: User,
         allowedRoles: ['admin', 'frontdesk', 'accountant', 'teacher', 'garrison_director', 'school_admin'],
@@ -154,7 +155,7 @@ const navGroups: NavGroup[] = [
 
   // ── ACADEMICS & OPERATIONS ── school staff + garrison director
   {
-    title: 'Academics & Operations',
+    title: 'School Operations',
     items: [
       {
         title: 'Registration',
@@ -167,7 +168,7 @@ const navGroups: NavGroup[] = [
         ],
       },
       {
-        title: 'Enrollment',
+        title: 'Class Enrollment',
         url: '/admission',
         icon: GraduationCap,
         allowedRoles: ['admin', 'frontdesk', 'accountant', 'teacher', 'garrison_director', 'school_admin'],
@@ -183,16 +184,16 @@ const navGroups: NavGroup[] = [
         ],
       },
       {
-        title: 'Students Directory',
+        title: 'Student Records',
         url: '/students',
         icon: Users,
         allowedRoles: ['admin', 'frontdesk', 'garrison_director', 'school_admin'],
         items: [
-          { title: 'All Students', url: '/students' },
-          { title: 'Parents Directory', url: '/team/parents' },
-          { title: 'ID Card Generator', url: '/students/id-cards' },
-          { title: 'Exeat & Leave', url: '/students/exeat' },
-          { title: 'Promote Students', url: '/students/promote' },
+          { title: 'Student List', url: '/students' },
+          { title: 'Parent List', url: '/team/parents' },
+          { title: 'Student IDs', url: '/students/id-cards' },
+          { title: 'Permissions & Leave', url: '/students/exeat' },
+          { title: 'Student Promotion', url: '/students/promote' },
         ],
       },
       {
@@ -207,18 +208,12 @@ const navGroups: NavGroup[] = [
         icon: Shield,
         allowedRoles: ['admin', 'teacher', 'garrison_director', 'school_admin'],
       },
-      {
-        title: 'Staff Payroll',
-        url: '/team/payroll',
-        icon: Wallet,
-        allowedRoles: ['admin', 'accountant', 'garrison_director', 'school_admin'],
-      },
     ],
   },
 
   // ── FINANCE & COLLECTIONS ── finance roles + garrison director
   {
-    title: 'Finance & Collections',
+    title: 'Finances',
     items: [
       {
         title: 'Fee Management',
@@ -228,10 +223,6 @@ const navGroups: NavGroup[] = [
         items: [
           { title: 'Create Receipt', url: '/fees/invoices' },
           { title: 'Debt Ledger', url: '/fees/ledger' },
-          { title: 'Provisions Store', url: '/fees/store' },
-          { title: 'Store Intelligence', url: '/fees/store/report' },
-          { title: 'Expenses Tracker', url: '/fees/expenses' },
-          { title: 'MoMo Reconciliation', url: '/fees/momo' },
           { title: 'Receipt History', url: '/fees/receipt-history' },
           { title: 'Payment History', url: '/fees/payment-history' },
         ],
@@ -244,41 +235,39 @@ const navGroups: NavGroup[] = [
     title: 'System Administration',
     items: [
       {
-        title: 'Console Overview',
+        title: 'Admin Dashboard',
         url: '/admin',
         icon: LayoutDashboard,
         allowedRoles: ['admin', 'garrison_director', 'school_admin'],
       },
       {
-        title: 'Access Management',
+        title: 'User Access',
         url: '/admin/user-management',
         icon: KeyRound,
         allowedRoles: ['admin', 'garrison_director', 'school_admin'],
         items: [
-          { title: 'User Directory', url: '/admin/user-management' },
-          { title: 'Roles & Permissions', url: '/admin/roles' },
-          { title: 'Module Access', url: '/admin/module-access' },
+          { title: 'Staff List', url: '/admin/user-management' },
         ],
       },
       {
-        title: 'Institutional Setup',
+        title: 'School Setup',
         url: '/admin/schools',
         icon: Building2,
         allowedRoles: ['admin', 'garrison_director', 'school_admin'],
         items: [
-          { title: 'Schools & Branches', url: '/admin/schools' },
+          { title: 'Manage Schools', url: '/admin/schools' },
           { title: 'Class Management', url: '/admin/classes' },
         ],
       },
       {
-        title: 'System Config',
+        title: 'System Settings',
         url: '/admin/system-settings',
         icon: Settings,
         allowedRoles: ['admin', 'garrison_director', 'school_admin'],
         items: [
           { title: 'Fee Categories', url: '/admin/categories' },
           { title: 'Assessment Config', url: '/admin/assessment-config' },
-          { title: 'Global Settings', url: '/admin/system-settings' },
+          { title: 'System Settings', url: '/admin/system-settings' },
         ],
       },
     ],
@@ -353,11 +342,16 @@ export function AppSidebar() {
   const filteredGroups = navGroups
     .map((group) => ({
       ...group,
-      items: group.items.filter((item) => checkRoleAccess(item.allowedRoles)),
+      items: group.items
+        .filter((item) => checkRoleAccess(item.allowedRoles))
+        .map((item) => ({
+          ...item,
+          items: item.items?.filter((sub) => !sub.allowedRoles || checkRoleAccess(sub.allowedRoles)),
+        })),
     }))
     .filter((group) => group.items.length > 0);
 
-  const allNavItems = navGroups.flatMap(g =>
+  const allNavItems = filteredGroups.flatMap(g =>
     g.items.flatMap(item => [item, ...(item.items || [])])
   );
 

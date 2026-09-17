@@ -17,7 +17,6 @@ import {
     Users,
     Mail,
     Phone,
-    Calendar,
     ArrowRight
 } from 'lucide-react';
 
@@ -41,8 +40,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Separator } from '@/components/ui/separator';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 import registrationService, { type RegistrationCreateInput } from '@/services/registrations';
 import classService, { ClassData } from '@/services/class';
@@ -50,7 +48,7 @@ import { Category, getAllCategories } from '@/services/categories';
 import { academicYear, getAllAcademicYear } from '@/services/academic_year';
 import { saveOfflineRegistration } from '@/lib/offlineRegistrations';
 import { registrationSchema, RegistrationFormValues } from './schemas';
-import { PageHeader }from '@/components/layout/page-header';
+import { PageHeader } from '@/components/layout/page-header';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 
 export default function NewRegistrationPage() {
@@ -132,7 +130,6 @@ export default function NewRegistrationPage() {
             const backendData: RegistrationCreateInput = {
                 ...formData,
                 category: selectedCategory?.name || formData.category,
-                category_id: formData.category,
                 previous_school: formData.previous_school || '',
                 scores: 0,
                 status: "pending",
@@ -160,7 +157,7 @@ export default function NewRegistrationPage() {
     };
 
     return (
-        <div className="flex flex-1 flex-col gap-8 p-4 md:p-8 max-w-4xl mx-auto w-full pb-24">
+        <div className="flex flex-1 flex-col gap-6 p-4 md:p-8 max-w-[1600px] mx-auto w-full pb-24">
             <PageHeader
                 title="Student Registration"
                 description="Complete the form below to register a new applicant in the system."
@@ -172,173 +169,184 @@ export default function NewRegistrationPage() {
             />
 
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onFormSubmit)} className="space-y-6">
-                    {/* SECTION 1: PERSONAL INFO */}
-                    <Card className="shadow-sm">
-                        <CardHeader className="py-4 border-b bg-muted/20">
-                            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                                <User className="size-4" /> Personal Information
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-6 grid gap-6">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <FormField control={form.control} name="first_name" render={({ field }) => (
-                                    <FormItem><FormLabel>First Name</FormLabel><FormControl><Input placeholder="John" {...field} /></FormControl><FormMessage /></FormItem>
-                                )} />
-                                <FormField control={form.control} name="middle_name" render={({ field }) => (
-                                    <FormItem><FormLabel>Middle Name</FormLabel><FormControl><Input placeholder="Quincy" {...field} /></FormControl><FormMessage /></FormItem>
-                                )} />
-                                <FormField control={form.control} name="last_name" render={({ field }) => (
-                                    <FormItem><FormLabel>Last Name (Surname)</FormLabel><FormControl><Input placeholder="Doe" {...field} /></FormControl><FormMessage /></FormItem>
-                                )} />
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <FormField control={form.control} name="date_of_birth" render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Date of Birth</FormLabel>
-                                            <FormControl>
-                                                <div className="relative">
-                                                    <Input type="date" {...field} className="pr-12" />
-                                                    {field.value && calculateAge(field.value) !== null && (
-                                                        <Badge className="absolute right-1 top-1.5 h-7" variant="secondary">{calculateAge(field.value)} yrs</Badge>
-                                                    )}
-                                                </div>
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
+                <form onSubmit={form.handleSubmit(onFormSubmit)} className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                    {/* LEFT COLUMN: MAIN FORM */}
+                    <div className="xl:col-span-2 space-y-6">
+                        {/* SECTION 1: PERSONAL INFO */}
+                        <Card className="shadow-sm dark:shadow-none">
+                            <CardHeader className="py-4 border-b bg-muted/10">
+                                <CardTitle className="text-sm font-bold flex items-center gap-2">
+                                    <User className="size-4 text-primary" /> Personal Information
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-6 grid gap-6">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <FormField control={form.control} name="first_name" render={({ field }) => (
+                                        <FormItem><FormLabel className="text-xs font-bold uppercase text-muted-foreground">First Name</FormLabel><FormControl><Input placeholder="John" {...field} className="h-10" /></FormControl><FormMessage /></FormItem>
                                     )} />
-                                    <FormField control={form.control} name="gender" render={({ field }) => (
+                                    <FormField control={form.control} name="middle_name" render={({ field }) => (
+                                        <FormItem><FormLabel className="text-xs font-bold uppercase text-muted-foreground">Middle Name</FormLabel><FormControl><Input placeholder="Quincy" {...field} className="h-10" /></FormControl><FormMessage /></FormItem>
+                                    )} />
+                                    <FormField control={form.control} name="last_name" render={({ field }) => (
+                                        <FormItem><FormLabel className="text-xs font-bold uppercase text-muted-foreground">Last Name (Surname)</FormLabel><FormControl><Input placeholder="Doe" {...field} className="h-10" /></FormControl><FormMessage /></FormItem>
+                                    )} />
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <FormField control={form.control} name="date_of_birth" render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="text-xs font-bold uppercase text-muted-foreground">Date of Birth</FormLabel>
+                                                <FormControl>
+                                                    <div className="relative">
+                                                        <Input type="date" {...field} className="pr-12 h-10" />
+                                                        {field.value && calculateAge(field.value) !== null && (
+                                                            <Badge className="absolute right-1 top-1.5 h-7 bg-muted text-foreground border-none" variant="secondary">{calculateAge(field.value)} yrs</Badge>
+                                                        )}
+                                                    </div>
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )} />
+                                        <FormField control={form.control} name="gender" render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="text-xs font-bold uppercase text-muted-foreground">Gender</FormLabel>
+                                                <FormControl>
+                                                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex h-10 items-center space-x-4 border rounded-md px-3 bg-muted/5">
+                                                        <div className="flex items-center space-x-2"><RadioGroupItem value="Male" id="m" /><Label htmlFor="m" className="text-sm font-medium">Male</Label></div>
+                                                        <div className="flex items-center space-x-2"><RadioGroupItem value="Female" id="f" /><Label htmlFor="f" className="text-sm font-medium">Female</Label></div>
+                                                    </RadioGroup>
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )} />
+                                    </div>
+                                    <FormField control={form.control} name="phone_number" render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Gender</FormLabel>
-                                            <FormControl>
-                                                <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex h-10 items-center space-x-4 border rounded-md px-3 bg-muted/5">
-                                                    <div className="flex items-center space-x-2"><RadioGroupItem value="Male" id="m" /><Label htmlFor="m" className="text-sm">Male</Label></div>
-                                                    <div className="flex items-center space-x-2"><RadioGroupItem value="Female" id="f" /><Label htmlFor="f" className="text-sm">Female</Label></div>
-                                                </RadioGroup>
-                                            </FormControl>
+                                            <FormLabel className="text-xs font-bold uppercase text-muted-foreground">Applicant Phone (If Any)</FormLabel>
+                                            <div className="relative">
+                                                <Phone className="absolute left-3 top-3 size-4 text-muted-foreground" />
+                                                <FormControl><Input type="tel" placeholder="+233..." className="pl-10 h-10" {...field} /></FormControl>
+                                            </div>
                                             <FormMessage />
                                         </FormItem>
                                     )} />
                                 </div>
-                                <FormField control={form.control} name="phone_number" render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Applicant Phone (If Any)</FormLabel>
-                                        <div className="relative">
-                                            <Phone className="absolute left-3 top-3 size-4 text-muted-foreground" />
-                                            <FormControl><Input type="tel" placeholder="+233..." className="pl-10" {...field} /></FormControl>
-                                        </div>
-                                        <FormMessage />
-                                    </FormItem>
-                                )} />
-                            </div>
-                        </CardContent>
-                    </Card>
+                            </CardContent>
+                        </Card>
 
-                    {/* SECTION 2: PLACEMENT */}
-                    <Card className="shadow-sm">
-                        <CardHeader className="py-4 border-b bg-muted/20">
-                            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                                <GraduationCap className="size-4" /> Academic Placement
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <FormField control={form.control} name="class_applying_for" render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Target Class</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                        <FormControl><SelectTrigger><SelectValue placeholder="Select class level" /></SelectTrigger></FormControl>
-                                        <SelectContent>{classes.map((cls, i) => <SelectItem key={i} value={cls.name}>{cls.name}</SelectItem>)}</SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                </FormItem>
-                            )} />
-                            <div className="grid grid-cols-2 gap-4">
-                                <FormField control={form.control} name="category" render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Category</FormLabel>
-                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                            <FormControl><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger></FormControl>
-                                            <SelectContent>{categories.map(cat => <SelectItem key={cat.id} value={cat.id.toString()}>{cat.name}</SelectItem>)}</SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                )} />
-                                <FormField control={form.control} name="academic_year" render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Academic Year</FormLabel>
-                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                            <FormControl><SelectTrigger><SelectValue placeholder="Year" /></SelectTrigger></FormControl>
-                                            <SelectContent>{academicYears.map(year => <SelectItem key={year.id} value={year.year.toString()}>{year.year}</SelectItem>)}</SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                )} />
-                            </div>
-                            <div className="md:col-span-2">
+                        {/* SECTION 2: ACADEMIC PLACEMENT */}
+                        <Card className="shadow-sm dark:shadow-none">
+                            <CardHeader className="py-4 border-b bg-muted/10">
+                                <CardTitle className="text-sm font-bold flex items-center gap-2">
+                                    <GraduationCap className="size-4 text-primary" /> Academic Placement
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-6 space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <FormField control={form.control} name="class_applying_for" render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className="text-xs font-bold uppercase text-muted-foreground">Target Class</FormLabel>
+                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                <FormControl><SelectTrigger className="h-10"><SelectValue placeholder="Select class level" /></SelectTrigger></FormControl>
+                                                <SelectContent>{classes.map((cls, i) => <SelectItem key={i} value={cls.name}>{cls.name}</SelectItem>)}</SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )} />
+                                    <FormField control={form.control} name="category" render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className="text-xs font-bold uppercase text-muted-foreground">Category</FormLabel>
+                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                <FormControl><SelectTrigger className="h-10"><SelectValue placeholder="Select" /></SelectTrigger></FormControl>
+                                                <SelectContent>{categories.map(cat => <SelectItem key={cat.id} value={cat.id.toString()}>{cat.name}</SelectItem>)}</SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )} />
+                                    <FormField control={form.control} name="academic_year" render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className="text-xs font-bold uppercase text-muted-foreground">Academic Year</FormLabel>
+                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                <FormControl><SelectTrigger className="h-10"><SelectValue placeholder="Year" /></SelectTrigger></FormControl>
+                                                <SelectContent>{academicYears.map(year => <SelectItem key={year.id} value={year.year.toString()}>{year.year}</SelectItem>)}</SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )} />
+                                </div>
                                 <FormField control={form.control} name="previous_school" render={({ field }) => (
-                                    <FormItem><FormLabel>Previous Institution Attended</FormLabel><FormControl><Input placeholder="School name and location" {...field} /></FormControl><FormMessage /></FormItem>
+                                    <FormItem><FormLabel className="text-xs font-bold uppercase text-muted-foreground">Previous Institution Attended</FormLabel><FormControl><Input placeholder="School name and location" {...field} className="h-10" /></FormControl><FormMessage /></FormItem>
                                 )} />
-                            </div>
-                        </CardContent>
-                    </Card>
+                            </CardContent>
+                        </Card>
 
-                    {/* SECTION 3: GUARDIAN */}
-                    <Card className="shadow-sm">
-                        <CardHeader className="py-4 border-b bg-muted/20">
-                            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                                <Users className="size-4" /> Guardian Details
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-6 space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <FormField control={form.control} name="guardian_name" render={({ field }) => (
-                                    <FormItem><FormLabel>Guardian Full Name</FormLabel><FormControl><Input placeholder="e.g. Samuel Doe" {...field} /></FormControl><FormMessage /></FormItem>
-                                )} />
-                                <FormField control={form.control} name="relationship" render={({ field }) => (
-                                    <FormItem><FormLabel>Relationship</FormLabel><FormControl><Input placeholder="e.g. Father" {...field} /></FormControl><FormMessage /></FormItem>
-                                )} />
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <FormField control={form.control} name="guardian_phone_number" render={({ field }) => (
+                        {/* SECTION 3: GUARDIAN DETAILS */}
+                        <Card className="shadow-sm dark:shadow-none">
+                            <CardHeader className="py-4 border-b bg-muted/10">
+                                <CardTitle className="text-sm font-bold flex items-center gap-2">
+                                    <Users className="size-4 text-primary" /> Guardian Details
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-6 space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <FormField control={form.control} name="guardian_name" render={({ field }) => (
+                                        <FormItem><FormLabel className="text-xs font-bold uppercase text-muted-foreground">Guardian Full Name</FormLabel><FormControl><Input placeholder="e.g. Samuel Doe" {...field} className="h-10" /></FormControl><FormMessage /></FormItem>
+                                    )} />
+                                    <FormField control={form.control} name="relationship" render={({ field }) => (
+                                        <FormItem><FormLabel className="text-xs font-bold uppercase text-muted-foreground">Relationship</FormLabel><FormControl><Input placeholder="e.g. Father" {...field} className="h-10" /></FormControl><FormMessage /></FormItem>
+                                    )} />
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <FormField control={form.control} name="guardian_phone_number" render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className="text-xs font-bold uppercase text-muted-foreground">Guardian Phone Number</FormLabel>
+                                            <div className="relative">
+                                                <Phone className="absolute left-3 top-3 size-4 text-muted-foreground" />
+                                                <FormControl><Input type="tel" placeholder="+233..." className="pl-10 h-10" {...field} /></FormControl>
+                                            </div>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )} />
+                                    <FormField control={form.control} name="email" render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className="text-xs font-bold uppercase text-muted-foreground">Email Address (Optional)</FormLabel>
+                                            <div className="relative">
+                                                <Mail className="absolute left-3 top-3 size-4 text-muted-foreground" />
+                                                <FormControl><Input type="email" placeholder="example@email.com" className="pl-10 h-10" {...field} /></FormControl>
+                                            </div>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )} />
+                                </div>
+                                <FormField control={form.control} name="address" render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Guardian Phone Number</FormLabel>
+                                        <FormLabel className="text-xs font-bold uppercase text-muted-foreground">Residential Address</FormLabel>
                                         <div className="relative">
-                                            <Phone className="absolute left-3 top-3 size-4 text-muted-foreground" />
-                                            <FormControl><Input type="tel" placeholder="+233..." className="pl-10" {...field} /></FormControl>
+                                            <MapPin className="absolute left-3 top-3 size-4 text-muted-foreground" />
+                                            <FormControl><Input className="pl-10 h-10" placeholder="House No. / Physical Location / Landmark" {...field} /></FormControl>
                                         </div>
                                         <FormMessage />
                                     </FormItem>
                                 )} />
-                                <FormField control={form.control} name="email" render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Email Address (Optional)</FormLabel>
-                                        <div className="relative">
-                                            <Mail className="absolute left-3 top-3 size-4 text-muted-foreground" />
-                                            <FormControl><Input type="email" placeholder="example@email.com" className="pl-10" {...field} /></FormControl>
-                                        </div>
-                                        <FormMessage />
-                                    </FormItem>
-                                )} />
-                            </div>
-                            <FormField control={form.control} name="address" render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Residential Address</FormLabel>
-                                    <div className="relative">
-                                        <MapPin className="absolute left-3 top-3 size-4 text-muted-foreground" />
-                                        <FormControl><Input className="pl-10" placeholder="House No. / Physical Location / Landmark" {...field} /></FormControl>
-                                    </div>
-                                    <FormMessage />
-                                </FormItem>
-                            )} />
-                        </CardContent>
-                    </Card>
+                            </CardContent>
+                        </Card>
+                    </div>
 
-                    <div className="flex justify-end pt-4">
-                        <Button type="submit" size="lg" className="px-10 gap-2">
-                            Review Registration <ArrowRight className="size-4" />
-                        </Button>
+                    {/* RIGHT COLUMN: SUMMARY & ACTIONS */}
+                    <div className="space-y-6">
+                        {/* REGISTRATION ACTION */}
+                        <Card className="shadow-lg dark:shadow-none border-border/50 bg-primary/5">
+                            <CardContent className="p-6 space-y-4">
+                                <div className="space-y-1">
+                                    <h4 className="text-sm font-bold">Review Submission</h4>
+                                    <p className="text-xs text-muted-foreground leading-relaxed">Ensure all student and guardian details are accurate before finalizing the signup.</p>
+                                </div>
+                                <Button type="submit" size="lg" className="w-full h-12 rounded-xl font-bold uppercase tracking-widest text-xs gap-2">
+                                    Continue Signup <ArrowRight className="size-4" />
+                                </Button>
+                            </CardContent>
+                        </Card>
                     </div>
                 </form>
             </Form>
@@ -370,4 +378,3 @@ export default function NewRegistrationPage() {
         </div>
     );
 }
-

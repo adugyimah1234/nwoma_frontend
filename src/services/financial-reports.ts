@@ -572,9 +572,14 @@ export const downloadReport = async (
   try {
     const exportUrl = await exportReport(reportType, params, format);
     
+    // Ensure we have an absolute URL
+    const absoluteUrl = exportUrl.startsWith('http')
+      ? exportUrl
+      : `${api.defaults.baseURL?.replace('/api', '') || ''}${exportUrl.startsWith('/') ? '' : '/'}${exportUrl}`;
+
     // Create a direct link and trigger download
     const link = document.createElement('a');
-    link.href = exportUrl;
+    link.href = absoluteUrl;
     link.setAttribute('download', `${reportType}_report.${format === 'excel' ? 'xlsx' : format}`);
     link.setAttribute('target', '_blank');
     document.body.appendChild(link);

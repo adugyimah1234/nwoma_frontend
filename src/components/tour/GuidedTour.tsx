@@ -4,9 +4,7 @@ import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import type {
   Step,
-  CallBackProps,
-  TooltipRenderProps,
-  Styles
+  TooltipRenderProps
 } from 'react-joyride';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -16,17 +14,25 @@ import { useAtom } from 'jotai';
 import { tourRunAtom } from './tour-atom';
 
 // Properly load Joyride with SSR disabled to avoid "window is not defined"
-// and handle the export default issue in Turbopack.
-const Joyride = dynamic(() => import('react-joyride').then(mod => {
-  // If the module has a default export, use it. Otherwise, use the module itself.
-  return (mod.default || mod) as any;
+const Joyride = dynamic<any>(() => import('react-joyride').then(mod => {
+  // react-joyride exports Joyride component.
+  // In some environments, it might be the default export, or a named export.
+  // Next.js dynamic expects a promise that resolves to a component or { default: Component }
+  const component = mod.Joyride || mod.default || (typeof mod === 'function' ? mod : null);
+
+  if (!component) {
+    console.error("Failed to load Joyride component from react-joyride module", mod);
+    // Return a dummy component to avoid "Element type is invalid"
+    return () => null;
+  }
+
+  return { default: component };
 }), {
   ssr: false,
   loading: () => null
 });
 
 // Access STATUS from the module via dynamic import or constant if available.
-// Since STATUS is a constant, we can define it locally or import it normally.
 const STATUS = {
   IDLE: 'idle',
   ACTION: 'action',
@@ -38,7 +44,7 @@ const STATUS = {
   ERROR: 'error',
 } as const;
 
-const TOUR_STYLES: Styles = {
+const TOUR_STYLES: any = {
   options: {
     zIndex: 10000,
     primaryColor: 'hsl(var(--primary))',
@@ -46,9 +52,6 @@ const TOUR_STYLES: Styles = {
   overlay: {
     backgroundColor: 'rgba(0, 0, 0, 0.4)',
     backdropFilter: 'blur(2px)',
-  },
-  spotlight: {
-    borderRadius: 8,
   },
 };
 
@@ -58,9 +61,27 @@ const CustomTooltip = ({
   backProps,
   closeProps,
   primaryProps,
-  stepCount,
+  size,
   isLastStep,
 }: TooltipRenderProps) => {
+  /**
+   * Filter out non-standard attributes that React warns about when passed to DOM elements.
+   */
+  const filterJoyrideProps = (props: any) => {
+    const {
+      borderRadius,
+      boxShadow,
+      textAlign,
+      lineHeight,
+      ...domProps
+    } = props;
+    return domProps;
+  };
+
+  const safePrimaryProps = filterJoyrideProps(primaryProps);
+  const safeBackProps = filterJoyrideProps(backProps);
+  const stepCount = size || 0;
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9, y: 10 }}
@@ -102,12 +123,12 @@ const CustomTooltip = ({
 
         <div className="flex gap-2">
           {index > 0 && (
-            <Button variant="ghost" size="sm" {...backProps} className="h-8 px-3 text-xs font-bold text-slate-600">
+            <Button variant="ghost" size="sm" {...safeBackProps} className="h-8 px-3 text-xs font-bold text-slate-600">
               <ChevronLeft className="mr-1 h-3 w-3" /> Back
             </Button>
           )}
 
-          <Button size="sm" {...primaryProps} className="h-8 px-3 text-xs font-bold bg-indigo-600 text-white rounded-xl">
+          <Button size="sm" {...safePrimaryProps} className="h-8 px-3 text-xs font-bold bg-indigo-600 text-white rounded-xl">
             {isLastStep ? (
               <span className="flex items-center"><Check className="mr-1 h-3 w-3" /> Finish</span>
             ) : (
@@ -141,7 +162,7 @@ export const GuidedTour = ({ steps, run = false, onFinish }: GuidedTourProps) =>
     }
   }, [pathname, run, setTourRun]);
 
-  const handleJoyrideCallback = (data: CallBackProps) => {
+  const handleJoyrideCallback = (data: any) => {
     const { status } = data;
     const finishedStatuses: string[] = [STATUS.FINISHED, STATUS.SKIPPED];
 
@@ -159,6 +180,7 @@ export const GuidedTour = ({ steps, run = false, onFinish }: GuidedTourProps) =>
       steps={steps}
       run={tourRun}
       callback={handleJoyrideCallback}
+      onEvent={handleJoyrideCallback}
       continuous
       showProgress
       showSkipButton
