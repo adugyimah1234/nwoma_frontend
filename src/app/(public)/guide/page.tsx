@@ -8,7 +8,6 @@ import {
   Building2,
   BookOpen,
   Search,
-  ChevronRight,
   Menu,
   X,
   Command,
@@ -352,32 +351,36 @@ export default function GuidePage() {
   }, [activeArticle]);
 
   return (
-    <div className="min-h-screen bg-white font-sans text-slate-900">
+    <div className="min-h-screen bg-background font-sans text-foreground">
       {/* Top Navbar */}
-      <header className="h-16 border-b border-slate-100 flex items-center justify-between px-6 sticky top-0 bg-white/90 backdrop-blur-md z-[100]">
+      <header className="h-16 border-b border-border flex items-center justify-between px-6 sticky top-0 bg-card/95 backdrop-blur-md z-[100]">
         <div className="flex items-center gap-8">
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="size-8 bg-indigo-600 rounded-lg flex items-center justify-center group-hover:rotate-12 transition-transform">
-               <ShieldCheck className="text-white size-5" />
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <div className="size-9 bg-primary text-primary-foreground rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform shadow-md">
+               <Image src="/logo.png" alt="Ghana Garrison Schools Logo" width={24} height={24} priority />
             </div>
-            <span className="font-bold text-lg tracking-tight">Garrison <span className="text-indigo-600">Manual</span></span>
+            <span className="font-extrabold text-lg tracking-tight text-foreground">
+              Garrison <span className="text-primary">Manual</span>
+            </span>
           </Link>
           <div className="hidden lg:flex relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <input
               type="text"
               placeholder="Search command protocols..."
-              className="bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-1.5 text-sm w-96 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-medium"
+              className="bg-muted/50 border border-input rounded-xl pl-10 pr-4 py-2 text-sm w-96 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium text-foreground placeholder:text-muted-foreground"
             />
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <Link href="/login" className="text-sm font-bold text-slate-500 hover:text-slate-900 transition-colors">Portal Login</Link>
-          <Button size="sm" asChild className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl px-6 h-9 shadow-lg shadow-indigo-100">
+          <Link href="/login" className="text-xs font-bold text-muted-foreground hover:text-foreground transition-colors">
+            Portal Login
+          </Link>
+          <Button size="sm" asChild className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl px-5 h-9 shadow-md transition-all">
              <Link href="/register">Request Access</Link>
           </Button>
-          <button className="md:hidden" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
-            {isSidebarOpen ? <X className="size-6 text-slate-900" /> : <Menu className="size-6 text-slate-900" />}
+          <button className="md:hidden text-foreground" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
+            {isSidebarOpen ? <X className="size-6" /> : <Menu className="size-6" />}
           </button>
         </div>
       </header>
@@ -385,15 +388,15 @@ export default function GuidePage() {
       <div className="flex justify-center max-w-[1500px] mx-auto">
         <div className="flex w-full relative">
 
-          {/* Left Sidebar - CLEANER & FIXED */}
+          {/* Left Sidebar */}
           <aside className={cn(
-            "fixed md:sticky top-16 left-0 w-72 bg-white border-r border-slate-100 h-[calc(100vh-4rem)] z-[90] transition-transform md:translate-x-0 overflow-y-auto no-scrollbar",
+            "fixed md:sticky top-16 left-0 w-72 bg-card border-r border-border h-[calc(100vh-4rem)] z-[90] transition-transform md:translate-x-0 overflow-y-auto no-scrollbar",
             isSidebarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
           )}>
-            <div className="p-8 space-y-10">
+            <div className="p-6 space-y-8">
               {ARTICLES.map((cat, idx) => (
                 <div key={idx}>
-                  <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 px-2">{cat.category}</h3>
+                  <h3 className="text-[10px] font-black text-muted-foreground/70 uppercase tracking-[0.2em] mb-3 px-2">{cat.category}</h3>
                   <div className="space-y-1">
                     {cat.items.map((item) => (
                       <button
@@ -403,13 +406,13 @@ export default function GuidePage() {
                           setIsSidebarOpen(false);
                         }}
                         className={cn(
-                          "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all group text-left",
+                          "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all group text-left",
                           activeArticle === item.id
-                            ? "bg-indigo-50 text-indigo-700 shadow-sm"
-                            : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                            ? "bg-primary/10 text-primary font-bold shadow-xs border border-primary/20"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                         )}
                       >
-                        <item.icon className={cn("size-4 shrink-0", activeArticle === item.id ? "text-indigo-600" : "text-slate-400 group-hover:text-slate-600")} />
+                        <item.icon className={cn("size-4 shrink-0", activeArticle === item.id ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
                         {item.title}
                       </button>
                     ))}
@@ -420,24 +423,24 @@ export default function GuidePage() {
           </aside>
 
           {/* Main Content */}
-          <main className="flex-1 min-w-0 p-8 md:p-16 lg:p-24 bg-white">
+          <main className="flex-1 min-w-0 p-8 md:p-14 lg:p-20 bg-background">
             <div className="max-w-[800px]">
-               <div className="mb-16">
-                 <div className="size-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-6">
+               <div className="mb-12">
+                 <div className="size-12 bg-primary/10 text-primary rounded-2xl flex items-center justify-center mb-6 border border-primary/20">
                     {React.createElement((ARTICLES.flatMap(c => c.items).find(i => i.id === activeArticle) as any)?.icon || Command, { size: 24 })}
                  </div>
-                 <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-slate-900 mb-6">{currentContent.title}</h1>
-                 <p className="text-xl text-slate-500 font-medium leading-relaxed italic border-l-4 border-indigo-100 pl-6 py-2">
+                 <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-foreground mb-4">{currentContent.title}</h1>
+                 <p className="text-base md:text-lg text-muted-foreground font-medium leading-relaxed italic border-l-4 border-primary/30 pl-5 py-2">
                    {currentContent.subtitle}
                  </p>
 
-                 <div className="mt-12 p-6 rounded-2xl bg-slate-900 text-white flex items-center justify-between shadow-2xl">
+                 <div className="mt-8 p-6 rounded-2xl bg-slate-900 text-white flex items-center justify-between shadow-lg">
                     <div className="flex items-center gap-4">
                        <div className="size-10 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md">
                           <Info className="size-5" />
                        </div>
                        <div>
-                          <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Node Status</p>
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Node Status</p>
                           <p className="text-sm font-semibold">Verified Operational Protocol</p>
                        </div>
                     </div>
@@ -448,25 +451,25 @@ export default function GuidePage() {
                  </div>
                </div>
 
-               <div className="space-y-24">
+               <div className="space-y-16">
                   {currentContent.sections.map((section: any) => (
                     <section key={section.id} id={section.id} className="scroll-mt-24 group">
-                      <div className="flex items-center gap-3 mb-8">
-                         <Link href={`#${section.id}`} className="text-indigo-200 hover:text-indigo-600 transition-colors">
+                      <div className="flex items-center gap-3 mb-6">
+                         <Link href={`#${section.id}`} className="text-primary/40 hover:text-primary transition-colors">
                            <span className="text-2xl font-normal rotate-90 inline-block">∞</span>
                          </Link>
-                         <h2 className="text-3xl font-bold text-slate-900 tracking-tight">{section.title}</h2>
+                         <h2 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">{section.title}</h2>
                       </div>
-                      <p className="text-lg text-slate-600 leading-relaxed font-medium mb-10">
+                      <p className="text-base text-muted-foreground leading-relaxed font-medium mb-8">
                          {section.text}
                       </p>
-                      <div className="grid gap-4">
+                      <div className="grid gap-3">
                          {section.points.map((point: string, pIdx: number) => (
-                           <div key={pIdx} className="flex gap-5 items-start p-6 rounded-2xl bg-slate-50 border border-slate-100 hover:border-indigo-200 hover:bg-white hover:shadow-xl hover:shadow-indigo-500/5 transition-all group/point">
-                              <div className="size-6 rounded-lg bg-white border border-slate-200 flex items-center justify-center group-hover/point:bg-indigo-600 group-hover/point:border-indigo-600 transition-colors shrink-0 mt-0.5">
-                                 <ArrowRight className="size-3.5 text-slate-400 group-hover/point:text-white" />
+                           <div key={pIdx} className="flex gap-4 items-start p-5 rounded-2xl bg-card border border-border hover:border-primary/30 hover:shadow-md transition-all group/point">
+                              <div className="size-6 rounded-lg bg-muted border border-border flex items-center justify-center group-hover/point:bg-primary group-hover/point:border-primary transition-colors shrink-0 mt-0.5">
+                                 <ArrowRight className="size-3.5 text-muted-foreground group-hover/point:text-primary-foreground" />
                               </div>
-                              <p className="text-base font-semibold text-slate-700 leading-relaxed tracking-tight">{point}</p>
+                              <p className="text-sm font-semibold text-foreground leading-relaxed tracking-tight">{point}</p>
                            </div>
                          ))}
                       </div>
@@ -477,16 +480,16 @@ export default function GuidePage() {
           </main>
 
           {/* Right Sidebar - TOC */}
-          <aside className="hidden xl:block w-72 sticky top-16 h-[calc(100vh-4rem)] p-12 overflow-y-auto no-scrollbar">
+          <aside className="hidden xl:block w-72 sticky top-16 h-[calc(100vh-4rem)] p-10 overflow-y-auto no-scrollbar">
             <div className="space-y-8">
               <div className="space-y-4">
-                 <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">In this article</h4>
-                 <nav className="space-y-3 border-l-2 border-slate-50 ml-1">
+                 <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">In this article</h4>
+                 <nav className="space-y-2.5 border-l-2 border-border ml-1">
                    {currentContent.toc.map((item: any) => (
                      <Link
                        key={item.id}
                        href={`#${item.id}`}
-                       className="block pl-4 text-xs font-bold text-slate-500 hover:text-indigo-600 hover:border-indigo-600 border-l-2 border-transparent -ml-[2px] transition-all leading-relaxed"
+                       className="block pl-4 text-xs font-bold text-muted-foreground hover:text-primary hover:border-primary border-l-2 border-transparent -ml-[2px] transition-all leading-relaxed"
                      >
                        {item.label}
                      </Link>
@@ -494,12 +497,12 @@ export default function GuidePage() {
                  </nav>
               </div>
 
-              <div className="p-6 rounded-2xl bg-indigo-50 border border-indigo-100 space-y-4 shadow-sm shadow-indigo-100/50">
-                 <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Protocol Support</p>
-                 <p className="text-[11px] font-semibold text-indigo-700 leading-relaxed italic">
+              <div className="p-5 rounded-2xl bg-accent/15 border border-accent/30 space-y-3 shadow-xs">
+                 <p className="text-[10px] font-bold text-foreground uppercase tracking-widest">Protocol Support</p>
+                 <p className="text-[11px] font-semibold text-muted-foreground leading-relaxed italic">
                    Need clarification on a command protocol?
                  </p>
-                 <Button variant="link" className="p-0 h-auto text-xs font-bold text-indigo-600">
+                 <Button variant="link" className="p-0 h-auto text-xs font-bold text-primary hover:underline">
                     Open Support Ticket
                  </Button>
               </div>
