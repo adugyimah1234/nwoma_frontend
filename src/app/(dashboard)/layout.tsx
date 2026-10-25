@@ -2,8 +2,6 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { Header } from "@/components/layout/header";
 import { DashboardProvider } from "@/contexts/DashboardContext";
-// import { Toaster as SonnerToaster } from "sonner";
-// import { Toaster as RadixToaster } from "@/components/ui/toaster";
 
 export default function DashboardLayout({
   children,
@@ -14,7 +12,7 @@ export default function DashboardLayout({
     <DashboardProvider>
       <SidebarProvider>
         <AppSidebar />
-        <SidebarInset>
+        <SidebarInset className="bg-[#F4F7FC] dark:bg-background flex flex-col min-h-screen">
           <Header fixed />
           <main className="flex-1 overflow-y-auto">
             {children}
@@ -24,4 +22,3 @@ export default function DashboardLayout({
     </DashboardProvider>
   );
 }
-

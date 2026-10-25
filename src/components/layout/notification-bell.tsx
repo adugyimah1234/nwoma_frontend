@@ -72,12 +72,16 @@ export function NotificationBell() {
   return (
     <DropdownMenu onOpenChange={(open) => open && fetchNotifications()}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative h-8 w-8">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="relative h-9 w-9 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+        >
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
             <Badge
               variant="destructive"
-              className="absolute -right-0.5 -top-0.5 h-4 w-4 justify-center rounded-full p-0 text-[10px] animate-in zoom-in duration-300"
+              className="absolute -right-0.5 -top-0.5 h-4 w-4 justify-center rounded-full p-0 text-[10px] bg-red-600 text-white font-bold border-2 border-[#06152D] animate-in zoom-in duration-300"
             >
               {unreadCount}
             </Badge>
@@ -85,7 +89,7 @@ export function NotificationBell() {
           <span className="sr-only">Notifications</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80 p-0 shadow-xl border-none">
+      <DropdownMenuContent align="end" className="w-80 p-0 shadow-xl border-border rounded-xl overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 bg-muted/20">
           <span className="text-sm font-bold uppercase tracking-tight text-muted-foreground">Notifications</span>
           {unreadCount > 0 && (
@@ -98,44 +102,40 @@ export function NotificationBell() {
           )}
         </div>
         <Separator />
-        <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
+        <div className="max-h-80 overflow-y-auto divide-y divide-border">
           {notifications.length === 0 ? (
-            <div className="py-10 text-center space-y-2">
-                <Bell className="size-8 mx-auto text-muted-foreground/20" />
-                <p className="text-xs text-muted-foreground italic">No new operational alerts.</p>
+            <div className="p-8 text-center text-xs text-muted-foreground font-medium">
+              No notifications yet
             </div>
           ) : (
             notifications.map((n) => (
               <DropdownMenuItem
                 key={n.id}
+                onClick={() => handleMarkAsRead(n.id)}
                 className={cn(
-                    "flex flex-col items-start gap-1 py-4 px-4 border-b last:border-0 cursor-default focus:bg-muted/30 transition-colors",
-                    !n.is_read && "bg-primary/5"
+                  "flex items-start gap-3 p-3.5 cursor-pointer focus:bg-muted/50 transition-colors",
+                  !n.is_read ? "bg-primary/[0.03]" : "opacity-75"
                 )}
-                onClick={() => !n.is_read && handleMarkAsRead(n.id)}
               >
-                <div className="flex items-center gap-2 w-full">
-                    {getIcon(n.type)}
-                    <span className={cn("text-xs flex-1 truncate font-bold", !n.is_read ? "text-foreground" : "text-muted-foreground")}>{n.title}</span>
-                    <span className="text-[10px] text-muted-foreground tabular-nums whitespace-nowrap">
-                        {formatDistanceToNow(new Date(n.created_at), { addSuffix: true }).replace('about ', '')}
+                <div className="mt-0.5 shrink-0">{getIcon(n.type)}</div>
+                <div className="flex-1 space-y-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className={cn("text-xs font-semibold leading-none", !n.is_read ? "text-foreground" : "text-muted-foreground")}>
+                      {n.title}
+                    </p>
+                    <span className="text-[10px] text-muted-foreground/75 font-medium shrink-0">
+                      {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}
                     </span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground leading-snug line-clamp-2">
+                    {n.message}
+                  </p>
                 </div>
-                <p className="text-[11px] leading-relaxed text-muted-foreground pl-6">
-                  {n.message}
-                </p>
               </DropdownMenuItem>
             ))
           )}
-        </div>
-        <Separator />
-        <div className="p-2">
-            <Button variant="ghost" className="w-full h-8 text-[10px] font-bold uppercase text-muted-foreground" onClick={() => {}}>
-                View Full Audit Trail
-            </Button>
         </div>
       </DropdownMenuContent>
     </DropdownMenu>
   );
 }
-

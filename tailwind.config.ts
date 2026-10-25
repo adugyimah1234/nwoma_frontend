@@ -95,6 +95,17 @@ const config = {
   				'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
   				border: 'hsl(var(--sidebar-border))',
   				ring: 'hsl(var(--sidebar-ring))'
+  			},
+  			ghana: {
+  				red: '#DC2626',
+  				gold: '#FAB005',
+  				green: '#00875A'
+  			},
+  			military: {
+  				navy: '#06152D',
+  				deep: '#0A1931',
+  				blue: '#0077E6',
+  				surface: '#0F2244'
   			}
   		},
   		borderRadius: {

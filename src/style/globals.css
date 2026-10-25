@@ -4,74 +4,89 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    /* Soft light grayish-blue canvas from Image 1 design */
+    --background: 216 33% 97%;
     --foreground: 222.2 84% 4.9%;
+    
+    /* Clean pure white cards with soft contrast against background */
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 220 75% 38%;
+    
+    /* Primary military/executive royal blue */
+    --primary: 215 88% 45%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 40% 96.1%;
+    
+    --secondary: 214 32% 93%;
     --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
+    
+    --muted: 214 28% 92%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 38 92% 50%;
+    
+    /* Ghana Gold Accent */
+    --accent: 38 95% 50%;
     --accent-foreground: 222.2 47.4% 11.2%;
+    
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 220 75% 38%;
-    --radius: 0.5rem;
-    --chart-1: 220 75% 38%;
-    --chart-2: 38 92% 50%;
-    --chart-3: 173 58% 39%;
-    --chart-4: 197 37% 24%;
+    
+    --border: 214.3 31.8% 90%;
+    --input: 214.3 31.8% 90%;
+    --ring: 215 88% 45%;
+    --radius: 0.75rem;
+    
+    /* Chart colors */
+    --chart-1: 215 88% 45%;
+    --chart-2: 38 95% 50%;
+    --chart-3: 154 100% 26%;
+    --chart-4: 265 65% 55%;
     --chart-5: 0 84.2% 60.2%;
-    --sidebar-background: 222.2 47.4% 11.2%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 220 75% 38%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 38 92% 50%;
-    --sidebar-accent-foreground: 222.2 47.4% 11.2%;
-    --sidebar-border: 217.2 19% 20%;
-    --sidebar-ring: 220 75% 38%;
+    
+    /* Midnight Military Navy Sidebar from Image 1 */
+    --sidebar-background: 221 68% 10.5%;
+    --sidebar-foreground: 210 30% 90%;
+    --sidebar-primary: 38 95% 50%;
+    --sidebar-primary-foreground: 221 68% 10.5%;
+    --sidebar-accent: 38 95% 50%;
+    --sidebar-accent-foreground: 221 68% 10.5%;
+    --sidebar-border: 221 50% 18%;
+    --sidebar-ring: 38 95% 50%;
   }
 
   .dark {
-    --background: 222.2 20% 3.9%;
+    --background: 222 55% 7%;
     --foreground: 210 40% 98%;
-    --card: 222.2 20% 5%;
+    --card: 221 50% 11%;
     --card-foreground: 210 40% 98%;
-    --popover: 222.2 20% 5%;
+    --popover: 221 50% 11%;
     --popover-foreground: 210 40% 98%;
-    --primary: 220 75% 48%;
+    --primary: 215 90% 55%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 217.2 20% 10%;
+    --secondary: 221 40% 16%;
     --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 20% 10%;
-    --muted-foreground: 215 10% 65.1%;
-    --accent: 38 92% 50%;
+    --muted: 221 40% 16%;
+    --muted-foreground: 215 15% 65%;
+    --accent: 38 95% 50%;
     --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217.2 20% 10%;
-    --input: 217.2 20% 10%;
-    --ring: 220 75% 48%;
-    --chart-1: 220 75% 48%;
-    --chart-2: 38 92% 50%;
-    --chart-3: 160 60% 45%;
-    --chart-4: 280 65% 60%;
+    --border: 221 40% 18%;
+    --input: 221 40% 18%;
+    --ring: 215 90% 55%;
+    --chart-1: 215 90% 55%;
+    --chart-2: 38 95% 50%;
+    --chart-3: 154 80% 40%;
+    --chart-4: 265 65% 60%;
     --chart-5: 340 75% 55%;
-    --sidebar-background: 222.2 20% 3.9%;
+    --sidebar-background: 221 70% 6.5%;
     --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 220 75% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 38 92% 50%;
-    --sidebar-accent-foreground: 222.2 47.4% 11.2%;
-    --sidebar-border: 217.2 20% 10%;
-    --sidebar-ring: 220 75% 48%;
+    --sidebar-primary: 38 95% 50%;
+    --sidebar-primary-foreground: 221 70% 6.5%;
+    --sidebar-accent: 38 95% 50%;
+    --sidebar-accent-foreground: 221 70% 6.5%;
+    --sidebar-border: 221 45% 15%;
+    --sidebar-ring: 38 95% 50%;
   }
 }
 
@@ -112,7 +127,6 @@
     color: hsl(var(--muted-foreground)) !important;
   }
 }
-
 
 .input {
   @apply border rounded px-3 py-2 w-full text-sm;

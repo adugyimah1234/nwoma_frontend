@@ -19,6 +19,11 @@ import {
   Building,
   BarChart3,
   Calculator,
+  BadgeCheck,
+  Bell,
+  ChevronsUpDown,
+  KeyRound,
+  Settings,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
@@ -26,6 +31,9 @@ import { getAllRoles } from '@/services/roles';
 import { useLoading } from '../nav/side-nav/components/LoadingContext';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { getBranding } from '@/services/superAdmin';
+import { SidebarWatermark } from './sidebar-watermark';
+import { GhanaRibbonCorner } from './ghana-ribbon';
+import { cn } from '@/lib/utils';
 
 import {
   Sidebar,
@@ -57,7 +65,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { BadgeCheck, Bell, ChevronsUpDown, KeyRound, Settings } from 'lucide-react';
 
 interface NavSubItem {
   title: string;
@@ -277,6 +284,7 @@ const navGroups: NavGroup[] = [
 function getInitials(name: string) {
   return name
     .split(' ')
+    .filter(Boolean)
     .map((n) => n[0])
     .join('')
     .substring(0, 2)
@@ -293,14 +301,14 @@ export function AppSidebar() {
 
   useEffect(() => {
     const fetchBranding = async () => {
-        try {
-            const brandRes = await getBranding();
-            if (brandRes && brandRes.institutional_logo) {
-                setLogoUrl(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${brandRes.institutional_logo}`);
-            }
-        } catch {
-            // keep default logo
+      try {
+        const brandRes = await getBranding();
+        if (brandRes && brandRes.institutional_logo) {
+          setLogoUrl(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${brandRes.institutional_logo}`);
         }
+      } catch {
+        // keep default logo
+      }
     };
     fetchBranding();
   }, []);
@@ -326,13 +334,9 @@ export function AppSidebar() {
   };
 
   const checkRoleAccess = (allowedRoles: string[]) => {
-    if (!user) return false; // Default to no access if user is not loaded
-
-    // Normalize role string (e.g. 'super_admin' -> 'superadmin', 'garrison_director' -> 'garrisondirector')
+    if (!user) return false;
     const roleStr = (user.role || userRole || '').toLowerCase().replace(/_/g, '').replace(/\s/g, '');
-
-    if (!roleStr) return false; // Default to no access if role is empty
-
+    if (!roleStr) return false;
     return allowedRoles.some((allowed) => {
       const allowedStr = allowed.toLowerCase().replace(/_/g, '').replace(/\s/g, '');
       return roleStr === allowedStr;
@@ -351,23 +355,20 @@ export function AppSidebar() {
     }))
     .filter((group) => group.items.length > 0);
 
-  const allNavItems = filteredGroups.flatMap(g =>
-    g.items.flatMap(item => [item, ...(item.items || [])])
+  const allNavItems = filteredGroups.flatMap((g) =>
+    g.items.flatMap((item) => [item, ...(item.items || [])])
   );
 
   const isActive = (url: string) => {
     if (url === '/') return pathname === '/';
-
     const isMatch = pathname === url || pathname.startsWith(url + '/');
     if (!isMatch) return false;
-
-    // For highlighting, we want the most specific match
-    const hasMoreSpecificMatch = allNavItems.some(item =>
-      item.url !== url &&
-      item.url.startsWith(url + '/') &&
-      (pathname === item.url || pathname.startsWith(item.url + '/'))
+    const hasMoreSpecificMatch = allNavItems.some(
+      (item) =>
+        item.url !== url &&
+        item.url.startsWith(url + '/') &&
+        (pathname === item.url || pathname.startsWith(item.url + '/'))
     );
-
     return !hasMoreSpecificMatch;
   };
 
@@ -383,20 +384,35 @@ export function AppSidebar() {
     return '/';
   };
 
+  const isSuperAdmin = (user?.role || '').toLowerCase().replace(/_/g, '') === 'superadmin';
+  const displayName = user?.full_name || (isSuperAdmin ? 'System Admin' : 'User');
+  const userInitials = user?.full_name ? getInitials(user.full_name) : (isSuperAdmin ? 'SA' : 'U');
+
   return (
-    <Sidebar collapsible="icon">
-      {/* Header — App branding */}
-      <SidebarHeader>
+    <Sidebar collapsible="icon" className="border-r border-white/10 bg-[#06152D] text-slate-200">
+      {/* Header — App branding matching Image 1 */}
+      <SidebarHeader className="h-16 md:h-[70px] border-b border-white/10 flex items-center justify-center px-3 bg-[#06152D]">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
-              <Link href={getDashboardUrl()}>
-                <div className="flex aspect-square size-8 items-center justify-center  text-primary-foreground">
-                    <img src={logoUrl} className="size-6 object-contain" />
+            <SidebarMenuButton size="lg" asChild className="hover:bg-white/5 rounded-xl h-auto py-2">
+              <Link href={getDashboardUrl()} className="flex items-center gap-3">
+                <div className="flex aspect-square size-10 shrink-0 items-center justify-center rounded-xl bg-amber-400/10 border border-amber-400/30 text-amber-300 shadow-xs">
+                  <img
+                    src={logoUrl}
+                    alt="Logo"
+                    className="size-7 object-contain drop-shadow"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLElement).style.display = 'none';
+                    }}
+                  />
                 </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">Garrison SMS</span>
-                  <span className="truncate text-xs text-muted-foreground">School Management</span>
+                <div className="grid flex-1 text-left leading-tight group-data-[collapsible=icon]:hidden">
+                  <span className="truncate font-extrabold text-white text-sm tracking-tight">
+                    Ghana Garrison Schools
+                  </span>
+                  <span className="truncate text-[10px] font-medium text-amber-300/90 tracking-wider">
+                    Discipline • Excellence • Service
+                  </span>
                 </div>
               </Link>
             </SidebarMenuButton>
@@ -404,14 +420,20 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarHeader>
 
-      {/* Content — Nav Groups */}
-      <SidebarContent>
+      {/* Content — Nav Groups with subtle Watermark */}
+      <SidebarContent className="relative overflow-y-auto no-scrollbar py-3 px-2">
+        {/* Subtle Crest Watermark in the sidebar background */}
+        <SidebarWatermark className="group-data-[collapsible=icon]:hidden" />
+
         {filteredGroups.map((group) => (
-          <SidebarGroup key={group.title}>
-            <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
-            <SidebarMenu>
-              {group.items.map((item) =>
-                item.items ? (
+          <SidebarGroup key={group.title} className="py-1">
+            <SidebarGroupLabel className="text-[11px] font-bold uppercase tracking-wider text-slate-400/80 px-3 py-1.5">
+              {group.title}
+            </SidebarGroupLabel>
+            <SidebarMenu className="gap-1.5">
+              {group.items.map((item) => {
+                const active = isActive(item.url);
+                return item.items ? (
                   <Collapsible
                     key={item.title}
                     asChild
@@ -422,25 +444,45 @@ export function AppSidebar() {
                       <CollapsibleTrigger asChild>
                         <SidebarMenuButton
                           tooltip={item.title}
-                          isActive={isActive(item.url)}
+                          isActive={active}
+                          className={cn(
+                            'rounded-xl text-sm font-medium transition-all duration-150 h-10 px-3',
+                            active
+                              ? '!bg-[#FAB005] !text-[#06152D] font-bold shadow-md shadow-amber-500/20 [&>svg]:!text-[#06152D]'
+                              : 'text-slate-300 hover:text-white hover:bg-white/10 [&>svg]:text-slate-400 group-hover:[&>svg]:text-white'
+                          )}
                         >
-                          <item.icon />
-                          <span>{item.title}</span>
-                          <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                          <item.icon className="size-4 shrink-0" />
+                          <span className="truncate">{item.title}</span>
+                          <ChevronRight
+                            className={cn(
+                              'ml-auto size-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90',
+                              active ? '!text-[#06152D]' : 'text-slate-400'
+                            )}
+                          />
                         </SidebarMenuButton>
                       </CollapsibleTrigger>
                       <CollapsibleContent>
-                        <SidebarMenuSub>
-                          {item.items.map((sub) => (
-                            <SidebarMenuSubItem key={sub.title}>
-                              <SidebarMenuSubButton
-                                asChild
-                                isActive={isActive(sub.url)}
-                              >
-                                <Link href={sub.url}>{sub.title}</Link>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                          ))}
+                        <SidebarMenuSub className="border-l border-white/10 ml-5 pl-2 my-1 space-y-1">
+                          {item.items.map((sub) => {
+                            const subActive = isActive(sub.url);
+                            return (
+                              <SidebarMenuSubItem key={sub.title}>
+                                <SidebarMenuSubButton
+                                  asChild
+                                  isActive={subActive}
+                                  className={cn(
+                                    'rounded-lg text-xs transition-colors h-8 px-2.5',
+                                    subActive
+                                      ? '!bg-amber-400/20 !text-amber-300 font-semibold border-l-2 border-amber-400 pl-2'
+                                      : 'text-slate-400 hover:text-white hover:bg-white/5'
+                                  )}
+                                >
+                                  <Link href={sub.url}>{sub.title}</Link>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            );
+                          })}
                         </SidebarMenuSub>
                       </CollapsibleContent>
                     </SidebarMenuItem>
@@ -450,66 +492,85 @@ export function AppSidebar() {
                     <SidebarMenuButton
                       asChild
                       tooltip={item.title}
-                      isActive={isActive(item.url)}
+                      isActive={active}
+                      className={cn(
+                        'rounded-xl text-sm font-medium transition-all duration-150 h-10 px-3',
+                        active
+                          ? '!bg-[#FAB005] !text-[#06152D] font-bold shadow-md shadow-amber-500/20 [&>svg]:!text-[#06152D]'
+                          : 'text-slate-300 hover:text-white hover:bg-white/10 [&>svg]:text-slate-400 group-hover:[&>svg]:text-white'
+                      )}
                     >
-                      <Link href={item.url}>
-                        <item.icon />
-                        <span>{item.title}</span>
+                      <Link href={item.url} className="flex items-center gap-3">
+                        <item.icon className="size-4 shrink-0" />
+                        <span className="truncate">{item.title}</span>
+                        <ChevronRight
+                          className={cn(
+                            'ml-auto size-4 shrink-0',
+                            active ? '!text-[#06152D]' : 'text-slate-500/80 group-hover:text-white'
+                          )}
+                        />
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                )
-              )}
+                );
+              })}
             </SidebarMenu>
           </SidebarGroup>
         ))}
       </SidebarContent>
 
-      {/* Footer — User menu */}
-      <SidebarFooter>
+      {/* Ghana Ribbon at the bottom-left of the sidebar matching Image 1 */}
+      <GhanaRibbonCorner position="bottom-left" className="group-data-[collapsible=icon]:hidden" />
+
+      {/* Footer — User menu matching Image 1 */}
+      <SidebarFooter className="border-t border-white/10 p-3 bg-[#06152D] relative z-20">
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton
                   size="lg"
-                  className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                  className="rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-white transition-colors h-auto py-2 px-2.5 data-[state=open]:bg-white/15"
                 >
-                  <Avatar className="h-8 w-8 rounded-lg">
+                  <Avatar className="h-9 w-9 rounded-full border border-white/20 shrink-0">
                     <AvatarImage
-                      src={user?.id ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/users/${user.id}/profile-image` : undefined}
+                      src={
+                        user?.id
+                          ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/users/${user.id}/profile-image`
+                          : undefined
+                      }
                       alt={user?.full_name}
                     />
-                    <AvatarFallback className="rounded-lg bg-primary/10 text-primary text-xs font-semibold">
-                      {user?.full_name ? getInitials(user.full_name) : 'U'}
+                    <AvatarFallback className="rounded-full bg-[#0077E6] text-white text-xs font-bold">
+                      {userInitials}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold">{user?.full_name}</span>
-                    <span className="truncate text-xs text-muted-foreground">{user?.email}</span>
+                  <div className="grid flex-1 text-left leading-tight group-data-[collapsible=icon]:hidden">
+                    <span className="truncate font-semibold text-white text-xs">
+                      {displayName}
+                    </span>
+                    <span className="truncate text-[11px] text-slate-400">
+                      {user?.email || 'admin@school.com'}
+                    </span>
                   </div>
-                  <ChevronsUpDown className="ml-auto size-4" />
+                  <ChevronsUpDown className="ml-auto size-4 text-slate-400 group-data-[collapsible=icon]:hidden" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent
-                className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+                className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-xl border-border shadow-xl"
                 side="bottom"
                 align="end"
                 sideOffset={4}
               >
                 <DropdownMenuLabel className="p-0 font-normal">
-                  <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                    <Avatar className="h-8 w-8 rounded-lg">
-                      <AvatarImage
-                        src={user?.id ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/users/${user.id}/profile-image` : undefined}
-                        alt={user?.full_name}
-                      />
-                      <AvatarFallback className="rounded-lg bg-primary/10 text-primary text-xs font-semibold">
-                        {user?.full_name ? getInitials(user.full_name) : 'U'}
+                  <div className="flex items-center gap-2 px-2 py-2 text-left text-sm">
+                    <Avatar className="h-8 w-8 rounded-full border border-border">
+                      <AvatarFallback className="rounded-full bg-[#0077E6] text-white text-xs font-bold">
+                        {userInitials}
                       </AvatarFallback>
                     </Avatar>
                     <div className="grid flex-1 text-left text-sm leading-tight">
-                      <span className="truncate font-semibold">{user?.full_name}</span>
+                      <span className="truncate font-semibold">{displayName}</span>
                       <span className="truncate text-xs text-muted-foreground">{user?.email}</span>
                     </div>
                   </div>
@@ -523,7 +584,7 @@ export function AppSidebar() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/admin/system-settings">
+                    <Link href={isSuperAdmin ? '/super-admin/settings' : '/admin/system-settings'}>
                       <Settings className="mr-2 size-4" />
                       Settings
                     </Link>
@@ -557,4 +618,3 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
-

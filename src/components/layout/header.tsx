@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { Separator } from '@/components/ui/separator';
 import { ThemeToggle } from '@/components/theme-toggle';
 import {
   DropdownMenu,
@@ -13,20 +12,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Bell, Search, Settings } from 'lucide-react';
+import { ChevronDown, Search, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { NotificationBell } from './notification-bell';
+import { GhanaRibbonCorner } from './ghana-ribbon';
 
 type HeaderProps = React.HTMLAttributes<HTMLElement> & {
   fixed?: boolean;
@@ -35,6 +27,7 @@ type HeaderProps = React.HTMLAttributes<HTMLElement> & {
 function getInitials(name: string) {
   return name
     .split(' ')
+    .filter(Boolean)
     .map((n) => n[0])
     .join('')
     .substring(0, 2)
@@ -63,110 +56,131 @@ export function Header({ className, fixed = true, children, ...props }: HeaderPr
     router.push('/login');
   };
 
+  const roleName = (user?.role || '').toLowerCase().replace(/_/g, '');
+  const isSuperAdmin = roleName === 'superadmin';
+  const displayName = user?.full_name || (isSuperAdmin ? 'System Admin' : 'User');
+  const userInitials = user?.full_name ? getInitials(user.full_name) : (isSuperAdmin ? 'SA' : 'U');
+
   return (
     <header
       className={cn(
-        'flex h-14 shrink-0 items-center gap-2 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-[box-shadow] duration-200',
-        fixed && 'sticky top-0 z-50',
-        offset > 10 && fixed ? 'shadow-md dark:shadow-none' : 'shadow-xs dark:shadow-none',
+        'relative flex h-16 md:h-[70px] shrink-0 items-center border-b border-white/10 bg-[#06152D] text-white transition-[box-shadow] duration-200 overflow-hidden select-none',
+        fixed && 'sticky top-0 z-40',
+        offset > 10 && fixed ? 'shadow-lg shadow-black/20' : '',
         className
       )}
       {...props}
     >
-      <div className="flex w-full items-center justify-between px-4">
-        {/* Left: sidebar trigger + separator + page nav tabs / title */}
-        <div className="flex items-center gap-2 overflow-hidden min-w-0">
-          <SidebarTrigger className="-ml-1 shrink-0" />
-          <Separator orientation="vertical" className="h-4 shrink-0" />
+      {/* Dynamic Ghana Tri-Color Ribbon in the top-right corner */}
+      <GhanaRibbonCorner position="top-right" />
+
+      <div className="flex w-full items-center justify-between px-3 md:px-6 relative z-10">
+        {/* Left: Mobile/Desktop trigger & dynamic title */}
+        <div className="flex items-center gap-3 overflow-hidden min-w-0">
+          <SidebarTrigger className="h-9 w-9 text-white/80 hover:text-white hover:bg-white/10 rounded-lg shrink-0 transition-colors" />
+
           {children || (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="text-sm font-medium text-muted-foreground truncate cursor-default">
-                    {user?.garrison_name ? (
-                      <>
-                        <span className="hidden sm:inline">{user.garrison_name}</span>
-                        <span className="sm:hidden">{user.garrison_name.split(' ')[0]}</span>
-                        {user.role?.toLowerCase().replace(/_/g, '') === 'schooladmin' && user.school_name ? ` - ${user.school_name}` : ''}
-                      </>
-                    ) : (
-                      "Garrison SMS"
+            <div className="flex flex-col min-w-0">
+              <span className="text-sm md:text-base font-bold text-white tracking-tight truncate">
+                {user?.garrison_name ? (
+                  <>
+                    <span>{user.garrison_name}</span>
+                    {user?.school_name && (
+                      <span className="hidden sm:inline text-white/70 font-normal">
+                        {' '}— {user.school_name}
+                      </span>
                     )}
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>
-                    {user?.garrison_name ? (
-                      <>
-                        {user.garrison_name}
-                        {user.role?.toLowerCase().replace(/_/g, '') === 'schooladmin' && user.school_name ? ` - ${user.school_name}` : ''}
-                      </>
-                    ) : (
-                      "Garrison School Management System"
-                    )}
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+                  </>
+                ) : (
+                  'Ghana Garrison Schools'
+                )}
+              </span>
+              <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-medium text-amber-300/90 tracking-wide">
+                <span>Discipline</span>
+                <span className="text-white/40">•</span>
+                <span>Excellence</span>
+                <span className="text-white/40">•</span>
+                <span>Service</span>
+              </span>
+            </div>
           )}
         </div>
 
-        {/* Right: search + actions */}
-        <div className="flex items-center gap-1">
-          {/* Search */}
-          <div className="relative hidden md:flex items-center">
-            <Search className="absolute left-2.5 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-            <Input
-              placeholder="Search..."
-              className="h-8 w-48 pl-8 text-sm bg-muted/50 border-transparent focus:border-border focus:bg-background transition-all"
+        {/* Center / Right: Global Search, Quick Actions, Profile */}
+        <div className="flex items-center gap-2 md:gap-3 pr-8 md:pr-14">
+          {/* Global search pill input as seen in design */}
+          <div className="relative hidden lg:flex items-center">
+            <Search className="absolute left-3.5 h-4 w-4 text-white/50 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search garrisons, schools, or reports..."
+              className="h-9 w-72 xl:w-96 rounded-full bg-white/10 pl-9 pr-10 text-xs md:text-sm text-white placeholder:text-white/50 border border-white/15 outline-none focus:border-amber-400 focus:bg-white/15 focus:ring-1 focus:ring-amber-400/50 transition-all shadow-inner"
             />
-            <kbd className="absolute right-2 hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground sm:flex">
+            <kbd className="absolute right-3 hidden h-5 select-none items-center gap-1 rounded bg-white/10 px-1.5 font-mono text-[10px] font-medium text-white/60 sm:flex">
               ⌘K
             </kbd>
           </div>
 
-          <Separator orientation="vertical" className="mx-1 h-4" />
+          {/* Notifications */}
+          <div className="text-white/80 hover:text-white">
+            <NotificationBell />
+          </div>
 
           {/* Theme toggle */}
-          <ThemeToggle />
+          <div className="text-white/80 hover:text-white">
+            <ThemeToggle />
+          </div>
 
-          {/* Settings */}
+          {/* Settings shortcut */}
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8"
-            onClick={() => router.push('/settings')}
+            className="h-9 w-9 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+            onClick={() => router.push(isSuperAdmin ? '/super-admin/settings' : '/settings')}
           >
             <Settings className="h-4 w-4" />
             <span className="sr-only">Settings</span>
           </Button>
 
-          {/* Notifications */}
-          <NotificationBell />
-
-          {/* User avatar */}
+          {/* User Profile Pill button */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-                <Avatar className="h-7 w-7">
-                  <AvatarFallback className="text-[11px] font-semibold bg-primary text-primary-foreground">
-                    {user?.full_name ? getInitials(user.full_name) : 'U'}
+              <Button
+                variant="ghost"
+                className="flex items-center gap-2.5 h-10 px-2 sm:px-3 hover:bg-white/10 text-white rounded-full transition-colors focus-visible:ring-1 focus-visible:ring-amber-400"
+              >
+                <Avatar className="h-8 w-8 rounded-full border border-white/20 shrink-0">
+                  <AvatarFallback className="text-[12px] font-bold bg-[#0077E6] text-white">
+                    {userInitials}
                   </AvatarFallback>
                 </Avatar>
+                <div className="hidden sm:flex flex-col text-left">
+                  <span className="text-xs font-semibold text-white leading-tight">
+                    {displayName}
+                  </span>
+                  <span className="text-[10px] text-white/60 leading-tight">
+                    {user?.email ? user.email.split('@')[0] : 'Admin'}
+                  </span>
+                </div>
+                <ChevronDown className="h-3.5 w-3.5 text-white/60" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuContent align="end" className="w-56 shadow-xl border-border">
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{user?.full_name || 'User'}</p>
-                  <p className="text-xs leading-none text-muted-foreground">
+                  <p className="text-sm font-semibold leading-none">{displayName}</p>
+                  <p className="text-xs leading-none text-muted-foreground truncate">
                     {user?.email || user?.username || ''}
                   </p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => router.push('/profile')}>Profile</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push('/settings')}>Settings</DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => router.push(isSuperAdmin ? '/super-admin/settings' : '/settings')}
+              >
+                Settings
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
                 Log out
@@ -178,4 +192,3 @@ export function Header({ className, fixed = true, children, ...props }: HeaderPr
     </header>
   );
 }
-

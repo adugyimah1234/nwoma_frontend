@@ -69,7 +69,7 @@ export default function ProfessionalLogin() {
       {/* Main Container Card */}
       <div className="w-full max-w-[1150px] min-h-[600px] flex bg-card rounded-3xl shadow-[0_35px_60px_-15px_rgba(0,0,0,0.1)] overflow-hidden border border-border relative">
         {/* Top Accent Bar (Brand Colors) */}
-        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-primary via-accent to-primary z-20" />
+        <div className="absolute top-0 left-0 right-0 h-1.5" />
 
         {/* Left Side: Form Section */}
         <div className="w-full md:w-1/2 p-8 md:p-14 flex flex-col justify-between bg-card z-10">
@@ -85,10 +85,10 @@ export default function ProfessionalLogin() {
               />
             </div>
             {/* Academic Year Indicator Badge */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/15 border border-accent/30 text-foreground text-[11px] font-semibold mt-1">
+            {/* <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/15 border border-accent/30 text-foreground text-[11px] font-semibold mt-1">
               <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
               2024/2025 Academic Year • Term 1
-            </div>
+            </div> */}
           </div>
 
           <div className="flex-1 flex flex-col justify-center max-w-[360px] mx-auto w-full my-4">
